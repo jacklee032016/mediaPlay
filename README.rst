@@ -10,13 +10,18 @@ Modules
 ffmpeg
 -------
 FFMPEG-3.3;
+
 For mPlayer(ARM), only libavcodec, libavformat and libavutils are neeeded;
+
 For testing on X86 platform, all libraries are needed;
+
 Build only dependent on itself;
 
 *ffmpegTest*
 All ffmpeg tools and some examples from ffmpeg;
+
 Most importances are play and server, used to as testing tool or start points;
+
 Add 'record' to record from player;
 
 
@@ -28,8 +33,8 @@ in configuration items;
 
 1. shared library;
 2. web server: 
-  1) for CGI/static web pages,
-  2) for HTTP/HLS(dynamic ts files);
+  I for CGI/static web pages,
+  II for HTTP/HLS(dynamic ts files);
 3. record: 
 * Capture media from player or server;
 * Save media into mkv/avi/ts/flv formats;
