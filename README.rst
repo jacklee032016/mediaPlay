@@ -11,19 +11,18 @@ ffmpeg
 -------
 * FFMPEG-3.3;
 * For mPlayer(ARM), only libavcodec, libavformat and libavutils are neeeded;
-*For testing on X86 platform, all libraries are needed;
-*Build only dependent on itself;
+* For medis tools on X86 platform, all libraries are needed;
+* Build only dependent on itself;
 
-*ffmpegTest*
-All ffmpeg tools and some examples from ffmpeg;
-
-Most importances are play and server, used to as testing tool or start points;
-
-Add 'record' to record from player;
+ffmpegTest
+----------
+* All ffmpeg tools and some examples from ffmpeg;
+* Most importances are play and server, used to as testing tool or start points;
+* Add 'record' to record from player;
 
 
 mediaPlayer
---------
+-----------
 Multi-View Player support Media server, record, web service, based on plugin infrastructure,
 Every function: record, web service, server, and player all are plugin, can be enabled/disabled
 in configuration items;
