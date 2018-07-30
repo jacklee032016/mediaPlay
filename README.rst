@@ -9,10 +9,10 @@ Modules
 
 ffmpeg
 -------
-" FFMPEG-3.3;
-" For mPlayer(ARM), only libavcodec, libavformat and libavutils are neeeded;
-" For testing on X86 platform, all libraries are needed;
-" Build only dependent on itself;
+", FFMPEG-3.3;
+", For mPlayer(ARM), only libavcodec, libavformat and libavutils are neeeded;
+", For testing on X86 platform, all libraries are needed;
+", Build only dependent on itself;
 
 *ffmpegTest*
 All ffmpeg tools and some examples from ffmpeg;
