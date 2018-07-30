@@ -32,14 +32,17 @@ mediaPlayer
   #. for CGI/static web pages,
   #. for HTTP/HLS(dynamic ts files);
 3. record: 
-Capture media from player or server;
-Save media into mkv/avi/ts/flv formats;
+
+| Capture media from player or server;
+| Save media into mkv/avi/ts/flv formats;
 4. Media Server:
-Support protocol: RTSP/HTTP/UDP Multicast(not RTP Multicast);
-Media source from local media file;
-Media from player, eg. behave like a media gateway;
+
+| Support protocol: RTSP/HTTP/UDP Multicast(not RTP Multicast);
+| Media source from local media file;
+| Media from player, eg. behave like a media gateway;
 
 5. mPlayer: multi-view player;
+
 * Maximum 6 views(windows) simultaneously;
 * Number of windows and position of every window can be changed/hiden dynamically;
 * CEC auto negotiation;
@@ -55,10 +58,13 @@ Media from player, eg. behave like a media gateway;
 mediaServers
 ------------
 1 rtmpNginx
+
 * Nginx + RTMP plugin : to test RTMP/HLS protocols;
 2 server.2017.07
+
 * media server of one version;
 3 server.2017.09
+
 * media server of another version;
 
 
@@ -69,6 +75,7 @@ resorces
 
 ecpws
 -----
+
 * ECPWS(Embedded Cross-Platform Web Server)
 * Web server works in Linux/Windows;
 
