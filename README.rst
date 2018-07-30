@@ -23,14 +23,14 @@ ffmpegTest
 
 mediaPlayer
 -----------
-Multi-View Player support Media server, record, web service, based on plugin infrastructure,
-Every function: record, web service, server, and player all are plugin, can be enabled/disabled
+* Multi-View Player support Media server, record, web service, based on plugin infrastructure;
+* Every function: record, web service, server, and player all are plugins, which can be enabled/disabled
 in configuration items;
 
 1. shared library;
 2. web server: 
-  I for CGI/static web pages,
-  II for HTTP/HLS(dynamic ts files);
+  #. for CGI/static web pages,
+  #. for HTTP/HLS(dynamic ts files);
 3. record: 
 * Capture media from player or server;
 * Save media into mkv/avi/ts/flv formats;
