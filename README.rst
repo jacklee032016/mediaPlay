@@ -32,13 +32,12 @@ in configuration items;
   #. for CGI/static web pages,
   #. for HTTP/HLS(dynamic ts files);
 3. record: 
-* Capture media from player or server;
-* Save media into mkv/avi/ts/flv formats;
-
+| Capture media from player or server;
+| Save media into mkv/avi/ts/flv formats;
 4. Media Server:
-* Support protocol: RTSP/HTTP/UDP Multicast(not RTP Multicast);
-* Media source from local media file;
-* Media from player, eg. behave like a media gateway;
+| Support protocol: RTSP/HTTP/UDP Multicast(not RTP Multicast);
+| Media source from local media file;
+| Media from player, eg. behave like a media gateway;
 
 5. mPlayer: multi-view player;
 * Maximum 6 views(windows) simultaneously;
