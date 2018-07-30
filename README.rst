@@ -24,20 +24,19 @@ ffmpegTest
 mediaPlayer
 -----------
 * Multi-View Player support Media server, record, web service, based on plugin infrastructure;
-* Every function: record, web service, server, and player all are plugins, which can be enabled/disabled
-in configuration items;
+* Every function: record, web service, server, and player all are plugins, which can be enabled/disabled in configuration items;
 
 1. shared library;
 2. web server: 
   #. for CGI/static web pages,
   #. for HTTP/HLS(dynamic ts files);
 3. record: 
-| Capture media from player or server;
-| Save media into mkv/avi/ts/flv formats;
+Capture media from player or server;
+Save media into mkv/avi/ts/flv formats;
 4. Media Server:
-| Support protocol: RTSP/HTTP/UDP Multicast(not RTP Multicast);
-| Media source from local media file;
-| Media from player, eg. behave like a media gateway;
+Support protocol: RTSP/HTTP/UDP Multicast(not RTP Multicast);
+Media source from local media file;
+Media from player, eg. behave like a media gateway;
 
 5. mPlayer: multi-view player;
 * Maximum 6 views(windows) simultaneously;
