@@ -1,0 +1,94 @@
+
+A simple schema for HLS (m38u)
+
+Request from HiPlayer
+				GET /video.m3u8 HTTP/1.1
+				User-Agent: Lavf/56.40.101
+				Accept: */*
+				Range: bytes=0-
+				Connection: close
+				Host: 192.168.168.102:6080
+				Icy-MetaData: 1
+				
+				"
+
+		
+				GET /video.m3u8 HTTP/1.1
+				User-Agent: PotPlayer/1.7.3344
+				Host: 192.168.168.102:6080
+				Cache-Control: no-cache
+				
+				"
+
+
+				GET /video.m3u8 HTTP/1.1
+				Host: 192.168.168.102:6080
+				User-Agent: VLC/2.2.6 LibVLC/2.2.6
+				Range: bytes=0-
+				Connection: close
+				Icy-MetaData: 1
+				
+				"
+
+				
+		Notes:
+				PotPlayer does not require connection:close;		
+
+
+Response from Server:
+				HTTP/1.1 206 Partial Content
+				Date: Thu, 07 Sep 2017 16:17:35 GMT
+				Server: ECPWS/0.1.0rc10
+				Accept-Ranges: bytes
+				Connection: close
+				Content-Type: text/html; charset=ISO-8859-1
+				Last-Modified: Thu, 07 Sep 2017 16:17:29 GMT
+				Content-Range: bytes 0-200/200
+				Content-Length: 208
+				
+				" 
+
+		Write: 208 bytes : "#EXTM3U
+				#EXT-X-VERSION:3
+				#EXT-X-TARGETDURATION:12
+				#EXT-X-MEDIA-SEQUENCE:0
+				#EXTINF:10.346000,
+				muxLabAv000.ts
+				#EXTINF:9.834000,
+				muxLabAv001.ts
+				#EXTINF:11.385000,
+				muxLabAv002.ts
+				#EXTINF:9.867000,
+				muxLabAv003.ts
+				"
+
+
+Request from HiPlayer
+				"GET /muxLabAv001.ts HTTP/1.1
+				User-Agent: Lavf/56.40.101
+				Accept: */*
+				Connection: close
+				Host: 192.168.168.102:6080
+				Icy-MetaData: 1
+				
+				
+				"
+		Notes:
+				Not require muxLabAv000.ts
+
+
+Response from Server:
+		CONN 98:Wrote "HTTP/1.1 200 OK
+				Date: Thu, 07 Sep 2017 16:17:35 GMT
+				Server: ECPWS/0.1.0rc10
+				Accept-Ranges: bytes
+				Connection: close
+				Content-Length: 5463844
+				Last-Modified: Thu, 07 Sep 2017 16:17:10 GMT
+				Content-Type: video/mp2t
+				
+			" (219 bytes)
+
+
+
+

@@ -1,0 +1,16 @@
+
+					CGI for ECPWS(Embedded Cross-Platform Web Server)
+   									   				Lizhijiie 2015.10.26
+
+2015.11.1
+	Browser always send a request of 
+		"GET /tracker/tracker.php?info_hash=9.819578E-308D0X1.23D160P-10195BAd%0B%E3D04.596558E-303rD3k7.066246E-312%EADDB&peer_id=DSD0100D5%ACD0P%3D"
+	
+2015.10.26
+	Browser can be running for a long time when access CGI of libCgi, but not when access simplestCgi
+			There is no content_length header for normal CGI, but simplestCgi output content_length correctly.
+	
+	Log file is very huge when CGI is used. Because pipe access is not blocked.
+	
+	When CgiMd5 is access with form data, it is 400 error in browser.
+

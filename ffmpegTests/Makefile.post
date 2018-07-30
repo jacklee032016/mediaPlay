@@ -1,0 +1,168 @@
+#
+# $Id: Makefile.post,v 1.1.1.1 2006/11/29 08:35:29 lizhijie Exp $
+
+C_CFLAGS += $(INCLUDE_DIR) 
+CC_CFLAGS+= -Wno-deprecated
+
+########################  from sample/hi_sample_rules.make
+
+HI_INSTALL_DIR			:= $(NEW_SDK)/board
+HI_LIB_DIR          := $(HI_INSTALL_DIR)/lib
+HI_STATIC_LIB_DIR   := $(HI_LIB_DIR)/static
+HI_SHARED_LIB_DIR   := $(HI_LIB_DIR)/share
+HI_EXTERN_LIB_DIR   := $(HI_LIB_DIR)/extern
+
+HI_INCLUDE_DIR			:=  $(HI_INSTALL_DIR)/include
+
+
+CFLAGS  +=  $(CFG_HI_SAMPLE_CFLAGS)
+
+CFLAGS  +=  -I$(HI_INCLUDE_DIR) \
+            -I$(SAMPLE_DIR)/common \
+            $(FFMPEG_CFLAGS)
+
+
+            
+ifdef CFG_HI_ADVCA_FUNCTION
+HI_LIB_PATHS :=  -L$(HI_STATIC_LIB_DIR)  -L$(HI_EXTERN_LIB_DIR) -L$(HI_SHARED_LIB_DIR) $(LIB_PATHS)
+HI_LIB64_PATHS := -L$(HI_STATIC_LIB64_DIR) -L$(HI_EXTERN_LIB64_DIR) -L$(HI_SHARED_LIB64_DIR) $(LIB64_PATHS)
+else
+HI_LIB_PATHS := -L$(HI_SHARED_LIB_DIR) -L$(HI_EXTERN_LIB_DIR) -L$(HI_STATIC_LIB_DIR) $(LIB_PATHS)
+HI_LIB64_PATHS := -L$(HI_SHARED_LIB64_DIR) -L$(HI_EXTERN_LIB64_DIR) -L$(HI_STATIC_LIB64_DIR) $(LIB64_PATHS)
+endif
+
+DEPEND_LIBS := $(HI_LIBS)
+
+
+HI_DEPEND_LIBS := -Wl,--start-group $(SYS_LIBS) $(DEPEND_LIBS) -Wl,--end-group
+
+TARGETS :=
+
+ifeq ($(HI_USER_SPACE_LIB),y)
+TARGETS += $(if $(HI_SAMPLE_IMAGES),$(HI_SAMPLE_IMAGES),$(HI_COMMON_OBJS))
+endif
+
+ifeq ($(HI_USER_SPACE_LIB64),y)
+TARGETS += $(if $(HI_SAMPLE_IMAGES64),$(HI_SAMPLE_IMAGES64),$(HI_COMMON_OBJS64))
+endif
+
+
+LDFLAGS := $(LDFLAGS) -L$(BIN_DIR)/lib $(FFMPEG_LDFLAGS)
+
+ifeq ($(ARCH),arm)
+	LDFLAGS += $(HI_LIB_PATHS) $(HI_DEPEND_LIBS)
+endif	
+########################  end of adding from sample/hi_sample_rules.mak
+
+
+DFLAGS = -MM 
+DEP = 
+DMANGLE = 
+DEPS=yes
+
+.SECONDARY: $(DEPENDENCIES) $(OBJS)
+
+DEPENDENCIES = $(patsubst %.c,$(OBJ_DIR)/%.d,$(patsubst %.asm,$(OBJ_DIR)/%.d,$(SRC)))
+OBJS = $(patsubst %.c,$(OBJ_DIR)/%.o,$(patsubst %.asm,$(OBJ_DIR)/%.o,$(SRC))) $(EXTRA_OBJS) $(PBX_UTIL_OBJS)
+# DEPENDENCIES = $(patsubst %.c,$(OBJ_DIR)/%.d,$(patsubst %.cpp,$(OBJ_DIR)/%.d,$(SRC)))
+# OBJS = $(patsubst %.c,$(OBJ_DIR)/%.o,$(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SRC))) $(EXTRA_OBJS) $(PBX_UTIL_OBJS)
+
+all:$(BIN_DIR) $(TARGET_LIB) $(LOCAL_ALL)
+
+$(OBJ_DIR):
+	-if [ -d $(OBJ_DIR) ] ; then : ; else $(MKDIR) $(OBJ_DIR); fi
+ifdef CODE_SUBDIRS
+	-@ for subdir in $(CODE_SUBDIRS) ; do ( mkdir -p $(OBJ_DIR)/$$subdir ) ; done
+endif
+
+$(BIN_DIR):
+	-if [ -d $(BIN_DIR) ] ; then : ; else $(MKDIR) $(BIN_DIR)/lib;$(MKDIR) $(BIN_DIR)/usr/bin;$(MKDIR) $(BIN_DIR)/sbin;fi
+#	$(ROOT_DIR)/scripting/installdir.sh $(BIN_DIR); fi
+#ifdef CODE_SUBDIRS
+#	-@ for subdir in $(CODE_SUBDIRS) ; do ( mkdir -p $(BIN_DIR)/$$subdir ) ; done
+#endif
+
+clean:$(LOCAL_CLEAN)
+	-if [ -d $(BIN_DIR) ] ; then $(RM) $(BIN_DIR) ; fi
+	-if [ -d $(OBJ_DIR) ] ; then $(RM) $(OBJ_DIR) ; fi
+
+TARGET_LIB_SHARED:=$(TARGET_LIB).so
+TARGET_LIB_STATIC:=$(TARGET_LIB).a
+
+
+############### only static link suuport on PC platform  #############
+ifeq ($(ARCH),arm)
+$(TARGET_LIB):$(TARGET_LIB_STATIC) #$(TARGET_LIB_SHARED) 
+else
+$(TARGET_LIB):$(TARGET_LIB_STATIC) #$(TARGET_LIB_SHARED)
+endif
+
+######## $(HI_LIB_PATHS) $(HI_DEPEND_LIBS) for HiSilcon SoC, from sample/hi_sample_rules.mak
+$(TARGET_LIB_SHARED):$(OBJS)  
+	$(CC) $(LDFLAGS) -shared -s $(SHARED_LD_FLAGS) $(LIBS) $(LDFLAGS) $^ -o $@  
+	$(MOVE) $(TARGET_LIB_SHARED) $(BIN_DIR)/lib
+
+
+$(TARGET_LIB_STATIC):$(OBJS)  
+	$(AR) $(ARFLAGS) $@ $^ 
+	$(RANLIB) $@
+	$(MOVE) $(TARGET_LIB_STATIC) $(BIN_DIR)/lib
+
+######## $(CFLAGS) $(HI_FLOAT_OPTIONS) HiSilicon SoC, from sample/hi_sample_rules.mak
+# $(OBJ_DIR)/%.o:%.cpp $(OBJ_DIR)/%.d 
+$(OBJ_DIR)/%.o:%.cxx $(OBJ_DIR)/%.d 
+	$(CXX) $(CXXFLAGS) $(C_CFLAGS) $(CC_CFLAGS) $(CFLAGS) $(HI_FLOAT_OPTIONS) -c  $< -o $(OUTPUT_FLAG)$@ 
+	
+	
+$(OBJ_DIR)/%.o:%.c $(OBJ_DIR)/%.d
+	$(CC) $(C_FLAGS) $(CFLAGS) $(HI_FLOAT_OPTIONS) -c $< -o $(OUTPUT_FLAG) $@ 
+	
+# .o.cpp :
+.o.cxx :
+	$(CXX) $(CXXFLAGS) $(CC_CFLAGS) -g $(CFLAGS) $(HI_FLOAT_OPTIONS) -c $<
+
+$(OBJ_DIR)/%.o:%.asm $(OBJ_DIR)/%.d 
+	$(ASM) $(ASM_FLAGS) -o $@ $<
+	
+
+	
+$(OBJ_DIR)/%.d: %.c 
+ifdef CODE_SUBDIRS
+	-@ for subdir in $(CODE_SUBDIRS) ; do ( mkdir -p $(OBJ_DIR)/$$subdir ) ; done
+endif
+ifeq ($(DEPS),yes)
+	@echo "Making $@"
+	@$(SHELL) -ec '$(CC) $(C_FLAGS) $(DFLAGS) $(CFLAGS) $(HI_FLOAT_OPTIONS) $< \
+		$(DMANGLE) | sed -e "s#^$(*F).o[ :]*#$(@D)\/$(*F).o $@ : #" \
+		> $@; [ -s $@ ] || mv -f a.temp'
+endif
+
+# $(OBJ_DIR)/%.d: %.cpp 
+$(OBJ_DIR)/%.d: %.cxx 
+ifdef CODE_SUBDIRS
+	-@ for subdir in $(CODE_SUBDIRS) ; do ( mkdir -p $(OBJ_DIR)/$$subdir ) ; done
+endif
+ifeq ($(DEPS),yes)
+	@echo "Making $@"
+	@$(SHELL) -ec '$(CXX) $(C_CFLAGS) $(CXXFLAGS) $(CC_CFLAGS) $(DFLAGS) $(CFLAGS) $(HI_FLOAT_OPTIONS) $< \
+		$(DMANGLE) | sed -e "s#^$(*F).o[ :]*#$(@D)\/$(*F).o $@ : #" \
+		> $@; [ -s $@ ] || mv -f a.temp'
+		
+endif
+
+
+$(OBJ_DIR)/%.d: %.asm 
+ifdef CODE_SUBDIRS
+	-@ for subdir in $(CODE_SUBDIRS) ; do ( mkdir -p $(OBJ_DIR)/$$subdir ) ; done
+endif
+ifeq ($(DEPS),yes)
+	@echo "Making $@"
+	@$(SHELL) -ec '$(ASM) $(ASM_FLAGS) -M -o $@ $< \
+		$(DMANGLE) | sed -e "s#^$(*F).o[ :]*#$(@D)\/$(*F).o $@ : #" \
+		> $@; [ -s $@ ] || mv -f a.temp'
+		
+endif
+
+
+-include $(DEPENDENCIES)	
+-include $(PBX_DIR)/fakepre

@@ -1,0 +1,282 @@
+# $Log: README,v $
+					Design for ECPWS(Embedded Cross-Platform Web Server)
+   									   				Lizhijiie 2015.10.10
+
+2015.11.02
+	WWW Authentication:
+		1). When headers are parsing:
+				Parse the authentication header, check the credit, and set status of authentication;
+		2). Before to state change:
+				Turn to ERROR state of 401 error when authen is enabled and not validated.
+
+	Concurrent running structure:
+		Pipe read is blocked because of CGI error, then the service is blocked, no other request can be serviced later.
+		Even CGI has no error, main loop is read the pipe one by one; the delay of the sequential read pipe will low 
+		the performance of service greatly.
+		How to premote the performance in this single thread main loop?
+		
+
+2015.11.01
+	About Cookie, RFC2109
+		In response header, "set-cookie: key=value; max-age=;path=;domain=;secure";
+		In the request header later, "cookie:", for exmple "Cookie: ecpwsCookie=CookieValue; MY_COOKIE=; CGISID=hjYPofqP1qg2um4HwFYTbxXT2uLjVleMLbH8O1nXhTqVv"
+		here, 2 cookie are feed back by browser.
+		Path: the cookie only used when UA access 'domain/path';
+		
+		For CGI, send cookie in HTTP_COOKIE, as defined in CGI/1.1.
+		Sesssions are implemented with cookie.
+		
+				
+2015.10.29
+	CGI with POST data
+		Read request;
+		If Post, then POST READ;
+				Data has been RXed, then POST_READ;
+				Data has not been RXed, then POST_WRITE;
+		POST_READ:
+				If data available, then POST_WRITE;
+		POST_WRITE:		
+				write to CGI in a temperal file which is mapped into the standard input of CGI
+				Start CGI program;
+		CGI_READ: normal work of CGI;
+
+2015.10.25
+	CGI Design
+		Types of Executable CGI
+			NPH_CGI/unzip
+					Buffer mode, only buffer data from pipe, no new headers is added.
+					So conn->header_line and header_end are initialized to point to
+					conn->buffer.
+					
+			IndexDir
+			CGI_CGI:
+					Modify content from pipe(only after contentType/ContentLength), so parse
+					the data from pipe, and added '200 header, connection:close' etc.
+					
+					Conn->header_line and header_end point to the begin and end of buffer used
+					to receive data from pipe respectively.
+					In order to modify it, these pointers point to the half of conn->buffer.
+					
+			
+
+2015.10.24
+	Architecture and Main Loop
+		WinSock: only socket can be used in select(), not same as Unix.
+		
+		2 types of connection queues:
+			Free queue: prelocated resources;
+			Ready Queue: Mainloop used.
+		
+		
+		The sockets monitored by select()
+			server_socket: new socket and its connection;
+			client_socket: create events
+		
+		Event:
+			socket ready event for read/write
+			Timeout	event of socket
+			Error event
+			notify event of local file access
+		
+		MainLoop:
+			set up fd_set of select based status of connection
+			select() waite and emit event
+			handler event in FSM
+			Create new event in FSM handler
+		
+		Status and FSM: only for ready queue
+			READ_REQUEST:
+					READY_EVENT: read and parse header;
+					TIMEOUT_EVENT: close socket; conn enqueued into free queue;
+			WRITE_STATIC:
+					READY_EVENT: send out sucessfully, and enter into READ_REQUEST for next request;
+			
+			CGI_READ:
+			CGI_WRITE:
+					READY: send out; return to READ_REQUEST status
+			
+			POST_READ:
+			POST_WRITE:
+			
+			ERROR:
+					READY: always; send out info about error; close socket; conn enqueued into free queue;						
+
+2015.10.13
+		4 Types of externel program called by webServer
+			1. CGI_NPH: 
+					begin with prefix of nph-
+					Redirect socket to the stdout of CGI_NPH
+					Bo pipe is needed.
+					Environment variables are needed.
+					
+			2. CG_CGI
+					Pipe support, CGI stdout is the pipe input of web server
+					Environment variables are needed.
+			3. Directory List
+					Pipe is needed.
+					Environment variables are not needed.
+			4. GUNZIP
+					input gzip data from stdin
+					Environment variables are not needed.
+		
+		3 status of CGI_CGI program
+			1. Parsing: initialized, waiting for input from CGI
+			2. Buffered: waiting for more data
+			3. Done: data from CGI send to client
+		
+		Data send by CGI_CGI
+			First HTTP header(HTTP/1.x 2000) is send by web server;
+			Content Type and Content Length are send by CGI; content length is manidate requirement.
+			HTML pages are send by web server.
+													
+2015.11.12
+		Output for HTTP and Error Pages
+				2 Types of output:
+						1. Only HTTP header, the html is output by other part, such as 1XX, 2xx, 3xx
+						2. Output HTTP headers and simple HTML body, mainly for error output, such as error>400
+				
+				How to guanratee the relationship of 2 parts
+						In the same functions, output one by one
+						Error check: output length, the second part must be the length of content length
+
+		CGI Theory	& Implementation
+				CGI/1.1 and its standard
+				WinCGI
+				Environment Variables
+				Pipe,  the standard output of CGI program
+
+		dup/dup2 and output/input redirection
+				Functions:
+						fd2 =dup(fd) : associate a second fd2 for the fd, fd2 is the next available fd
+						dup(fd1, fd2): force fd2 refering to the same file as fd1. If fd2 is currently opened, then 
+						the file of fd2 is closed.
+				Application:
+						old = dup(_fileno(stdout)); 
+								old is another fd pointing to the same file descriptor of stdout, so write(old, ..) will
+								output to stdout device.
+						
+						dup(_fileno(FILE *), _fileno(stdout));
+								Now fd of FILE stdout pointing to another file of FILE *; the fd associated to stdout 
+								device has been closed.
+						
+						puts("xxx");
+								printf()/puts() is used for FILE of stdout (fd of 1). So now they output to a file, not 
+								stdout device.
+						dup(old, _fileno(stdout));
+								Because fd old pointing to stdout device, so FILE *stdout now point to stdout device again.
+				Note: refer to source of win32CrtDup.c				
+
+
+		Pipe and communication between parent/child process
+				Function:
+						pipe(): create 2 pipe descriptors, the first is for read, the second is for write.
+						
+				Communication:
+						Every process can only has one pipe descriptor.
+						1. parent process: pipe(.., _O_NOINHERIT);
+							Defaultly, child process inherits all data from parent process. With this call, then all data
+							of parent process is not inheritable.
+						2. dup()/dup2() Create a inheritable descriptor for the pipe descriptor which child process can 
+							use/inherit.
+						3. Close the duplicated descriptor in parent process.
+						4. Spawm child process. So child process inherit the dup descriptor, because that is inheritable.	
+						
+				Used in CGI:
+						1. Pipe
+						2. CGI stdout point to pipeDescriptor[1]
+						3. Web server read the CGI output from pipeDescriptor[0]
+						
+				Note: Refer to win32CrtPipe1/2.c
+
+2015.10.11
+Enhancement:
+		Database connection
+		Java VM support
+		
+		Memory Leak Tests: with Memory Management package
+
+
+2015.10.10
+Abstract of Network interface/socket
+		Client:
+		Server : 
+				Listen
+				Socket: 
+						Recv
+						Send
+
+FSM(Finite State Machine): Only for Ready Queue
+		1. Read Header
+				First Line: Logline
+				Option Lines: in Key:value format
+				Validate: some manidate fields
+				
+				Enter into Response state when static 
+					
+		2. Read Body
+				Post File: 
+						File Size: content length
+						File Name	
+				Post Form:
+		
+		3. Response
+				match pattern of dir lists or others
+				Look for file
+				Send static content(HTTP header and HTML body) to client
+				Enter into Done state for next request
+				Enter into Error state when failed
+		
+		4. Done
+				Response for Error Code<400
+				Stay at ready queue, waiting for next request
+				
+		5. Error Handle/Dead
+				Error Code: as HTTP Protocol 
+				Send back response based on REQ
+				Close socket
+				Release sources, such as string buffer, buffer, Fd and others
+				REQ--> Free Queue
+
+
+Queue Pool
+	Instead of Thread pool
+		1. Types
+				Free Queue
+				Ready Queue
+				Blocking Queue
+		
+		2. Operations
+				Initialization:
+						Free Queue: Max Connections
+				Running:
+						Free-->Ready
+						Ready-->Blocking
+						Ready-->Free
+						Blocking-->Free
+						Blocking-->Ready
+
+Anti-DDoS
+		Max Connections=Max Requests=Free Queue+Ready Queue+Blocking Queue
+		
+		When All REQs are used, new connection is refused directly in main loop, without any	
+		involvement of FSM.
+
+Optimizations for Embedded System
+		Objects:
+				Portability
+				Performance
+				Size
+				Security
+		
+		Conditional compiling
+		Stack Size
+		Thread
+		Blocking/Waiting Mechanism
+		File System:
+				No FS supported
+		Network/Socket:
+				IPv4/IPv6
+				Different platforms
+		Memory Allocation:
+				Dynamical
+				Statical		

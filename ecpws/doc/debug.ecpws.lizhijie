@@ -1,0 +1,179 @@
+# $Log: README,v $
+					Debug for ECPWS(Embedded Cross-Platform Web Server)
+   									   				Lizhijiie 2015.10.05
+
+2015.11.02
+	Log:
+		When no CGI is called, check the delay of logging function?
+		
+		The output of upload file and logging info always have 0x0d 0x0d 0x0a as \r\n, not just 0x0d 0x0a. why?
+
+2015.10.31
+	Bug:
+		1).When cgiHtmlEntities is access with post data of html format, ecpws complaints
+			"C Run-Time Error R6002: floating-point support not loaded", and no content 
+			is rxed in socket.
+		2).But with other post data, such as a simple string, without this problem.
+		3).Other CGIs do not have this type of bug.
+	Analysis:
+		ECPWS rx data	from CGI, which are html lables, and has been transformed by CGI, these
+		data are treated as float point data, so error happened.
+	Plans:
+		1). ECPWS don't output data to log file
+		2). Check the data returned by HtmlEntities
+	Resolution:
+		Disabled the output of data rxed from socket for the html label, this problem disappeared.
+		
+		For example, when cgiRedirect is redirect to http://news.sina.com, the request is
+		"cgiRedirect.exe?url=http%3A%2F%2Fnews.sina.com" and this string is formated "vsprintf(debugStr, format, marker)"
+		so the format and the marker is splended, and %2F is think as float point format.
+		Although the query_string is fprintf directly, it also fails.
+		
+		Add one float printf in program, although R6200 is disappeared, but output assert fails.
+	Finally:
+		1). Add float point support: fprintf one float point number, so float point is loaded in this program;
+		2). Output all socket content only with fprintf without any format string.
+
+	Reference:
+		https://msdn.microsoft.com/en-us/library/k1x26e0x.aspx	
+		
+		
+2015.10.29
+		The value in the lines of configuration file must be seperated with SPACE only, TAB space is not support.
+		
+		Bug of no trimming the leading space in string parameters of parsing configuration file
+		
+		Web browser want to access /favicon.ico??? Why?
+		
+		conn->response_status is not assigned when entering into ERROR state in some cases.
+		
+		The DirList created by server can not be update in browser because of the if_modified header.
+		
+
+2015.10.27
+		Redesign the select operation in main loop for static resource response:
+				Clear both read and write FD_SET;
+				Set FD_SET one by one: server socket-->client socket in different states;
+				Check timeout value;
+				Check state of every socket in read and write socket;
+				
+		Test cases for static resource response:
+				1. Timeout for client socket;
+						timeout for keepalive acount;
+						timeout for keepalive timer;	
+				2. Connection is broken by remote peer;
+						1). When conn is closed by client(telnet), server always receive some(less than 5) odd charactors. This represents
+						invalidate request, so the conn of server is also closed later.
+						2). When browser receive the CGI output, which contains 'Connection:close' and content_length headers, then it close this socket.
+						Then server monitor and read this socket, return length is 0, so emit timeout event to stop this connection.
+						
+						3). If only 'Connection:close' header, browser will wait for body forever, even </html> has been received by client.
+						So for CGI program, server must close socket when CGI content had been transfered.
+						
+				3. Multiple concurrent, interleaved connections from different clients;
+				4. Directory List;
+					1). DirectoryMaker: calling external executable (as CGI) to create dir list;
+					2). DirectoryCache: when DirectoryMaker is not used, then web server create the dir list;
+					
+				5. Waiting mechanism/logging content after server was accessed.
+				6. Delay of logging output.
+
+2015.10.13
+		A simplest CGI, only output environment variable, works in Windows platform.
+		
+		todo List:
+			Optimizing the string manipulations of mapping url to local resources
+			Logging and error process: output local message and some message can also used in HTML output.
+			Logging of CGI program.
+
+2015.10.12
+		ServerRoot and DocRoot access failure:
+				Difference in open root directory in Unix and Windows
+				Look up index.html, index.htm, index.cgi or directory list. Index executable is not needed.
+		
+		All functions called by FSM handler should return uniformed return value and set HTTP Error Code
+				Did every error in any program should set into the HTTP Error Code?
+				How to add arguments for every HTTP error handlers?
+		
+		Add HTTP Client Connection, and this connection is not same as the HTTP Request.
+				One Client Connection can has multiple HTTP Requests, one by one, when the keep-alive field in request is allowed.
+				
+				When to close the client socket?
+				Buffer for reading HTTP header
+				Buffer for reading file
+				mmap for the reading file
+				Buffer for writing HTTP header
+				Buffer for writing file content after HTTP header
+		
+		Deferer field in HTTP header:
+				Parsing failure. For example, when access email16.gif, the Deferer point to index.html which is it is referenced.
+						
+		Only one SEND operation for all data send by socket:
+				Send HTTP headers
+				Send mmap
+				Send IoShuffle content
+				Send CGI output content.
+				
+
+2015.11.11
+Tests:
+		Simplest CGI in C
+		Simplest POST for data file
+		Simplest POST for form data
+		Other RFC functions for HTTP protocol
+		
+
+2015.10.10
+Works:
+		Rewrite the code of parse http headers
+		FSM works up
+		All error handlers are contained in STATE_DEAD
+		debug: 
+				buffer overflow in MSG_DEBUG
+				Send buffer size of socket and set options
+
+Tests:
+		Static Web Pages
+				Index.html
+				images in html
+				HTML file with forms
+				HTML file with POST file
+				Result of these HTML files
+				Response web pages in server
+				
+		Tests for configuration	options
+				Output of all configuration options
+				Max Connections
+				Virtual Host
+				Parsing config file
+				Check config options
+						Explicit configed options
+						Implicit configed options
+		
+		Package:
+				support small package, even with telnet client which say in HTTP language
+		
+		Steps:
+				1. Initialization: 
+						Configuration
+						Queues
+						MIME
+						Alias
+						Others
+				
+				2. Destory
+				
+				3. Running
+						Static Content: HTML, images, virtual host
+						Directory List
+						POST data
+						CGI
+
+2015.10.05
+		IndexDir Program with POSIX calls in Windows platform.
+		strcpy_s return errno, not char * pointer, so bug made by cascased call strcat(strcpy_s());
+		FD_SETSIZE is set as 64 by CRT, how to enlarge the max connection beyond this limits?
+
+		
+
+

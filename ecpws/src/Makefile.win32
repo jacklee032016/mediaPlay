@@ -1,0 +1,142 @@
+# 
+
+
+TARGET_TYPE=CUI
+
+
+EXE_NAME=ecpws
+
+HTTP_OBJS_DIR			=$(OBJDIR)\http
+WINDOWS_OBJS_DIR	=$(OBJDIR)\win32
+INDEX_OBJS_DIR		=$(OBJDIR)\index
+CGI_OBJS_DIR			=$(OBJDIR)\cgi
+
+# First, the object should be build
+ECPWS_OBJS= \
+    $(OBJDIR)\ecpws.obj    \
+    $(OBJDIR)\ecpwsSignals.obj    \
+    $(OBJDIR)\ecpwsLog.obj    \
+    $(OBJDIR)\ecpwsConfig.obj    \
+    $(OBJDIR)\ecpwsAlias.obj    \
+    $(OBJDIR)\ecpwsHash.obj    \
+    $(OBJDIR)\ecpwsRange.obj    \
+    $(OBJDIR)\ecpwsUtil.obj    \
+    $(OBJDIR)\ecpwsEscape.obj    \
+    $(OBJDIR)\ecpwsMmapCache.obj    \
+    $(OBJDIR)\ecpwsNetIp.obj    \
+    $(OBJDIR)\ecpwsNetService.obj    \
+    $(OBJDIR)\ecpwsBuffer.obj    \
+    $(OBJDIR)\ecpwsIoShuffle.obj    \
+    $(OBJDIR)\ecpwsShadow.obj    \
+    $(OBJDIR)\ecpwsReqQueue.obj    \
+    $(OBJDIR)\ecpwsSelect.obj    \
+   
+ODD = \
+
+
+HTTP_OBJS= \
+    $(HTTP_OBJS_DIR)\ecpwsHttpHandlers.obj    \
+    $(HTTP_OBJS_DIR)\ecpwsHttpBaseAuthen.obj    \
+    $(HTTP_OBJS_DIR)\ecpwsHttpReadRequest.obj    \
+    $(HTTP_OBJS_DIR)\ecpwsHttpParseRequest.obj    \
+    $(HTTP_OBJS_DIR)\ecpwsHttpStaticContent.obj    \
+    $(HTTP_OBJS_DIR)\ecpwsHttpResponse.obj    \
+    $(HTTP_OBJS_DIR)\ecpwsHttpFsm.obj    \
+
+CGI_OBJS= \
+    $(CGI_OBJS_DIR)\ecpwsCgiInit.obj    \
+    $(CGI_OBJS_DIR)\ecpwsCgiCreate.obj    \
+    $(CGI_OBJS_DIR)\ecpwsCgiHandlers.obj    \
+
+
+WINDOWS_OBJS= \
+    $(WINDOWS_OBJS_DIR)\getOpts.obj   \
+    $(WINDOWS_OBJS_DIR)\dirent.obj    \
+    $(WINDOWS_OBJS_DIR)\mkstemp.obj   \
+
+
+INDEX_OBJS = \
+    $(INDEX_OBJS_DIR)\indexDir.obj    \
+    $(INDEX_OBJS_DIR)\indexScanDir.obj    \
+  
+OBJS = \
+		$(ECPWS_OBJS)	\
+		$(HTTP_OBJS)	\
+		$(CGI_OBJS)	\
+		$(INDEX_OBJS)	\
+		$(WINDOWS_OBJS)	\
+		
+		
+
+!if "$(TARGET_TYPE)" == "GUI"
+RESES= \
+    $(OBJDIR)\$(EXE_NAME).res    
+!else
+RESES= 
+!endif
+
+!include MakePre.mak
+
+
+{$(SRC_DIR)\http\}.c{$(HTTP_OBJS_DIR)\}.obj:
+    $(cc) $(cflags) $(cdebug) /Fo"$(HTTP_OBJS_DIR)\\" /Fd"$(HTTP_OBJS_DIR)\\" /Fd"$(HTTP_OBJS_DIR)\\" $**
+
+{$(SRC_DIR)\cgi\}.c{$(CGI_OBJS_DIR)\}.obj:
+    $(cc) $(cflags) $(cdebug) /Fo"$(CGI_OBJS_DIR)\\" /Fd"$(CGI_OBJS_DIR)\\" /Fd"$(CGI_OBJS_DIR)\\" $**
+
+{$(SRC_DIR)\win32\}.c{$(WINDOWS_OBJS_DIR)\}.obj:
+    $(cc) $(cflags) $(cdebug) /Fo"$(WINDOWS_OBJS_DIR)\\" /Fd"$(WINDOWS_OBJS_DIR)\\" /Fd"$(WINDOWS_OBJS_DIR)\\" $**
+
+{$(SRC_DIR)\index\}.c{$(INDEX_OBJS_DIR)\}.obj:
+    $(cc) $(cflags) $(cdebug) /Fo"$(INDEX_OBJS_DIR)\\" /Fd"$(INDEX_OBJS_DIR)\\" /Fd"$(INDEX_OBJS_DIR)\\" $**
+
+
+DEST= $(OUTDIR)\indexDir.exe $(OUTDIR)\$(EXE_NAME).exe
+
+# Third, the target dependences
+all:$(OBJDIR) $(HTTP_OBJS_DIR) $(CGI_OBJS_DIR) $(WINDOWS_OBJS_DIR) $(INDEX_OBJS_DIR) \
+			$(OBJS) $(DEST) 
+
+
+$(OBJDIR) :
+    if not exist "$(OBJDIR)/$(NULL)" mkdir $(OBJDIR)
+
+$(HTTP_OBJS_DIR) :
+    if not exist "$(HTTP_OBJS_DIR)/$(NULL)" mkdir $(HTTP_OBJS_DIR)
+
+$(CGI_OBJS_DIR) :
+    if not exist "$(CGI_OBJS_DIR)/$(NULL)" mkdir $(CGI_OBJS_DIR)
+
+$(WINDOWS_OBJS_DIR) :
+    if not exist "$(WINDOWS_OBJS_DIR)/$(NULL)" mkdir $(WINDOWS_OBJS_DIR)
+
+$(INDEX_OBJS_DIR) :
+    if not exist "$(INDEX_OBJS_DIR)/$(NULL)" mkdir $(INDEX_OBJS_DIR)
+
+
+LIBS = user32.lib wsock32.lib 
+
+ODD_LIB = kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib \
+		ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib 
+
+#$(RESES)
+$(OUTDIR)\$(EXE_NAME).exe: $(ECPWS_OBJS) $(HTTP_OBJS) $(CGI_OBJS) $(WINDOWS_OBJS) 
+	$(link) $(linkdebug) $(LINK_FLAGS) -out:$@ $** $(LINK_LIBS) $(LIBS)
+
+$(OUTDIR)\indexDir.exe: $(INDEX_OBJS) $(WINDOWS_OBJS_DIR)\dirent.obj $(OBJDIR)\ecpwsEscape.obj
+	$(link) $(linkdebug) $(LINK_FLAGS) -out:$@ $** $(LINK_LIBS) $(LIBS)
+
+
+
+	
+!if "$(QUIET)"=="N"
+    dumpbin /imports $@
+!endif    
+
+
+#	gdi32.lib 
+
+
+clean:
+        $(CLEANUP)
+

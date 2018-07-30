@@ -1,0 +1,27 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+<HTML>
+<HEAD>
+<TITLE>Upload File</TITLE>
+</HEAD>
+<BODY>
+
+<form action="/cgi-bin/cgiUpload.exe" enctype="multipart/form-data" method="post">
+<p>
+This is first part of form data. Type some text you like to descripe the data file need to transfer:<br>
+<input type="text" name="textline" size="30">
+</p>
+<p>
+This the second part of form data. Please specify a file, or a set of files:<br>
+<input type="file" name="datafile" size="40">
+</p>
+<div>
+<p>
+This the third part of form data. Every control in form is represented as a independent part<br>
+</p>
+<input type="submit" name="action" value="Send">
+</div>
+</form>
+
+</BODY>
+</HTML> 

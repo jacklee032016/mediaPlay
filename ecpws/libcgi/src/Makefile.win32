@@ -1,0 +1,65 @@
+# 
+
+!include <Win32.Mak>
+
+TARGET_TYPE=DLL
+
+DLL_NAME=libCgi
+
+# First, the object should be build
+OBJS= \
+    $(OBJDIR)\libCgi.obj    \
+    $(OBJDIR)\libCgiBase64.obj    \
+    $(OBJDIR)\libCgiCookie.obj    \
+    $(OBJDIR)\libCgiError.obj    \
+    $(OBJDIR)\libCgiGeneral.obj    \
+    $(OBJDIR)\libCgiList.obj    \
+    $(OBJDIR)\libCgiMd5.obj    \
+    $(OBJDIR)\libCgiSession.obj    \
+    $(OBJDIR)\libCgiString.obj    \
+    $(OBJDIR)\libCgiUpload.obj    \
+  
+
+
+!if "$(TARGET_TYPE)" == "GUI"
+RESES= \
+    $(OBJDIR)\$(EXE_NAME).res    
+!else
+RESES= 
+!endif
+
+
+DEST=$(OUTDIR)\$(DLL_NAME).lib
+
+# Second, Suffix and rules
+!include MakePre.mak
+    
+
+# Third, the target dependences
+all: $(OBJDIR)  $(DEST)
+
+$(OBJDIR) :
+    if not exist "$(OBJDIR)/$(NULL)" mkdir $(OBJDIR)
+
+
+LIBS = kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib \
+		ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib wsock32.lib comctl32.lib 
+
+
+#$(DEST): $(OBJS) $(RESES)
+#	$(link) $(linkdebug) $(LINK_FLAGS) -out:$@ $** $(LINK_LIBS) $(LIBS)
+	
+!if "$(QUIET)"=="N"
+    dumpbin /imports $@
+!endif    
+
+$(DEST): $(OBJS) 
+    $(link) -lib -out:$@ $(OBJS) 
+
+
+#	gdi32.lib 
+
+
+clean:
+        $(CLEANUP)
+

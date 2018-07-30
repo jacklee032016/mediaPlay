@@ -1,0 +1,54 @@
+#
+# $Id: Makefile.pre,v 1.2 2006/12/21 18:36:14 lizhijie Exp $
+
+
+# for release 
+BUILDTIME := $(shell TZ=UTC date -u "+%Y_%m_%d-%H_%M")
+ASSIST_RELEASES_NAME=assist_samba_$(BUILDTIME).tar 
+
+ARCH=
+#arm
+
+ASSIST_SHARED=yes
+RELEASES_DIR=../releases
+C_FLAGS += -Wall
+
+ifeq ($(ARCH),arm)
+	C_FLAGS += -mbig-endian -D__ARM_IXP__=1 
+	CXXFLAGS = -mbig-endian -D__ARM_IXP__=1 
+	CROSS_COMPILER=arm-linux-
+	LDFLAGS+= -mbig-endian 
+	flag=-mbig-endian
+else
+	ARCH=i686
+endif
+
+
+CXXFLAGS += -Wall 
+
+LDFLAGS += -L$(BIN_DIR)/lib 
+
+# LDFLAGS+= -lpthread 
+
+BIN_DIR=$(ROOT_DIR)/Linux.bin.$(ARCH)
+OBJ_DIR=Linux.obj.$(ARCH)
+
+
+CC	= $(CROSS_COMPILER)gcc
+CXX 	= $(CROSS_COMPILER)g++ 
+STRIP	= $(CROSS_COMPILER)strip
+LD	= $(CROSS_COMPILER)ld
+RANLIB 	= $(CROSS_COMPILER)ranlib
+STRIP 	= $(CROSS_COMPILER)strip
+AR 	= $(CROSS_COMPILER)ar
+
+RM	= rm -r -f
+MKDIR	= mkdir -p
+MODE	= 700
+OWNER	= root
+CHOWN	= chown
+CHMOD	= chmod
+COPY	= cp
+MOVE	= mv
+
+LN		= ln -sf

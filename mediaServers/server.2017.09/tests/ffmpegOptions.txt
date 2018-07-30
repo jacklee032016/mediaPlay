@@ -1,0 +1,67 @@
+int 	av_opt_set (void *obj, const char *name, const char *val, int search_flags)
+ 
+int 	av_opt_set_int (void *obj, const char *name, int64_t val, int search_flags)
+ 
+int 	av_opt_set_double (void *obj, const char *name, double val, int search_flags)
+ 
+int 	av_opt_set_q (void *obj, const char *name, AVRational val, int search_flags)
+ 
+int 	av_opt_set_bin (void *obj, const char *name, const uint8_t *val, int size, int search_flags)
+ 
+int 	av_opt_set_image_size (void *obj, const char *name, int w, int h, int search_flags)
+ 
+int 	av_opt_set_pixel_fmt (void *obj, const char *name, enum AVPixelFormat fmt, int search_flags)
+ 
+int 	av_opt_set_sample_fmt (void *obj, const char *name, enum AVSampleFormat fmt, int search_flags)
+ 
+int 	av_opt_set_video_rate (void *obj, const char *name, AVRational val, int search_flags)
+ 
+int 	av_opt_set_channel_layout (void *obj, const char *name, int64_t ch_layout, int search_flags)
+ 
+int 	av_opt_set_dict_val (void *obj, const char *name, const AVDictionary *val, int search_flags)
+
+
+
+
+AVCodecContext *codec_ctx = NULL;
+AVFormatContext *ofmt_ctx = NULL;
+
+int ret = 0, gopSize = (int)(3.0 * 25);   // 3 sec * 25 fps
+
+// ofmt_ctx and codec_ctx initialization and filling are OK, but: 
+codec_ctx->time_base.num = 1;
+codec_ctx->time_base.den = 25 // fps
+
+// It seems, that the following three lines have no effect without explisit setting of the "hls_time" property
+codec_ctx->keyint_min = gopSize;       // in FFMpeg application, the corresponding option is "-keyint_min 3"
+codec_ctx->scenechange_threshold = 0;  // in FFMpeg application, the corresponding option is "-sc_threshold 0"
+codec_ctx->gop_size = gopSize;         // in FFMpeg application, the corresponding option is "-g 3"
+
+ret = av_opt_set_double(ofmt_ctx, "hls_time", 3.0, AV_OPT_SEARCH_CHILDREN);
+
+// Any of the following lines causes "Option not found" error.
+ret = av_opt_set(codec_ctx->priv_data, "profile", "main", AV_OPT_SEARCH_CHILDREN);
+ret = av_opt_set(codec_ctx->priv_data, "preset", "ultrafast", AV_OPT_SEARCH_CHILDREN);
+ret = av_opt_get(ofmt_ctx, "segment_time",  AV_OPT_SEARCH_CHILDREN, &str);
+ret = av_opt_set((ofmt_ctx, "segment_time", "3.0", AV_OPT_SEARCH_CHILDREN);
+
+
+
+AVDictionary* headerOptions(0);
+av_dict_set(&headerOptions, "segment_format", "mpegts", 0);
+av_dict_set(&headerOptions, "segment_list_type", "m3u8", 0);
+av_dict_set(&headerOptions, "segment_list", _playlistFileName.c_str(), 0);
+av_dict_set_int(&headerOptions, "segment_list_size", 0, 0);
+av_dict_set(&headerOptions, "segment_time_delta", TO_STRING(1.00).c_str(), 0);
+av_dict_set(&headerOptions, "segment_time", TO_STRING(_segmentDuration).c_str(), 0);
+av_dict_set_int(&headerOptions, "reference_stream", _videoStream->index, 0);
+av_dict_set(&headerOptions, "segment_list_flags", "cache+live", 0);
+avformat_write_header(_formatContext, &headerOptions);
+
+
+
+./Linux.bin.X86/usr/bin/ffmpeg -re -i ../m/iMPACT.Wrestling.2015.11.05.1080p-30.WEBRip.h264-spamTV.mkv -c copy -f hls -hls_time 10 -hls_flags single_file play
+
+./Linux.bin.X86/usr/bin/play play.ts
+
+

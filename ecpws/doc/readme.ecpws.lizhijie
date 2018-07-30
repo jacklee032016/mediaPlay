@@ -1,0 +1,79 @@
+# $Log: README,v $
+					README for ECPWS(Embedded Cross-Platform Web Server)
+   									   				Lizhijiie 2015.9.30
+
+2015.11.04
+		Update the Makefile to support dynamic link, etc.
+		
+2015.11.03
+		Basic functions work well.
+
+2015.10.24
+		Support telnet client.
+
+2015.10.14
+		Add libCGI and test it.
+
+2015.10.12
+	A stable version for static content
+
+2015.10.09 Friday
+	About Max Connection:
+		When client is connected, if the connections reaches this limits, it is refused even though 
+		any content has not received from this client.
+		
+		How to handle in this case?
+
+2015.10.07
+	SEND :
+		req->buffer  : io_shuffle, req_flush (HTTP response header)
+		req->mmap
+		req->header_line: Pipe
+
+	RECV :
+		read request header: req->client_stream
+		read POST data
+		read to clear and close socket
+
+2015.10.05
+	Port BOA into Windows platform. Only /index.html can be accessed.
+	
+	Problems:
+		1. sscanf_s and gttime_t in Windows platform is not compatible with Linux version.
+		2. System is not stable when access email16.gif, especially by Shougou browser.
+		3. / is not mapped into index.html
+		4. strcpy_s return errno, not char * pointer.
+		
+		
+	Tests:
+		1. testing for every independent functions
+		2. testing of configuration file and all its options.
+		3. testing of con-current accessing.
+		4. CGI/WinCGI, and other CGI programs
+		5. POST method.
+		
+	Optmization of source code:
+		1. Thread model (single or multiple thread model)
+		2. Blocking mechanism based on select() or other mechanism.
+		3. Function pointers or operation interfaces for different operations.
+		4. Layered structure: 
+				HTTP message handler layer, 
+				RX/Send layer for package.
+				Service socket
+				client communication socket.
+		5. Data structure
+		6. Standardize the process of initialization and end.
+		7. Limited states machine.
+		8. Optimization for embedded system, both in size and performance
+
+	Enhancement of functions
+		1. HTTPS supporting
+		2. Running as service in Windows platform.
+		3. Tray icon support and communication mechanism between them in Windows platform.
+		4. Adding registry in Windows ?
+		5. Other programs, such as directory lister, extra source code, testing code.
+		
+		
+
+FD_SETSIZE is set as 64 by CRT, how to enlarge the max connection beyond this limits?
+

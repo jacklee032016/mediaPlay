@@ -1,0 +1,95 @@
+#
+# $Id: Makefile.post,v 1.1.1.1 2006/11/29 17:51:53 lizhijie Exp $
+
+C_CFLAGS += $(INCLUDE_DIR) 
+CC_CFLAGS+= -Wno-deprecated
+
+DFLAGS = -MM 
+DEP = 
+DMANGLE = 
+DEPS=yes
+
+.SECONDARY: $(DEPENDENCIES) $(OBJS)
+
+DEPENDENCIES = $(patsubst %.c,$(OBJ_DIR)/%.d,$(patsubst %.cxx,$(OBJ_DIR)/%.d,$(SRC)))
+OBJS = $(patsubst %.c,$(OBJ_DIR)/%.o,$(patsubst %.cxx,$(OBJ_DIR)/%.o,$(SRC))) $(EXTRA_OBJS) $(PBX_UTIL_OBJS)
+# DEPENDENCIES = $(patsubst %.c,$(OBJ_DIR)/%.d,$(patsubst %.cpp,$(OBJ_DIR)/%.d,$(SRC)))
+# OBJS = $(patsubst %.c,$(OBJ_DIR)/%.o,$(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SRC))) $(EXTRA_OBJS) $(PBX_UTIL_OBJS)
+
+all:$(BIN_DIR) $(TARGET_LIB) $(LOCAL_ALL)
+
+$(OBJ_DIR):
+	-if [ -d $(OBJ_DIR) ] ; then : ; else $(MKDIR) $(OBJ_DIR); fi
+ifdef CODE_SUBDIRS
+	-@ for subdir in $(CODE_SUBDIRS) ; do ( mkdir -p $(OBJ_DIR)/$$subdir ) ; done
+endif
+
+$(BIN_DIR):
+	-if [ -d $(BIN_DIR) ] ; then : ; else $(MKDIR) $(BIN_DIR)/usr/bin;$(MKDIR) $(BIN_DIR)/lib;fi
+#	$(ROOT_DIR)/scripting/installdir.sh $(BIN_DIR); fi
+#ifdef CODE_SUBDIRS
+#	-@ for subdir in $(CODE_SUBDIRS) ; do ( mkdir -p $(BIN_DIR)/$$subdir ) ; done
+#endif
+
+clean:$(LOCAL_CLEAN)
+	-if [ -d $(BIN_DIR) ] ; then $(RM) $(BIN_DIR) ; fi
+	-if [ -d $(OBJ_DIR) ] ; then $(RM) $(OBJ_DIR) ; fi
+
+
+TARGET_LIB_SHARED:=$(TARGET_LIB).so
+
+$(TARGET_LIB):$(TARGET_LIB_SHARED) #$(TARGET_LIB_STATIC) 
+
+$(TARGET_LIB_SHARED):$(OBJS)  
+	$(CC) $(LDFLAGS) -shared  $(SHARED_LD_FLAGS) $(LIBS) $^ -o $@  
+	$(MOVE) $(TARGET_LIB_SHARED) $(BIN_DIR)/lib
+#	tar cvzf $(TARGET_LIB_SHARED).tar.gz $(BIN_DIR)/$(TARGET_LIB_SHARED)
+#	$(MOVE) $(TARGET_LIB_SHARED).tar.gz $(BIN_DIR)
+#-Wl,-soname 
+
+$(TARGET_LIB_STATIC):$(OBJS)  
+	$(AR) $(ARFLAGS) $@ $^ 
+	$(RANLIB) $@
+	$(MOVE) $(TARGET_LIB_STATIC) $(BIN_DIR)
+
+	
+# $(OBJ_DIR)/%.o:%.cpp $(OBJ_DIR)/%.d 
+$(OBJ_DIR)/%.o:%.cxx $(OBJ_DIR)/%.d 
+	$(CXX) $(CXXFLAGS) $(C_CFLAGS) $(CC_CFLAGS) -c  $< -o $(OUTPUT_FLAG)$@ 
+	
+	
+$(OBJ_DIR)/%.o:%.c $(OBJ_DIR)/%.d
+	$(CC) $(C_FLAGS) -c $< -o $(OUTPUT_FLAG)$@ 
+	
+# .o.cpp :
+.o.cxx :
+	$(CXX) $(CXXFLAGS) $(CC_CFLAGS) -g $(CFLAGS) -c $<
+
+	
+$(OBJ_DIR)/%.d: %.c 
+ifdef CODE_SUBDIRS
+	-@ for subdir in $(CODE_SUBDIRS) ; do ( mkdir -p $(OBJ_DIR)/$$subdir ) ; done
+endif
+ifeq ($(DEPS),yes)
+	@echo "Making $@"
+	@$(SHELL) -ec '$(CC) $(C_FLAGS) $(DFLAGS) $< \
+		$(DMANGLE) | sed -e "s#^$(*F).o[ :]*#$(@D)\/$(*F).o $@ : #" \
+		> $@; [ -s $@ ] || mv -f a.temp'
+endif
+
+# $(OBJ_DIR)/%.d: %.cpp 
+$(OBJ_DIR)/%.d: %.cxx 
+ifdef CODE_SUBDIRS
+	-@ for subdir in $(CODE_SUBDIRS) ; do ( mkdir -p $(OBJ_DIR)/$$subdir ) ; done
+endif
+ifeq ($(DEPS),yes)
+	@echo "Making $@"
+	@$(SHELL) -ec '$(CXX) $(C_CFLAGS) $(CXXFLAGS) $(CC_CFLAGS) $(DFLAGS) $< \
+		$(DMANGLE) | sed -e "s#^$(*F).o[ :]*#$(@D)\/$(*F).o $@ : #" \
+		> $@; [ -s $@ ] || mv -f a.temp'
+		
+endif
+
+
+-include $(DEPENDENCIES)	
+-include $(PBX_DIR)/fakepre

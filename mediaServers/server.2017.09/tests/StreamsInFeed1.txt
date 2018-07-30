@@ -1,0 +1,94 @@
+Input #0, matroska,webm, from '/media/usb/iMPACT.Wrestling.2015.11.05.1080p-30.WEBRip.h264-spamTV.mkv':
+
+  Metadata:
+    encoder         : 
+libebml v1.3.1 + libmatroska v1.4.2
+
+    creation_time   : 
+2015-11-30T08:16:31.000000Z
+
+  Duration: 
+01:25:45.10
+, start: 
+0.000000
+, bitrate: 
+3132 kb/s
+
+    Stream #0:0
+: Video: h264, none, 1920x1080
+, SAR 1:1 DAR 16:9
+, 
+29.97 fps, 
+29.97 tbr, 
+1k tbn, 
+1k tbc
+ (default)
+
+    Metadata:
+      BPS             : 
+3004714
+      BPS-eng         : 
+3004714
+      DURATION        : 
+01:25:45.040000000
+      DURATION-eng    : 
+01:25:45.040000000
+      NUMBER_OF_FRAMES: 
+154197
+      NUMBER_OF_FRAMES-eng: 
+154197
+      NUMBER_OF_BYTES : 
+1932421937
+      NUMBER_OF_BYTES-eng: 
+1932421937
+
+      _STATISTICS_WRITING_APP: 
+mkvmerge v7.9.0 ('Birds') 64bit
+      _STATISTICS_WRITING_APP-eng: 
+mkvmerge v7.9.0 ('Birds') 64bit
+      _STATISTICS_WRITING_DATE_UTC: 
+2015-11-30 08:16:31
+      _STATISTICS_WRITING_DATE_UTC-eng: 
+2015-11-30 08:16:31
+      _STATISTICS_TAGS: 
+BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+      _STATISTICS_TAGS-eng: 
+BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+
+
+    Stream #0:1
+: Audio: aac, 44100 Hz, 2 channels
+ (default)
+
+    Metadata:
+      BPS             : 
+125588
+      BPS-eng         : 
+125588
+      DURATION        : 
+01:25:45.101000000
+      DURATION-eng    : 
+01:25:45.101000000
+      NUMBER_OF_FRAMES: 
+221581
+      NUMBER_OF_FRAMES-eng: 
+221581
+      NUMBER_OF_BYTES : 
+80770545
+      NUMBER_OF_BYTES-eng: 
+80770545
+
+      _STATISTICS_WRITING_APP: 
+mkvmerge v7.9.0 ('Birds') 64bit
+      _STATISTICS_WRITING_APP-eng: 
+mkvmerge v7.9.0 ('Birds') 64bit
+      _STATISTICS_WRITING_DATE_UTC: 
+ 2015-11-30 08:16:31
+      _STATISTICS_WRITING_DATE_UTC-eng: 
+2015-11-30 08:16:31
+      _STATISTICS_TAGS: 
+BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+      _STATISTICS_TAGS-eng: 
+BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+
+

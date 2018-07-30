@@ -1,0 +1,65 @@
+!/bin/sh
+
+# Mount fs accroding to /etc/fstab 
+mount -a
+
+##launch reset_reboot
+#insmod /muxlab/muxswitch.ko
+#/muxlab/reset_reboot &
+
+##start muxled 
+#insmod /muxlab/blueled.ko
+#insmod /muxlab/orangeled.ko
+#/muxlab/blueled_load &
+
+LDCONFIG=$(type -p ldconfig)
+if [ -f "${LDCONFIG}" ]; then
+    ${LDCONFIG} -C /tmp/ld.so.cache
+fi
+
+#isnmod /muxlab/muxled.ko
+
+for initscript in /etc/init.d/S[0-9][0-9]*
+do
+	if [ -x $initscript ] ;
+	then
+		$initscript
+	fi
+done
+
+#/usr/sbin/httpd &
+
+#/sbin/sshd &
+
+#rm -r /var/run/avahi-daemon
+
+#/sbin/avahi-daemon &
+
+#sleep 4	# Wait till encoder's ready, need to be modified according to condition
+
+cd /muxlab
+
+chmod 777 load
+
+# before comment this line, login in serial port must be enabled. Jack
+#./load
+
+# comment this line for DHCP client, or modify S80network to enable static IP address
+# udhcpc 
+
+# enable FTP, optional. Jack
+/usr/bin/tcpsvd -vE 0.0.0.0 21 ftpd -w /ftp &
+
+
+/sbin/sshd
+
+/usr/sbin/crond
+
+/sbin/muxMedia
+
+sleep 5
+
+ntpd -p 132.163.4.101 -q -d >> /tmp/ntp.data
+
+
+

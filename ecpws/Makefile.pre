@@ -1,0 +1,64 @@
+#
+# $Id: Makefile.pre,v 1.1.1.1 2006/11/29 18:13:57 lizhijie Exp $
+#
+
+
+include $(ROOT_DIR)/Rules.mak
+
+RELEASES_DIR=../releases
+
+
+BIN_DIR=$(ROOT_DIR)/Linux.bin.$(ARCH)
+OBJ_DIR=Linux.obj.$(ARCH)
+
+
+# used by libavcodec
+TARGET_ARCH_ARMV4L=yes
+
+# used by libavformat
+CONFIG_RISKY=yes
+CONFIG_VIDEO4LINUX=yes
+CONFIG_DV1394=yes
+CONFIG_NETWORK=yes
+
+
+CODEC_PATH=$(ROOT_DIR)/libavcodec
+FORMAT_PATH=$(ROOT_DIR)/libavformat
+UTILS_PATH=$(ROOT_DIR)/libMsUtils
+
+DRIVER_PATH=$(ROOT_DIR)/../drivers
+SHARED_PATH=$(ROOT_DIR)/../shared
+ALSA_PATH=$(ROOT_DIR)/alsaLib
+
+ARFLAGS	= crus
+
+CFLAGS+=$(C_FLAGS)
+
+CXXFLAGS +=-Wall 
+
+LDFLAGS += -L$(BIN_DIR)/lib 
+
+# LDFLAGS+= -lpthread 
+CFLAGS +=-Wall -g -O3
+	 
+ifeq ($(ARCH),arm)
+	CFLAGS += -march=armv4 -mtune=arm9tdmi
+	LIB_LDFLAGS+=-L$(ALSA_PATH)/binary -lpcm -lcontrol -ltimer -lasound 
+else
+endif
+	 
+LIB_LDFLAGS+= -L$(SHARED_PATH)/Linux.bin.$(ARCH)/lib \
+		-L$(DRIVER_PATH)/Linux.bin.$(ARCH)/lib
+		
+CFLAGS +=-I. -I$(ROOT_DIR)/include \
+	-I$(CODEC_PATH) -I$(FORMAT_PATH) -I$(UTILS_PATH) \
+	 -I$(SHARED_PATH)/include \
+	-I$(DRIVER_PATH)/include -I$(DRIVER_PATH)/include/include
+
+CFLAGS +=$(OPTFLAGS) -DLINUX -DHAVE_AV_CONFIG_H -D_FILE_OFFSET_BITS=64 \
+	-D_LARGEFILE_SOURCE -D_GNU_SOURCE -DCONFIG_NETWORK -DHAVE_SONIX_CONFIG_H
+
+ifeq ($(EDITION),release)
+	CFLAGS += -D__SNX_RELEASE__
+endif 
+

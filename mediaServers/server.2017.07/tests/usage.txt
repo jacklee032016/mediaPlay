@@ -1,0 +1,58 @@
+
+About testing HLS service with nginx-rtmp
+		build X86 version;
+		Start nginx service;
+		run server in /tmp/hls:
+				/tmp/hls is configured in nginx both for rmtp and HTTP service;
+				output *.m3u8 and *.ts in /tmp/hls
+		browser and player with: http://192.168.168.102:8080/*.m3u8		
+
+
+August 3r, 2017
+		4K network stream tests:
+		
+rtsp://192.168.168.102:9098/h264.4k.29.vid
+rtsp://192.168.168.102:9098/h265.4k.29.vid
+rtsp://192.168.168.102:9098/h265.4k.60.vid
+
+
+July 25, 2017
+http://192.168.168.102:9090/file.asf
+redirect to :
+mmsh://192.168.168.102:9090/file.asf
+<Stream file.asf>
+File "/media/sf_mux/m/NorthKoreanParade2.asf"
+Format asf
+#NoAudio
+#Metadata author "Me"
+#Metadata copyright "Super MegaCorp"
+#Metadata title "Test stream from disk"
+#Metadata comment "Test comment"
+</Stream>
+
+
+July 20, 2017
+	When ac3 is in media, RTP can not support it?
+	Play *.h264 file, Client can connect to RTSP and HTTP protocols;
+	
+	
+rtsp://192.168.168.102:9098/file.rm
+http://192.168.168.102:9090/file.rm
+
+Notes:
+	When RTSP protocol, the extension is mpg;
+	When HTTP protocol, the extension is rtsp;
+	
+rtsp://192.168.168.102:9098/test1-rtsp.mpg
+http://192.168.168.102:9090/test1-rtsp.rtsp
+http://192.168.168.102:9098/test1-rtsp.sdp : RTSP/1.1 not support??
+
+rtsp://192.168.56.101:9098/test1-rtsp.mpg
+rtsp://192.168.56.101:9098/test1-rtsp.mpg
+http://192.168.56.102:9090/test1-rtsp.rtsp
+
+Startup server, then using play (from ffmpeg) to access these URLs.
+Problems:
+	No data is received in play;
+	Some media files can not be recongnized by server and abort with unknown media type for their sub-streams.
+	

@@ -1,0 +1,32 @@
+					README for tests of FFMPEG 3.3
+									May, 2017 Jack Lee
+
+
+May 9th, Tuesday
+Port and cross compile ffmpeg to ARM platform of 762RX:
+		only libavutil, libavcodec, and libavformat are built.
+
+
+Play raw format or other format
+	play -f rawvideo -pix_fmt yuv420p -video_size 1916x956 ./video.es 
+
+
+	Output H264 raw media stream: extension name of 'h264' or '264' all are raw mux of H264
+			remuxing ../S01E10.1080p.WEB-DL.DD5.1.H264-ViSUM.mkv h264.h264
+
+			play -f h264 ./h264.h264 
+
+scp Linux.bin.arm/usr/bin/esplay root@192.168.168.101:/usr/bin
+
+
+
+RX Board:
+	Mount USB disk:
+			mount /dev/sdb1 /mnt
+
+	Test ipplay:
+	
+	Test esplay:
+			 esplay /mnt/h264_1916x956.h264  h264 null null
+
+					

@@ -1,0 +1,42 @@
+# Nmake macros for building Windows 32-Bit apps
+
+
+# debug option is yes or others
+NODEBUG=YES
+DLL_SUPPORT=YES
+
+
+SUBDIRS= \
+			src \
+			tests\cgi	\
+			tests\win32	\
+			libCgi\src		\
+			libCgi\examples\strings	\
+			libCgi\examples\form	\
+			libCgi\examples\session	\
+			
+
+ADD = \
+			config \
+			tests\utils	\
+
+
+#!set QUIET=N
+#
+
+!include MakePre.mak
+
+#	@for %d in ( $(SUBDIRS)) do @echo "Enter %d"  
+# all build is run when the top level as the current path, so 'include' is simplified
+all:#$(SUBDIRS)
+	@for %d in ( $(SUBDIRS)) do $(COMSPEC) /c nmake /F "%d"/Makefile SRC_DIR=%d	NODEBUG=$(NODEBUG)	DLL_SUPPORT=$(DLL_SUPPORT)
+
+
+clean:
+        $(CLEANUP)
+
+package:clean
+#			echo $(MY_DATE)
+			set PATH=%PATH%;c:\Program Files\WinRAR
+			cd ..
+			rar a ecpws.$(MY_DATE).rar ecpws

@@ -1,0 +1,104 @@
+
+					Knowledge for ECPWS(Embedded Cross-Platform Web Server)
+   									   				Lizhijiie 2015.10.26
+
+2015.11.02
+	About mutipart form:
+		When form defined as "<form action="/cgi-bin/cgiUpload.exe" enctype="multipart/form-data" method="post">"
+		then every control in this form is viewed as a part, even the control of submit button if it has name and value attributes;
+		
+		The boundary is used to split these parts before and after every part.
+		For the control with type of 'file', 'name' is the control name, 'filename' is the name of file which will be transfered.
+	
+	A sample of mutipart/form-data and data file upload
+	"""
+	 POST /cgi-bin/cgiUpload.exe HTTP/1.1
+	 Host: 127.0.0.1
+	 Connection: keep-alive
+	 Content-Length: 2361
+	 Cache-Control: max-age=0
+	 Authorization: Basic bm9ib2R5Om5vYm9keQ==
+	 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+	 Origin: http://127.0.0.1
+	 User-Agent: Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36 SE 2.X MetaSr 1.0
+	 Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryxYGlLQc5tHUrAw46
+	 Referer: http://127.0.0.1/uploadFile.html
+	 Accept-Encoding: gzip,deflate,sdch
+	 Accept-Language: zh-CN,zh;q=0.8
+	 Cookie: ecpwsCookie=CookieValue; MY_COOKIE=; CGISID=hjYPofqP1qg2um4HwFYTbxXT2uLjVleMLbH8O1nXhTqVv
+	 
+	 ------WebKitFormBoundaryxYGlLQc5tHUrAw46
+	 Content-Disposition: form-data; name="textline"
+	 
+	 textFile
+	 ------WebKitFormBoundaryxYGlLQc5tHUrAw46
+	 Content-Disposition: form-data; name="datafile"; filename="knowledge.ecpws.lizhijie"
+	 Content-Type: application/octet-stream
+
+					Knowledge for ECPWS(Embedded Cross-Platform Web Server)
+   									   				Lizhijiie 2015.10.26
+	"""
+	
+CONTENT_TYPE=multipart/form-data; boundary=----WebKitFormBoundaryxYGlLQc5tHUrAw46
+CONTENT_LENGTH=2361
+
+
+2015.11.01
+	About URL Encoding
+		HTTP escape/URL encoding:
+			URL encode: section 2.2 of RFC 1738:
+				escape sequence: % 2*hexadecimal digits(one octet?), represent one graphic character or  one octet ( when no such graphic character)
+				char		-->  % hexadecimal+hexadecimal; 1 char --> 3 chars
+			In HtmlEntities, '<' is escaped into 4 chars, not %+one octet?
+			In Redirect, 'http://..", ':' and '/' are url encoded
+			application/x-www-form-urlencode: all form data is url encoded	
+		HTML escape:
+				1. >  -->  &gt;		4 chars
+				2. <  -->  &lgt;		4 chars
+				3. &  -->  &amp;	5 chars
+				4. "   -->  &quot;	6 chars
+
+2015.10.31
+	About GET method in form:
+		For example ""<form action='"ROOT_CGI_BIN"cgiRedirect."CGI_EXTENSION"' method='GET'>"".
+		In this page, when submit button is clicked, URL line in browser is display as
+		"http://127.0.0.1/cgi-bin/cgiRedirect.exe?url=http%3A%2F%2Fsina.com" (when http://sina.com)
+		and the content in socket is "GET /cgi-bin/cgiRedirect.exe?url=http0X1.3A7500P-1022%2Fsina.com HTTP/1.1".,
+		only headers are transfered in this request.
+
+2015.10.27
+	About Last-Modified:
+		When a URL is accessed first, server feedback Last-Modified header from the date of file; After that, when it is 
+		accessed later, browser query its modification time in the request.
+		If the resource is not modified since then, server only send back HTTP header with status of 304, not the content
+		of this resource.
+		So, the connection is not needed to be broken after every error responsing in this connection.
+		So, it is needed to do.
+		
+
+2015.10.26
+	About POST method
+		When form data is POSTed by browser, browser parse all data and repack it into HTTP request. 
+		Following is a request example of CgiMd5:
+		"POST /cgi-bin/cgiMd5.exe HTTP/1.1
+			Host: 127.0.0.1
+			Connection: keep-alive
+			Content-Length: 23
+			Cache-Control: max-age=0
+			Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+			Origin: http://127.0.0.1
+			User-Agent: Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36 SE 2.X MetaSr 1.0
+			Content-Type: application/x-www-form-urlencoded
+			Referer: http://127.0.0.1/cgi-bin/cgiMd5.exe
+			Accept-Encoding: gzip,deflate,sdch
+			Accept-Language: zh-CN,zh;q=0.8
+			
+			encode=123abc&action=OK"
+
+	About URL escape encoding and decoding
+		Escape encoding:
+			Alphabetic and numeric character is not escaped;
+			' ' escaped as '+'
+			3 special charaters of "_-." are escaped into "%s+High4 bits in hex coding+Low4 bits in hex coding"
+			
+

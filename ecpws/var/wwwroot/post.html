@@ -1,0 +1,24 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+<HTML>
+<HEAD>
+<TITLE>A document with FORM</TITLE>
+</HEAD>
+<BODY>
+ <FORM action="/cgi-bin/cgiUser.exe" method="post">
+    <P>
+    <LABEL for="firstname">First name: </LABEL>
+    <!-- <INPUT type="text" id="firstname"> id can not be send by browser -->
+              <INPUT type="text" name="firstname"><BR>
+    <LABEL for="lastname">Last name: </LABEL>
+              <INPUT type="text" name="lastname"><BR>
+    <LABEL for="email">email: </LABEL>
+              <INPUT type="text" name="email"><BR>
+    <INPUT type="radio" name="sex" value="Male"> Male<BR>
+    <INPUT type="radio" name="sex" value="Female"> Female<BR>
+    <INPUT type="submit" name="action" value="Send"> <INPUT type="reset">
+    </P>
+ </FORM>
+
+</BODY>
+</HTML>

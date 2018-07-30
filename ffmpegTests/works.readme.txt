@@ -1,0 +1,21 @@
+Input #0, matroska,webm, from 't.mkv':
+  Metadata:
+    ENCODER         : Lavf57.71.100
+  Duration: 00:00:00.69, start: 0.001000, bitrate: 65008 kb/s : from AVFormatContext 
+    Stream #0:0, 48, 1/1000: Video: h264 (High), 1 reference frame, yuv420p(progressive, left), 1280x720, 0/1, 1k fps, 1k tbr, 1k tbn, 2k tbc (default)
+    Metadata:
+      DURATION        : 00:00:00.685000000
+detected 1 logical cores
+[h264 @ 0xa153fd00] nal_unit_type: 7, nal_ref_idc: 3
+[h264 @ 0xa153fd00] nal_unit_type: 8, nal_ref_idc: 3
+[h264 @ 0xa153fd00] nal_unit_type: 7, nal_ref_idc: 3
+[h264 @ 0xa153fd00] nal_unit_type: 8, nal_ref_idc: 3
+[h264 @ 0xa153fd00] nal_unit_type: 5, nal_ref_idc: 3
+
+
+
+./Linux.bin.X86/usr/bin/ffmpeg -i ../vid.h264 -vcodec copy out.mkv
+
+./Linux.bin.X86/usr/bin/ffmpeg -i ../vid.h264 -i ../aud.aac -vcodec copy out.mkv
+
+ffmpeg -i "input.mov" -c:v copy -c:a copy "output.mkv"

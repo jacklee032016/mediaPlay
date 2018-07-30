@@ -1,0 +1,31 @@
+
+						ChangeLog for FFMPEG-3.3 Porting MuxLab Platform
+												May, 3rd, 2017
+
+Aug.,7th, 2017
+		Change libavutil/time.h to libavutils/_time.h, and modify libavutil/time.c to refer to it:
+				It is look as the <time.h> in C library, so some files (such as libavutil/dict.c) can't be built;
+		Remove Makefile.pre in this repository and modify Makefile.post, so it only refer to local files, no possiblity to refer to other directory.
+
+July,4th, 2017
+		Build both shared and static library for ARM platform; only static library is built for X86 platform.
+		Modify Makefile.post.
+
+
+June,5th, 2017
+		Remove all debugging information and build 2 libraries (utils, codec, format) as shared libraries for ARM.
+
+May 8th, 2017
+		Add test program for directory operation;
+		Build for ARM environment.
+		
+May 4th, 2017
+		Change directory name as ffmpeg, and remove all tests code, cpu-dependent directories, preparing for modifiction of source code and build environment for ARM.
+
+May 3nd, 2017
+		Remuxing can output rawenc.c for h264 media stream.
+		Test raw h264 es with esplay on board.
+
+May 2nd, 2017
+		Splitting ffplay into multiple modules
+

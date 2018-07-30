@@ -1,0 +1,41 @@
+
+July 25, 2017
+http://192.168.168.102:9090/file.asf
+redirect to :
+mmsh://192.168.168.102:9090/file.asf
+<Stream file.asf>
+File "/media/sf_mux/m/NorthKoreanParade2.asf"
+Format asf
+#NoAudio
+#Metadata author "Me"
+#Metadata copyright "Super MegaCorp"
+#Metadata title "Test stream from disk"
+#Metadata comment "Test comment"
+</Stream>
+
+
+July 20, 2017
+	When ac3 is in media, RTP can not support it?
+	Play *.h264 file, Client can connect to RTSP and HTTP protocols;
+	
+	
+rtsp://192.168.168.102:9098/file.rm
+http://192.168.168.102:9090/file.rm
+
+Notes:
+	When RTSP protocol, the extension is mpg;
+	When HTTP protocol, the extension is rtsp;
+	
+rtsp://192.168.168.102:9098/test1-rtsp.mpg
+http://192.168.168.102:9090/test1-rtsp.rtsp
+http://192.168.168.102:9098/test1-rtsp.sdp : RTSP/1.1 not support??
+
+rtsp://192.168.56.101:9098/test1-rtsp.mpg
+rtsp://192.168.56.101:9098/test1-rtsp.mpg
+http://192.168.56.102:9090/test1-rtsp.rtsp
+
+Startup server, then using play (from ffmpeg) to access these URLs.
+Problems:
+	No data is received in play;
+	Some media files can not be recongnized by server and abort with unknown media type for their sub-streams.
+	

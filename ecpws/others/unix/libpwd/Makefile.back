@@ -1,0 +1,131 @@
+# Makefile for tinylogin
+#
+
+ARCH=arm
+BUILDTIME := $(shell TZ=UTC date -u "+%Y.%m.%d-%H:%M%z")
+export VERSION
+
+CFLAGS_EXTRA =
+ 
+DOSTATIC = false
+
+DODEBUG = false
+
+# Setting this to `true' will cause tinylogin to directly use the system's
+# shadow password functions.  If you leave this off, tinylogin will use its 
+# own (probably smaller) shadow password functions.
+USE_SYSTEM_SHADOW = true
+
+DODMALLOC = false
+
+DOEFENCE  = false
+
+LIBRARIES = -lcrypt
+
+ifeq ($(ARCH),arm)
+CROSS =arm-linux-
+endif
+
+CC = $(CROSS)gcc
+AR = $(CROSS)ar
+STRIPTOOL = $(CROSS)strip
+
+ARFLAGS = -r
+
+#--------------------------------------------------------
+
+
+# use '-Os' optimization if available, else use -O2
+OPTIMIZATION = $(shell if $(CC) -Os -S -o /dev/null -xc /dev/null >/dev/null 2>&1; \
+    then echo "-Os"; else echo "-O2" ; fi)
+
+WARNINGS = -Wall
+
+ifeq ($(strip $(DODMALLOC)),true)
+    CFLAGS+=-DDMALLOC
+    LIBRARIES+= -ldmalloc
+    DODEBUG = true
+else
+    ifeq ($(strip $(DOEFENCE)),true)
+	LIBRARIES+= -lefence
+	DODEBUG = true
+    endif
+endif
+ifeq ($(strip $(DODEBUG)),true)
+    CFLAGS  += $(WARNINGS) -g -D_GNU_SOURCE
+    LDFLAGS += -Wl,-warn-common 
+    STRIP    =
+else
+    CFLAGS  += $(WARNINGS) $(OPTIMIZATION) -fomit-frame-pointer -D_GNU_SOURCE
+    LDFLAGS += -s -Wl,-warn-common 
+    STRIP    = $(STRIPTOOL) --remove-section=.note --remove-section=.comment $(PROG)
+endif
+ifeq ($(strip $(DODEBUG)),true)
+    LDFLAGS += --static
+endif
+ifeq ($(strip $(DOSTATIC)),true)
+    LDFLAGS += --static
+endif
+ifndef $(PREFIX)
+    PREFIX = `pwd`/_install
+endif
+
+
+TOPDIR:=$(shell /bin/pwd)
+
+ifeq ($(ARCH),arm)
+CFLAGS    += -mbig-endian
+endif
+
+CFLAGS    += -DCONFIG_VER='"$(VERSION)"'
+CFLAGS    += -DCONFIG_BT='"$(BUILDTIME)"'
+CFLAGS    += -I$(TOPDIR) 
+
+PWD_GRP	=# pwd_grp
+PWD_GRP_DIR = $(PWD_GRP)
+PWD_LIB     = libpwd.a
+PWD_CSRC=__getpwent.c pwent.c getpwnam.c getpwuid.c putpwent.c getpw.c \
+	    fgetpwent.c __getgrent.c grent.c getgrnam.c getgrgid.c fgetgrent.c \
+	    initgroups.c setgroups.c
+PWD_OBJS=$(patsubst %.c,$(PWD_GRP)%.o, $(PWD_CSRC))
+
+ifeq ($(strip $(USE_SYSTEM_SHADOW)),true)
+    CFLAGS+=-DUSE_SYSTEM_SHADOW
+endif
+
+# Put user-supplied flags at the end, where they
+# have a chance of winning.
+CFLAGS += $(CFLAGS_EXTRA)
+
+.EXPORT_ALL_VARIABLES:
+PWD_SHARED_LIB=libowd.so
+ 
+all: $(PWD_LIB) $(PWD_SHARED_LIB) 
+
+
+$(PWD_OBJS): %.o: %.c config.h tinylogin.h applets.h Makefile
+#	- mkdir -p $(PWD_GRP)
+	$(CC) $(CFLAGS) -c $< -o $*.o
+
+libpwd.a: $(PWD_OBJS)
+	$(AR) $(ARFLAGS) $@ $^
+
+$(PWD_SHARED_LIB):$(PWD_OBJS)
+	$(CC) -mbig-endian -Wl,-shared $(PWD_OBJS) -olibpwd.so
+ 	
+clean:
+	- rm -f tinylogin tinylogin.links *~ core
+	- find -name \*.o -exec rm -f {} \;
+	- find -name \*.a -exec rm -f {} \;
+	- find -name pod2htm\* -exec rm -f {} \;
+	- rm -rf _install
+	- rm -f rm ./pwd_grp/libpwd.a docs/TinyLogin.txt docs/TinyLogin.1 \
+		docs/TinyLogin.html docs/tinylogin.busybox.net/TinyLogin.html
+
+
+dist release: distclean doc
+	- find -name pod2htm\* -exec rm -f {} \;
+	cd ..;					\
+						\
+	tar -cvzf tinylogin-$(VERSION).tar.gz tinylogin-$(VERSION)/;
+

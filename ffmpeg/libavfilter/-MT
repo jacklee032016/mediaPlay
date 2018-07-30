@@ -1,0 +1,47 @@
+aeval.o: aeval.c /media/sf_mux/ffmpeg-3.3/libavutil/avassert.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/avutil.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/common.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/attributes.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/macros.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/version.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/avconfig.h \
+ /media/sf_mux/ffmpeg-3.3/config.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/intmath.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/x86/intmath.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/mem.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/error.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/internal.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/timer.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/log.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/x86/timer.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/cpu.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/dict.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/pixfmt.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/x86/emms.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/attributes.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/cpu.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/libm.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/intfloat.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/mathematics.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/rational.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/avstring.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/channel_layout.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/eval.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/opt.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/samplefmt.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/parseutils.h avfilter.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/avutil.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/buffer.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/dict.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/frame.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/buffer.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/log.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/samplefmt.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/pixfmt.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/rational.h \
+ /media/sf_mux/ffmpeg-3.3/libavfilter/version.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/version.h audio.h internal.h \
+ /media/sf_mux/ffmpeg-3.3/libavutil/internal.h avfiltergraph.h formats.h \
+ framepool.h framequeue.h thread.h version.h video.h \
+ /media/sf_mux/ffmpeg-3.3/libavcodec/avcodec.h \
+ /media/sf_mux/ffmpeg-3.3/libavcodec/version.h

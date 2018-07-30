@@ -1,0 +1,20 @@
+#
+
+
+include $(RULE_DIR)/Rules.mak
+
+OS		= linux
+
+# 
+TYPE=
+
+C_FLAGS += -O2 -Wall \
+	-I. -I$(ROOT_DIR)/include \
+
+# CXXFLAGS += -Wall 
+
+ifeq ($(ARCH),arm)
+	C_FLAGS += -fPIC 
+else
+endif
+

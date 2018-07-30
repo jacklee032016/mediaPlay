@@ -1,0 +1,236 @@
+
+Input #0, matroska,webm, from '/media/sf_mux/m/4k/HEVC.10bit.60fps.mkv':
+  Metadata:
+    encoder         : 
+libebml v1.3.1 + libmatroska v1.4.2
+    creation_time   : 
+2015-05-07T05:21:48.000000Z
+
+  Duration: 
+01:00:00.00
+, start: 
+0.000000
+, bitrate: 
+13328 kb/s
+
+
+    Stream #0:0
+: Video: hevc (Main 10), yuv420p10le(tv), 3840x2160
+, SAR 1:1 DAR 16:9
+, 
+59.94 fps, 
+59.94 tbr, 
+1k tbn, 
+59.94 tbc
+ (default)
+
+    Metadata:
+      BPS             : 
+12860972
+      BPS-eng         : 
+12860972
+      DURATION        : 
+00:59:59.997000000
+      DURATION-eng    : 
+00:59:59.997000000
+      NUMBER_OF_FRAMES: 
+215784
+      NUMBER_OF_FRAMES-eng: 
+215784
+      NUMBER_OF_BYTES : 
+5787432950
+      NUMBER_OF_BYTES-eng: 
+5787432950
+      _STATISTICS_WRITING_APP: 
+mkvmerge v7.6.0 ('Garden of Dreams') 32bit built on Feb  8 2015 12:51:39
+      _STATISTICS_WRITING_APP-eng: 
+mkvmerge v7.6.0 ('Garden of Dreams') 32bit built on Feb  8 2015 12:51:39
+      _STATISTICS_WRITING_DATE_UTC: 
+2015-05-07 05:21:48
+      _STATISTICS_WRITING_DATE_UTC-eng: 
+2015-05-07 05:21:48
+      _STATISTICS_TAGS: 
+BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+      _STATISTICS_TAGS-eng: 
+BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+
+
+    Stream #0:1
+: Audio: aac (LC), 48000 Hz, 5.1, fltp
+ (default)
+
+    Metadata:
+      BPS             : 
+380625
+      BPS-eng         : 
+380625
+      DURATION        : 
+00:59:59.914000000
+      DURATION-eng    : 
+00:59:59.914000000
+      NUMBER_OF_FRAMES: 
+168746
+      NUMBER_OF_FRAMES-eng: 
+168746
+      NUMBER_OF_BYTES : 
+171277190
+      NUMBER_OF_BYTES-eng: 
+171277190
+      _STATISTICS_WRITING_APP: 
+mkvmerge v7.6.0 ('Garden of Dreams') 32bit built on Feb  8 2015 12:51:39
+      _STATISTICS_WRITING_APP-eng: 
+mkvmerge v7.6.0 ('Garden of Dreams') 32bit built on Feb  8 2015 12:51:39
+      _STATISTICS_WRITING_DATE_UTC: 
+2015-05-07 05:21:48
+      _STATISTICS_WRITING_DATE_UTC-eng: 
+2015-05-07 05:21:48
+      _STATISTICS_TAGS: 
+BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+      _STATISTICS_TAGS-eng: 
+BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+
+
+    Stream #0:2
+(chi)
+: Subtitle: ass
+ (default)
+
+    Metadata:
+      title           : 
+简日
+      BPS             : 
+70
+      BPS-eng         : 
+70
+      DURATION        : 
+00:59:47.370000000
+      DURATION-eng    : 
+00:59:47.370000000
+      NUMBER_OF_FRAMES: 
+403
+      NUMBER_OF_FRAMES-eng: 
+403
+      NUMBER_OF_BYTES : 
+31653
+      NUMBER_OF_BYTES-eng: 
+31653
+      _STATISTICS_WRITING_APP: 
+mkvmerge v7.6.0 ('Garden of Dreams') 32bit built on Feb  8 2015 12:51:39
+      _STATISTICS_WRITING_APP-eng: 
+mkvmerge v7.6.0 ('Garden of Dreams') 32bit built on Feb  8 2015 12:51:39
+      _STATISTICS_WRITING_DATE_UTC: 
+2015-05-07 05:21:48
+      _STATISTICS_WRITING_DATE_UTC-eng: 
+2015-05-07 05:21:48
+      _STATISTICS_TAGS: 
+BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+      _STATISTICS_TAGS-eng: 
+BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+
+
+    Stream #0:3
+(chi)
+: Subtitle: ass
+
+    Metadata:
+      title           : 
+繁日
+      BPS             : 
+70
+      BPS-eng         : 
+70
+      DURATION        : 
+00:59:47.370000000
+      DURATION-eng    : 
+00:59:47.370000000
+      NUMBER_OF_FRAMES: 
+403
+      NUMBER_OF_FRAMES-eng: 
+403
+      NUMBER_OF_BYTES : 
+31653
+      NUMBER_OF_BYTES-eng: 
+31653
+      _STATISTICS_WRITING_APP: 
+mkvmerge v7.6.0 ('Garden of Dreams') 32bit built on Feb  8 2015 12:51:39
+      _STATISTICS_WRITING_APP-eng: 
+mkvmerge v7.6.0 ('Garden of Dreams') 32bit built on Feb  8 2015 12:51:39
+      _STATISTICS_WRITING_DATE_UTC: 
+2015-05-07 05:21:48
+      _STATISTICS_WRITING_DATE_UTC-eng: 
+2015-05-07 05:21:48
+      _STATISTICS_TAGS: 
+BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+      _STATISTICS_TAGS-eng: 
+BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+
+
+    Stream #0:4
+(jpn)
+: Subtitle: ass
+
+    Metadata:
+      title           : 
+日文
+      BPS             : 
+38
+      BPS-eng         : 
+38
+      DURATION        : 
+00:59:47.370000000
+      DURATION-eng    : 
+00:59:47.370000000
+      NUMBER_OF_FRAMES: 
+196
+      NUMBER_OF_FRAMES-eng: 
+196
+      NUMBER_OF_BYTES : 
+17192
+      NUMBER_OF_BYTES-eng: 
+17192
+      _STATISTICS_WRITING_APP: 
+mkvmerge v7.6.0 ('Garden of Dreams') 32bit built on Feb  8 2015 12:51:39
+      _STATISTICS_WRITING_APP-eng: 
+mkvmerge v7.6.0 ('Garden of Dreams') 32bit built on Feb  8 2015 12:51:39
+      _STATISTICS_WRITING_DATE_UTC: 
+2015-05-07 05:21:48
+      _STATISTICS_WRITING_DATE_UTC-eng: 
+2015-05-07 05:21:48
+      _STATISTICS_TAGS: 
+BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+      _STATISTICS_TAGS-eng: 
+BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+
+
+    Stream #0:5
+: Attachment: otf
+    Metadata:
+      filename        : 
+e2d8666075a11f343e4eb44605a81430.ttf
+      mimetype        : 
+application/vnd.ms-opentype
+
+    Stream #0:6
+: Attachment: ttf
+    Metadata:
+      filename        : 
+STXIHEI.TTF
+      mimetype        : 
+application/x-truetype-font
+
+    Stream #0:7
+: Attachment: ttf
+    Metadata:
+      filename        : 
+方正大黑_GBK.ttf
+      mimetype        : 
+application/x-truetype-font
+
+    Stream #0:8
+: Attachment: ttf
+    Metadata:
+      filename        : 
+方正特雅宋_GBK.TTF
+      mimetype        : 
+application/x-truetype-font
+

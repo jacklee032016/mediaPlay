@@ -1,0 +1,73 @@
+					Design and Tests for Protocols
+																		August 30th, 2017						Jack Lee
+
+
+Start RTMP server:
+		/usr/local/nginx/sbin/nginx 
+
+
+HLS:
+	http://192.168.168.102:6080/video.m3u8
+UMC:
+	udp://239.0.0.2:5000
+RTMP:
+	rtmp://192.168.168.102/jackSvr
+HTTP:
+	http://192.168.168.102:9090/video.avi
+	http://192.168.168.102:9090/video.mkv
+
+	http://192.168.168.102:9090/video.ts
+	http://192.168.168.102:9090/video.flv
+RTSP/RTP:
+	rtsp://192.168.168.102:9098/video.rtsp
+	
+
+HLS:
+		In HLS encoder (muxer in ffpmeg):
+				add destination directory of *.m3u8 and *ts
+				
+		For nginx+rtmp server:
+				make nginx run as 'root';
+				HTTP server with 'Location is 'muxServer', and 'root' is '/media/sf_mux'
+
+				Client: http://192.168.168.102:7070/muxServer/video.m3u8
+						VLC, PotPlayer and ffplay;
+
+
+
+
+RTMP:
+		Start RTMP service (nginx+rtmp) with the configuration;
+				service live application of 'live', 'jackSvr', 'show' and 'hls';
+		
+		TX push media to 192.168.168.102:1935/live	
+				VLC client: rtmp://192.168.168.102/live : 1935 is the default port of RTMP, here it is omitted;
+		
+		Client push media to rtmp://192.168.168.102:1935/jackSvr
+				VLC: rtmp://192.168.168.102/jackSvr
+				mmplay rtmp://192.168.168.102/jackSvr
+				potPlayer rtmp://192.168.168.102/jackSvr
+		
+	
+	Note:
+			After server restart, the RTMP client can connect and play again automatically.			
+
+
+UDP multicast :
+
+	Tests with ffmpeg:
+		service:
+			ffmpeg -i iMPACT.mkv -c copy -f mpegts udp://239.0.0.1:12345
+		Client:
+			ffmplay udp://239.0.0.1:12345: success!
+			HiPlayer udp://239.0.0.1:12345: play ok, but end quickly.
+
+	Media Server:
+			With multicast UDP implemented by my C code
+			
+			
+			With multicast UDP implemented by ff_udp_protocol:
+
+	
+	Note:
+			After server restart, the UDP MC client can connect and play again automatically.			

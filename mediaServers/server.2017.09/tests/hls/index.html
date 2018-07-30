@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=640px" />
+<title>Hello, Player!</title>
+<link href="./style.css" rel="stylesheet">
+<script>
+    window.onload = function() {
+        var video = document.getElementById('video');
+        if (!( video.canPlayType('video/x-matroska') || video.canPlayType('video/mp2t') || video.canPlayType('application/x-mpegurl'))) {
+            alert("Can't player Matroska(.mkv), MPEG2-TS (.ts) or HLS strean.\nTry other browsers.");
+        }
+    }
+</script>
+</head>
+<body>
+<video id="video" width="640" height="480" controls poster="/thumb.jpg">
+    <source src="stream.mkv">
+    <source src="stream.ts">
+    <source src="stream.m3u8">
+</video>
+</body>
+</html>

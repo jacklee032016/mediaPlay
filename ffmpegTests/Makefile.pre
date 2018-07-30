@@ -1,0 +1,26 @@
+#
+# $Id$
+
+
+include $(ROOT_DIR)/Rules.mak
+
+OS		= linux
+
+# 
+TYPE=
+
+ifeq ($(EDITION),release)
+	C_FLAGS += -D__SNX_RELEASE__
+endif 
+
+C_FLAGS += -O2 -Wall \
+	-I$(ROOT_DIR)/include \
+
+# -I.  this flags can't be used, because libutil/time.h
+# CXXFLAGS += -Wall 
+
+ifeq ($(ARCH),arm)
+	C_FLAGS += -fPIC 
+else
+endif
+

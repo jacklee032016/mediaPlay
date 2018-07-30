@@ -1,0 +1,36 @@
+
+					CGI for ECPWS(Embedded Cross-Platform Web Server)
+   									   				Lizhijiie 2015.10.23
+2015.10.31
+	Working directory of ECPWS and CGI server_root in configuration, eg. www_root.
+	Because ecpws server is chroot to this directory for service static content.
+	
+	other/multiple.html-->cgi-bin/cgiMultiple.exe: display multiple selection of checkbox buttons;
+	
+
+2015.10.30
+	Notes:
+		ecpws log output can not route to console(std out); because stdout
+		is the stdin of CGI program.
+		So if it is routed to console, CGI is blocked to read data from ecpws.
+		
+	Bugs:
+		When post data to cgiHtmlEntities.exe, ecpws complaints about
+		"C Run-Time Error R6002: floating-point support not loaded", and 
+		no content is rxed in socket.
+	
+	CGI tests:
+		set environment variables;
+		add post data in a text file;
+		run cgi executable in command line with test file as stdin;
+		such as following:
+				set REQUEST_METHOD=POST
+				set	CONTENT_LENGTH=23
+				WIN7_DEBUG\cgiMd5.exe < ecpws-temp.2XG
+		Notes: 
+				Test CGI program in other Windows but the windows runs web server 
+				in order to avoid the environment has effect on server.
+		
+2015.10.24
+	Add CGI support, but only run once.
+

@@ -1,0 +1,19 @@
+1 boa
+
+2007.01.24
+        增加video服务，以用于Video监控：video服务的alias指向/var/data/share/camera
+        解决多个server日志文件的错误
+
+2006.12.21
+        删除libboa_pwd对libpthread的依赖，以适应FLASH文件系统空间的限制
+
+2004.10.24
+	Makefile
+	src/Makefile
+	src/libpwd/Makefile
+	releases_dir.tar.gz : default user/group is /root
+	add WorkLog.txt to CVS repository
+	boa/src/my_passwd.h : comment trace for debug
+	restore 'releases' directory into CVS repository
+	
+

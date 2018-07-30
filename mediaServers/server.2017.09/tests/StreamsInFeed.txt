@@ -1,0 +1,185 @@
+Input #0, matroska,webm, from '/media/sf_mux/m/testService/We.Bare.Bears.S03E08.Ralph.720p.WEB-DL.AAC2.0.H264-TVSmash.mkv':
+
+  Metadata:
+    encoder         : 
+libebml v1.3.4 + libmatroska v1.4.5
+    creation_time   : 
+2017-04-18T01:44:23.000000Z
+    Encoded/Released by: 
+h@BTN/HDB
+    Group           : 
+TVSmash
+
+  Duration: 
+00:11:22.73
+, start: 
+0.000000
+, bitrate: 
+4977 kb/s
+
+    Stream #0:0
+(eng)
+: Video: h264 (High), yuv420p(tv, bt709, progressive), 1280x720 [SAR 1:1 DAR 16:9]
+, 
+23.98 fps, 
+23.98 tbr, 
+1k tbn, 
+2k tbc
+ (default)
+
+    Metadata:
+      BPS             : 
+4823711
+      BPS-eng         : 
+4823711
+      DURATION        : 
+00:11:22.682000000
+      DURATION-eng    : 
+00:11:22.682000000
+      NUMBER_OF_FRAMES: 
+16368
+      NUMBER_OF_FRAMES-eng: 
+16368
+      NUMBER_OF_BYTES : 
+411632637
+      NUMBER_OF_BYTES-eng: 
+411632637
+      _STATISTICS_WRITING_APP: 
+mkvmerge v10.0.0 ('To Drown In You') 64bit
+      _STATISTICS_WRITING_APP-eng: 
+mkvmerge v10.0.0 ('To Drown In You') 64bit
+      _STATISTICS_WRITING_DATE_UTC: 
+2017-04-18 01:44:23
+      _STATISTICS_WRITING_DATE_UTC-eng: 
+2017-04-18 01:44:23
+      _STATISTICS_TAGS: 
+BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+      _STATISTICS_TAGS-eng: 
+BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+
+
+    Stream #0:1
+(eng)
+: Audio: aac (LC), 48000 Hz, stereo, fltp
+ (default)
+
+    Metadata:
+      BPS             : 
+151123
+      BPS-eng         : 
+151123
+      DURATION        : 
+00:11:22.730000000
+      DURATION-eng    : 
+00:11:22.730000000
+      NUMBER_OF_FRAMES: 
+32003
+      NUMBER_OF_FRAMES-eng: 
+32003
+      NUMBER_OF_BYTES : 
+12897110
+      NUMBER_OF_BYTES-eng: 
+12897110
+      _STATISTICS_WRITING_APP: 
+mkvmerge v10.0.0 ('To Drown In You') 64bit
+      _STATISTICS_WRITING_APP-eng: 
+mkvmerge v10.0.0 ('To Drown In You') 64bit
+      _STATISTICS_WRITING_DATE_UTC: 
+2017-04-18 01:44:23
+      _STATISTICS_WRITING_DATE_UTC-eng: 
+2017-04-18 01:44:23
+      _STATISTICS_TAGS: 
+BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+      _STATISTICS_TAGS-eng: 
+BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+
+
+    Stream #0:2
+(eng)
+: Subtitle: subrip
+
+    Metadata:
+      BPS             : 
+106
+      BPS-eng         : 
+106
+      DURATION        : 
+00:11:17.563000000
+      DURATION-eng    : 
+00:11:17.563000000
+      NUMBER_OF_FRAMES: 
+313
+      NUMBER_OF_FRAMES-eng: 
+313
+      NUMBER_OF_BYTES : 
+9053
+      NUMBER_OF_BYTES-eng: 
+9053
+      _STATISTICS_WRITING_APP: 
+mkvmerge v10.0.0 ('To Drown In You') 64bit
+      _STATISTICS_WRITING_APP-eng: 
+mkvmerge v10.0.0 ('To Drown In You') 64bit
+      _STATISTICS_WRITING_DATE_UTC: 
+2017-04-18 01:44:23
+      _STATISTICS_WRITING_DATE_UTC-eng: 
+2017-04-18 01:44:23
+      _STATISTICS_TAGS: 
+BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+      _STATISTICS_TAGS-eng: 
+BPS DURATION NUMBER_OF_FRAMES NUMBER_OF_BYTES
+
+
+    Stream #0:3
+: Video: mjpeg, yuvj444p(pc, bt470bg/unknown/unknown), 120x176
+, 
+90k tbr, 
+90k tbn, 
+90k tbc
+
+    Metadata:
+      filename        : 
+small_cover.jpg
+      mimetype        : 
+image/jpeg
+
+    Stream #0:4
+: Video: mjpeg, yuvj444p(pc, bt470bg/unknown/unknown), 600x882
+, 
+90k tbr, 
+90k tbn, 
+90k tbc
+
+    Metadata:
+      filename        : 
+cover.jpg
+      mimetype        : 
+image/jpeg
+
+
+    Stream #0:5
+: Video: mjpeg, yuvj444p(pc, bt470bg/unknown/unknown), 1067x600
+, 
+90k tbr, 
+90k tbn, 
+90k tbc
+
+    Metadata:
+      filename        : 
+cover_land.jpg
+      mimetype        : 
+image/jpeg
+
+    Stream #0:6
+: Video: mjpeg, yuvj444p(pc, bt470bg/unknown/unknown), 213x120
+, 
+90k tbr, 
+90k tbn, 
+90k tbc
+
+    Metadata:
+      filename        : 
+small_cover_land.jpg
+
+      mimetype        : 
+image/jpeg
+

@@ -1,0 +1,73 @@
+# $Author: lizhijie $
+# $Revision: 1.1.1.1 $
+# $Log: Makefile.back,v $
+# Revision 1.1.1.1  2006/11/29 17:51:53  lizhijie
+# CommonProgram Boa
+#
+# Revision 1.1.1.1  2006/07/10 08:53:53  lizhijie
+# rebuild BOA
+#
+# Revision 1.5  2005/04/30 09:14:21  xixudong
+# ±‡“ÎπÊ∑∂ªØ
+#
+# Revision 1.4  2005/01/27 07:50:14  lizhijie
+# restore the default build target is i686
+#
+# Revision 1.3  2005/01/13 05:42:32  tangr
+# revised not to remove DIR release but to delete excutives only
+#
+# Revision 1.2  2004/10/28 11:39:03  lizhijie
+# remove pre-releases.tar support
+#
+# Revision 1.1.1.1  2004/10/26 07:04:42  lizhijie
+# re-import boa into repository
+#
+# Revision 1.3  2004/10/26 06:53:57  lizhijie
+# *** empty log message ***
+#
+# Revision 1.2  2004/10/23 05:40:11  lizhijie
+# add 'make install' target for release
+#
+# $Id: Makefile.back,v 1.1.1.1 2006/11/29 17:51:53 lizhijie Exp $
+
+# for release 
+BUILDTIME := $(shell TZ=UTC date -u "+%Y_%m_%d-%H_%M")
+ASSIST_RELEASES_NAME=assist_boa_$(BUILDTIME).tar 
+ARCH=#arm
+
+MAKE=make
+
+.PHONY: clean mrclean distclean boa docs
+
+all:	boa
+
+boa:
+ifeq ($(ARCH),arm)
+	(cd src && $(MAKE) $(MFLAGS) ARCH=arm)
+else
+	(cd src && $(MAKE) $(MFLAGS))	
+endif
+
+docs:
+	(cd docs && $(MAKE) $(MFLAGS))
+
+clean:
+	(cd src && $(MAKE) $(MFLAGS) clean);\
+#	if test -d releases; then rm -r -f releases;fi
+#	-(cd docs && $(MAKE) clean)
+	
+distclean:	mrclean
+
+mrclean:	clean
+	-(cd src && $(MAKE) $(MFLAGS) mrclean)
+#	-(cd docs && $(MAKE)$(MFLAGS) mrclean)
+#	rm -f config.status config.cache config.h config.log 
+	rm -f Makefile *~
+
+# dummy target for install
+install:
+	- find releases -name \CVS -exec rm -r -f {} \;
+#	tar xvzf release_dir.tar.gz
+	make -C src install
+	tar cvf $(ASSIST_RELEASES_NAME) -C releases etc  tmp usr var
+	mv $(ASSIST_RELEASES_NAME)  $(ASSIST_IXP_RELEASES_HOME)
