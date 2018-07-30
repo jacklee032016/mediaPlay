@@ -28,6 +28,7 @@ mediaPlayer
 
 1. shared library;
 2. web server: 
+
   #. for CGI/static web pages,
   #. for HTTP/HLS(dynamic ts files);
 3. record: 
