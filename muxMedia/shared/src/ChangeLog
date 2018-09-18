@@ -1,0 +1,97 @@
+# $Revision: 1.1.1.1 $
+# $Id: ChangeLog,v 1.1.1.1 2006/11/29 08:35:30 lizhijie Exp $
+#
+	ChangeLog for source code of shared library 
+				Li Zhijie, 2005.05.26
+
+ChangeLog for shared_lib
+
+2005.16.17
+	增加 /shared_lib/libs/src/readme 文件	
+		
+2005.06.17
+	解决看门狗定时不准确的BUG问题，增加看门狗的测试程序 test_beep(也可以测试蜂鸣)
+2005.06.15
+	增加用户库中对蜂鸣器的设置功能，参考aslib.h和as_beep.c,可以编译生成测试文件test_beep
+2005.06.07
+	增加用户库中对WatchDog的设置功能，参考aslib.h和as_watchdog.c
+
+2005.06.03
+	修改as_uart.c中，读写串口超时后的判断条件
+	
+2005.05.27
+	建立基本的目录结构，并上载CVS
+
+2005.12.30	tangr
+	bugfix：更正了一处导致uartd退出的错误
+	文件列表：
+		src/pbx/as_pbx_cmd.c
+
+2005.11.30 wangwei
+	增加对EEPROM(93LC66)的读写程序
+		src/m93lc66 增加 as_93lc66.c
+		src/test  增加 test_read_93lc66.c
+		src/test  增加 test_write_93lc66.c
+	编译条件：
+		可选择编译93LC66相关的共享库程序和测试程序
+		WITH_93LC66=yes (默认条件)
+		WITH_93LC66=no
+2005.10.14 wangwei
+	增加MAC address of LAN这个数据结构存入FLASH中
+2005.09.28 wangwei
+	增加一个对FLASH进行读取的数据结构和接口函数
+	注： 在对FLASH进行写操作之前要先对FLASH进行读操作，以便保留已经存在的数据信息
+		src/flash 增加 as_flash.c
+		src/test  增加 test_flash.c
+2005.09.16 wangwei
+	增加对序列号的读写编程接口文件修改：
+		src/Makefile 添加as_serialno.c的编译
+		src/pbx/as_serialno.c  读写422设备的序列号
+
+2005.09.08 tangr
+	更新bin库，增加设备button的编程接口
+
+2005.09.07 wangwei
+	增加设备button的编程接口，文件修改列表：
+		src/Makefile 添加as_button.c的编译
+		src/pbx/as_button.c 添加读BUTTON函数，通过返回值判断是否需要恢复配置到出厂状态
+	
+2005.08.30	wuaiwu
+修改
+	* aslib.h 增加LCD接口函数声明
+
+新增
+	* libs/include/as_lcd.h ; libs/src/lcd.as_lcd.c LCD接口函数的实现
+
+
+2005.08.18	tangr
+	更新libs/bin的发布库
+
+2005.08.02	wuaiwu
+	libs/include/aslib.h 增加syslog的接口声明
+	libs/include/as_utils.h 增加新文件，syslog的数据结构和实现函数声明
+	libs/src/utils/as_utils.c 增加syslog的实现
+	/libs/src/test/test_utils 增加新文件，syslog的测试程序
+	/libs/Makefile.pre,Makefile.post 修改结构，使测试代码与库文件代码分开编译
+	/libs/src/Makefile  增加对test文件夹下代码的编译 
+	
+
+2005.07.22		tangr
+	libs/Makefile.pre 修改编译依赖的头文件路径，从原来放在模块外的路径移到shared_lib里
+
+2005.07.18		tangr
+	增加录音接口后更新发布库文件
+	更新Makefile.post，去掉静态库
+
+Revision 1.1  2005/06/21 01:40:45  lijie
+Makefile.post <--  内容修改
+new revision: 1.3; previous revision: 1.2
+include/as_pbx_cmd.h <--  数据定义转移到as_msg_queue.h
+new revision: 1.2; previous revision: 1.1
+include/aslib.h,v  <--  共享库对外接口定义
+new revision: 1.4; previous revision: 1.3
+src/Makefile,v  <--  追加编译内容
+new revision: 1.4; previous revision: 1.3
+src/pbx/as_pbx_cmd.c,v  <--  内容须改
+new revision: 1.2; previous revision: 1.1
+src/uart/as_uart.c,v  <--  串口设置bug修正

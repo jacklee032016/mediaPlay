@@ -1,0 +1,147 @@
+[
+    {
+      "comment": "Commands for sys admin of muxMedia",
+      "targ": "11:11:11:11:11:11",
+      "cmd": "sys_admin",
+      "login_ack": "root",
+      "pwd_msg": "123",
+      "data": 
+      [
+      	{
+      		"action": "threads",
+      		"objects": "None"
+      	}
+      ]
+    },
+    {
+      "comment": "Commands for RECORDER controlling",
+      "targ": "11:11:11:11:11:11",
+      "cmd": "record_media",
+      "login_ack": "root",
+      "pwd_msg": "123",
+      "data": 
+      [
+      	{
+      		"action": "record",
+      		"objects": ["first"]
+      	}
+      ]
+    },
+    {
+      "comment": "Commands for SERVER controlling",
+      "targ": "11:11:11:11:11:11",
+      "cmd": "server_media",
+      "login_ack": "root",
+      "pwd_msg": "123",
+      "data": 
+      [
+      	{
+      		"action": "feeds",
+      		"objects": ["first"]
+      	}
+      ]
+    },
+    {
+      "comment": "Commands for WEB service",
+      "targ": "11:11:11:11:11:11",
+      "cmd": "web_media",
+      "login_ack": "root",
+      "pwd_msg": "123",
+      "data": 
+      [
+      	{
+      		"action": "files",
+      		"objects": ["first"]
+      	}
+      ]
+    },
+    {
+      "comment": "Set playfile from controller",
+      "targ": "11:11:11:11:11:11",
+      "cmd": "get_media",
+      "login_ack": "root",
+      "pwd_msg": "123",
+      "data": 
+      [
+      	{
+      		"action": "files",
+      		"objects": ["first"]
+      	}
+      ]
+    },
+    {
+      "comment": "Set playfile from controller",
+      "targ": "11:11:11:11:11:11",
+      "cmd": "set_media",
+      "login_ack": "root",
+      "pwd_msg": "123",
+      "data": 
+      [
+      	{
+      		"action": "fileDelete",
+      		"objects":["/media/usb/1.avi","/media/sd/2.avi"]
+      	}
+      ]
+    },
+    {
+      "comment": "Play one local media file or playlist",
+      "targ": "11:11:11:11:11:11",
+      "cmd": "play_media",
+      "login_ack": "root",
+      "pwd_msg": "123",
+      "data": 
+      [
+      	{
+      		"action": "mediaPlay",
+      		"objects": ["first"]
+      	}
+      ]
+    },
+    {
+      "comment": "get paramaters from RX/TX",
+      "targ": "11:11:11:11:11:11",
+      "cmd": "get_param",
+      "login_ack": "root",
+      "pwd_msg": "123",
+      "data": 
+      [
+      	{
+      		 "pName"	: "AV Over IP H.264 H.265",
+      		  "model" : "RX-500762"
+      	}
+      ]
+    },
+    {
+      "comment": "Send data through RS232",
+      "targ": "11:11:11:11:11:11",
+      "cmd": "send_data_rs232",
+      "login_ack": "root",
+      "pwd_msg": "123",
+      "data": 
+      [
+      	{
+      		"hexdata":"A055B1FF",
+      		"isFeedback":1,
+      		"waitTime":1000
+      	}
+      ]
+    },
+    {
+      "comment": "Send data through IR interface",
+      "targ": "11:11:11:11:11:11",
+      "cmd": "send_data_ir",
+      "login_ack": "root",
+      "pwd_msg": "123",
+      "data": 
+      [
+      	{
+      		"hexdata":"A055B1FF",
+      		"isFeedback":1,
+      		"waitTime":1000,
+      		"feedbackdata":"A055B1FF"
+      	}
+      ]
+    }
+]
+
+      

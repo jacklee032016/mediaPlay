@@ -1,0 +1,15 @@
+					TEST 
+					
+FTP download:
+		Start FTP server:
+				systemctl start vsftpd
+				systemctl status vsftpd
+
+		check file server:
+				root directory: /var/ftp
+				path: /pub
+
+download API client:
+		./Linux.bin.X86/usr/bin/apiClient -c download -o media=download.mp4,server=192.168.168.102,user=anonymous,password=lzj320@123.com,path=/pub
+		
+		

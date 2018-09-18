@@ -1,0 +1,17 @@
+{
+	global:
+			cmnMediaInit;
+			cmnMediaInitAvStream;
+			cmnMediaCreateDescribersForPlayer;
+			cmnMediaCreateDescriberFromStream;
+			cmnMediaCaptureWrite;
+			cmnMediaCapturerSendNotify;
+			cmnMediaScanGetFiles;
+			cmnMediaCheckLocalFile;
+			cmnMediaCheckCheckImageFile;
+			cmnMediaCheckSDCardFile;
+			cmnMediaRemountSDCard;
+
+	local:
+		*;
+};

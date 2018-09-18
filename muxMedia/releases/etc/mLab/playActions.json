@@ -1,0 +1,348 @@
+[
+      	{
+		      "comment": "Play one local media file, playlist or URL",
+      		"action": "play",
+      		"objects": 
+      		[
+      			{
+      				"window": 1,
+      				"media" : "firstPlayList"
+      			}
+      		]
+      	},
+      	{
+		      "comment": "Stop playing of one window, then black the screen",
+      		"action": "stop",
+      		"objects": 
+      		[
+      			{"window": 1}
+      		]
+      	},
+      	{
+		      "comment": "pause playing of one window, eg current frame displays on screen",
+      		"action": "pause",
+      		"objects": 
+      		[
+      			{"window": 1}
+      		]
+      	},
+      	{
+		      "comment": "resume playing of one window which has been paused",
+      		"action": "resume",
+      		"objects": 
+      		[
+      			{"window": 1}
+      		]
+      	},
+
+      	{
+		      "comment": "forward playing of one window",
+      		"action": "forward",
+      		"objects": 
+      		[
+      			{"window": 1}
+      		]
+      	},
+      	{
+		      "comment": "backward playing of one window",
+      		"action": "backward",
+      		"objects": 
+      		[
+      			{"window": 1}
+      		]
+      	},
+       	{
+		      "comment": "Info about one player in one window",
+      		"action": "playerInfo",
+      		"objects": 
+      		[
+      			{"window": 0}
+      		]
+      	},
+      	{
+		      "comment": "Info about the media playing in one window",
+      		"action": "mediaInfo",
+      		"objects": 
+      		[
+      			{"window": 0}
+      		]
+      	},
+      	{
+		      "comment": "Meta data of the media playing in one window",
+      		"action": "metaData",
+      		"objects": 
+      		[
+      			{"window": 0}
+      		]
+      	},
+      	
+    	
+      	{
+		      "comment": "swap main window(index is 0) and another window",
+      		"action": "swapWindow",
+      		"objects": 
+      		[
+      			{"window": 1}
+      		]
+      	},
+
+      	{
+		      "comment": "rotate one window in x90'",
+      		"action": "rotateWindow",
+      		"objects": 
+      		[
+      			{"window": 1}
+      		]
+      	},
+      	
+      	{
+		      "comment": "locate one window in position",
+      		"action": "locateWindow",
+      		"objects": 
+      		[
+      			{
+      				"window": 1,
+      				"left":	200,
+      				"top": 20,
+      				"width": 300,
+      				"height": 300
+      			}
+      		]
+      	},
+
+     	{
+		      "comment": "set display mode/aspect of one window",
+      		"action": "aspect",
+      		"objects": 
+      		[
+      			{
+      				"window": 1,
+      				"mode": 1
+      			}
+      		]
+      	},
+
+     	  {
+		      "comment": "set subtitle file of main window. Subtitle only service for main window",
+      		"action": "subtitle", 
+      		"objects": 
+      		[
+      			{
+      				"media": "/media/usb/subtitle.srt"
+      			}
+      		]
+      	},
+       	{
+		      "comment": "alert message in OSD",
+      		"action": "alert",
+      		"objects": 
+      		[
+      			{
+      				"fontcolor": 16711680,
+      				"message": "This is alert message displaying on OSD"
+      			}
+      		]
+      	},
+     	
+      	{
+		      "comment": "set icon of logo OSD. Icon image is .gif, .jpg, .png and .bmp format",
+      		"action": "logo",
+      		"objects": 
+      		[
+      			{
+      				"media": "/etc/muxLab.png"
+      			}
+      		]
+      	},
+      	{
+		      "comment": "toggle enable/disable of one OSD",
+      		"action": "osdEnable",
+      		"objects": 
+      		[
+      			{
+      				"osd": 0
+      			}
+      		]
+      	},
+
+
+      	{
+		      "comment": "set background of one OSD",
+      		"action": "osdBackground",
+      		"objects": 
+      		[
+      			{
+      				"osd": 0,
+      				"background": 122233
+      			}
+      		]
+      	},
+
+      	{
+		      "comment": "set transparency of one OSD",
+      		"action": "osdTransparency",
+      		"objects": 
+      		[
+      			{
+      				"osd": 0,
+      				"transparency": 12
+      			}
+      		]
+      	},
+
+      	{
+		      "comment": "set font size of one OSD",
+      		"action": "osdFontSize",
+      		"objects": 
+      		[
+      			{
+      				"osd": 0,
+      				"fontsize": 36
+      			}
+      		]
+      	},
+      	{
+		      "comment": "set font color of one OSD",
+      		"action": "osdFontColor",
+      		"objects": 
+      		[
+      			{
+      				"osd": 0,
+      				"fontcolor":12122323
+      			}
+      		]
+      	},
+
+      	{
+		      "comment": "locate one OSD to new position or/and size. either (left, top) or (width, height) can be only defined",
+      		"action": "osdPosition",
+      		"objects": 
+      		[
+      			{
+      				"osd": 0,
+      				"left":	200,
+      				"top": 20,
+      				"width": 300,
+      				"height": 300
+      			}
+      		]
+      	},
+      	{
+		      "comment": "Retrieve details about one OSD",
+      		"action": "osdInfo",
+      		"objects": 
+      		[
+      			{
+      				"osd": 0
+      			}
+      		]
+      	},
+
+      	
+      	{
+		      "comment": "increase volume of one window",
+      		"action": "vol+",
+      		"objects": 
+      		[
+      			{"window": 0}
+      		]
+      	},
+      	{
+		      "comment": "decrease volume of one window",
+      		"action": "vol-",
+      		"objects": 
+      		[
+      			{"window": 0}
+      		]
+      	},
+      	
+      	{
+		      "comment": "toggle audio of one window",
+      		"action": "mute",
+      		"objects": 
+      		[
+      			{"window": 0}
+      		]
+      	},
+
+      	{
+		      "comment": "explicitly set audio to enable(YES)/disable(NO) of one window",
+      		"action": "audio",
+      		"objects": 
+      		[
+      			{
+      				"window": 0,
+      				"media": "YES"
+      			}
+      		]
+      	},
+
+      	{
+		      "comment": "mute all windows, eg. sound card",
+      		"action": "muteAll",
+      		"objects": [{}]
+      	},
+
+       	{
+		      "comment": "CEC Command: Stand By",
+      		"action": "cecStandby",
+      		"objects": [{}]
+      	},
+       	{
+		      "comment": "CEC Command: Image View On",
+      		"action": "cecImageOn",
+      		"objects": [{}]
+      	},
+       	{
+		      "comment": "CEC Command: Volume Up",
+      		"action": "cecVolumeUp",
+      		"objects": [{}]
+      	},
+       	{
+		      "comment": "CEC Command: Volume Down",
+      		"action": "cecVolumeDown",
+      		"objects": [{}]
+      	},
+       	{
+		      "comment": "CEC Command: Mute",
+      		"action": "cecMute",
+      		"objects": [{}]
+      	},
+       	{
+		      "comment": "CEC Command: retrive TV Info",
+      		"action": "cecInfo",
+      		"objects": [{}]
+      	},
+
+
+       	{
+		      "comment": "Change resolution of TV on-fly",
+      		"action": "resolution",
+      		"objects": 
+      		[
+      			{
+      				"resolution": "1080P_60"
+      			}
+      		]
+      	},
+       	{
+		      "comment": "Change color depth of TV on-fly, color 0(8bits),1(10bits), 2(12bits)",
+      		"action": "color",
+      		"objects": 
+      		[
+      			{
+      				"color": 0
+      			}
+      		]
+      	},
+
+
+       	{
+		      "comment": "player will exit for reboot",
+      		"action": "quit",
+      		"objects": [{}]
+      	}
+
+       	
+      	
+ ]

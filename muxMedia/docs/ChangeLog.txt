@@ -1,0 +1,609 @@
+									ChangeLog of MuxMedia
+																		Nov, 2017						Jack Lee
+
+Aug,17, 2018
+	Modified Secure chip validating code: cmnMuxDs.c;
+
+Feb.26th, 2018
+
+	Modification of 2 configuration items in /etc/mLab/muxPlayer.conf
+			VideoFormat				Auto|4090X2160_60|3840X2160P_30
+						'Auto': selecting the optmized resolution based on EDID; otherwise using format defined here, such as '4090X2160_60';
+			DeepColor					100|0|1|2
+						'0': 8bits(24bits)
+						'1': 10bits(30bits)
+						'2': 12bits(36bits)
+
+	Adding 2 APIs for configuring resolution and deep color on-fly:
+		API of resolution:
+			command line : 'apiClient -c resolution -o resolution=4090X2160_60'
+			JSON messages:
+				request
+				{
+					"comment":	"Play one local media file or playlist",
+					"targ":	"11:11:11:11:11:11",
+					"cmd":	"play_media",
+					"login_ack":	"root",
+					"pwd_msg":	"123",
+					"data":	[{
+							"comment":	"Change resolution of TV on-fly",
+							"action":	"resolution",
+							"objects":	[{
+										"resolution":	"4090X2160_60"
+							}]
+					}]
+			}'
+			
+			reply:
+			'{
+					"comment":	"Play one local media file or playlist",
+					"targ":	"11:11:11:11:11:11",
+					"cmd":	"play_media",
+					"login_ack":	"OK",
+					"pwd_msg":	"OK",
+					"data":	[{
+							"comment":	"Change resolution of TV on-fly",
+							"action":	"resolution",
+							"objects":	[{
+											"resolution":	"4090X2160_60"
+							}],
+							"status":	200
+					}]
+			}'
+
+		API of deep color:
+			command line : 'apiClient -c color -o color=2'
+			JSON messages:
+			request
+			'{
+					"comment":	"Play one local media file or playlist",
+					"targ":	"11:11:11:11:11:11",
+					"cmd":	"play_media",
+					"login_ack":	"root",
+					"pwd_msg":	"123",
+					"data":	[{
+							"comment":	"Change color depth of TV on-fly, color 0(8bits),1(10bits), 2(12bits)",
+							"action":	"color",
+							"objects":	[{
+											"color":	2
+							}]
+					}]
+		}'
+		reply:
+		'{
+					"comment":	"Play one local media file or playlist",
+					"targ":	"11:11:11:11:11:11",
+					"cmd":	"play_media",
+					"login_ack":	"OK",
+					"pwd_msg":	"OK",
+					"data":	[{
+								"comment":	"Change color depth of TV on-fly, color 0(8bits),1(10bits), 2(12bits)",
+								"action":	"color",
+								"objects":	[{
+												"color":	2
+								}],
+								"status":	200
+					}]
+		}'
+
+			Notes:
+				After player startup, resolution and deep color can be changed with these 2 commands no matter when configuration it is;
+				The resolution can be used in command of 'resolution' shows as following:
+							{/* 0*/
+								.type = HI_UNF_ENC_FMT_1080P_60,
+								.name = "1080P_60",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_1080P_50,
+								.name = "1080P_50", /**<1080p 50 Hz*/
+							},
+							{
+								.type = HI_UNF_ENC_FMT_1080P_30,
+								.name = "1080P_30",/**<1080p 30 Hz*/
+							},
+							{
+								.type = HI_UNF_ENC_FMT_1080P_25,
+								.name = "1080P_25",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_1080P_24,
+								.name = "1080P_24",
+							},
+							{/* 5*/
+								.type = HI_UNF_ENC_FMT_1080i_60,
+								.name = "1080i_60",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_1080i_50,
+								.name = "1080i_50",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_720P_60,
+								.name = "720P_60",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_720P_50,
+								.name = "720P_50",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_576P_50,
+								.name = "576P_50",
+							},
+							{/* 10 */
+								.type = HI_UNF_ENC_FMT_480P_60,
+								.name = "480P_60",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_PAL,
+								.name = "PAL",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_PAL_N,
+								.name = "PAL_N",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_PAL_Nc,
+								.name = "PAL_Nc",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_NTSC,
+								.name = "NTSC",
+							},
+							{/* 15 */
+								.type = HI_UNF_ENC_FMT_NTSC_J,
+								.name = "NTSC_J",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_NTSC_PAL_M,
+								.name = "NTSC_PAL_M",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_SECAM_SIN,
+								.name = "SECAM_SIN",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_SECAM_COS,
+								.name = "SECAM_COS",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_1080P_24_FRAME_PACKING,
+								.name = "1080P_24_FP",
+							},
+							{/* 20 */
+								.type = HI_UNF_ENC_FMT_720P_60_FRAME_PACKING,
+								.name = "720P_60_FP",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_720P_50_FRAME_PACKING,
+								.name = "720P_50_FP",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_861D_640X480_60,
+								.name = "861D_640X480_60",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_VESA_800X600_60,
+								.name = "VESA_800X600_60",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_VESA_1024X768_60,
+								.name = "VESA_1024X768_60",
+							},
+							{/* 25 */
+								.type = HI_UNF_ENC_FMT_VESA_1280X720_60,
+								.name = "VESA_1280X720_60",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_VESA_1280X800_60,
+								.name = "VESA_1280X800_60",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_VESA_1280X1024_60,
+								.name = "VESA_1280X1024_60",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_VESA_1360X768_60,
+								.name = "VESA_1360X768_60",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_VESA_1366X768_60,
+								.name = "VESA_1366X768_60",
+							},
+							{/* 30 */
+								.type = HI_UNF_ENC_FMT_VESA_1400X1050_60,
+								.name = "VESA_1400X1050_60",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_VESA_1440X900_60,
+								.name = "VESA_1440X900_60",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_VESA_1440X900_60_RB,
+								.name = "VESA_1440X900_60_RB",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_VESA_1600X900_60_RB,
+								.name = "VESA_1600X900_60_RB",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_VESA_1600X1200_60,
+								.name = "VESA_1600X1200_60",
+							},
+							{/* 35 */
+								.type = HI_UNF_ENC_FMT_VESA_1680X1050_60,
+								.name = "VESA_1680X1050_60",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_VESA_1680X1050_60_RB,
+								.name = "VESA_1680X1050_60_RB",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_VESA_1920X1080_60,
+								.name = "VESA_1920X1080_60",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_VESA_1920X1200_60,
+								.name = "VESA_1920X1200_60",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_VESA_1920X1440_60,
+								.name = "VESA_1920X1440_60",
+							},
+							{/* 40 */
+								.type = HI_UNF_ENC_FMT_VESA_2048X1152_60,
+								.name = "VESA_2048X1152_60",
+							},
+							{/* 41 */
+								.type = HI_UNF_ENC_FMT_VESA_2560X1440_60_RB,
+								.name = "VESA_2560X1440_60_RB",
+							},
+							{ /* 42 */
+								.type = HI_UNF_ENC_FMT_VESA_2560X1600_60_RB,
+								.name = "VESA_2560X1600_60_RB",
+							},
+							{ /*  0x40, 64 */
+								.type = HI_UNF_ENC_FMT_3840X2160_24,
+								.name = "3840X2160P_24",
+							},
+							{/* 65 */
+								.type = HI_UNF_ENC_FMT_3840X2160_25,
+								.name = "3840X2160P_25",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_3840X2160_30,
+								.name = "3840X2160P_30",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_3840X2160_50,
+								.name = "3840X2160P_50",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_3840X2160_60,
+								.name = "3840X2160P_60",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_4096X2160_24,
+								.name = "4090X2160_24",
+							},
+							{/* 70 */
+								.type = HI_UNF_ENC_FMT_4096X2160_25,
+								.name = "4090X2160_25",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_4096X2160_30,
+								.name = "4090X2160_30",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_4096X2160_50,
+								.name = "4090X2160_50",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_4096X2160_60,
+								.name = "4090X2160_60",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_3840X2160_23_976,
+								.name = "3840X2160_23_976",
+							},
+							{/* 75 */
+								.type = HI_UNF_ENC_FMT_3840X2160_29_97,
+								.name = "3840X2160_29_97",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_720P_59_94,
+								.name = "720P_59_94",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_1080P_59_94,
+								.name = "1080P_59_94",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_1080P_29_97,
+								.name = "1080P_29_97",
+							},
+							{
+								.type = HI_UNF_ENC_FMT_1080P_23_976,
+								.name = "1080P_23_976",
+							},
+						
+							{/* 80 */
+								.type = HI_UNF_ENC_FMT_1080i_59_94,
+								.name = "1080i_59_94",
+							},
+
+		
+
+		Remount /media/sd with write permission when player writes file to SD card;
+		Remount /media/sd with read-only permission when player finish the writing operation on SD card;
+		
+
+
+		EDID command deep color can work for 8/10/12 bits on model of '1080P_60';
+		mount -o remount -o ro /media/sd
+		mount -o remount -o rw /media/sd
+
+
+Feb.15th, 2018
+		Support configuration of deep color and resolution on-fly:
+			About resolution:
+					Read and parse EDID from TV/TX, and then configure the resolution of TV/TX on-fly;
+					
+			About Deep Color:
+					Add new configuration item of 'DeepColor' in /etc/mLab/muxPlayer.conf
+						# Deep Color: 0: 24(8)bits; 1: 30(10)bits; 2: 36(12)bits; others: Auto Configuration
+						DeepColor						100
+		  		Normally it is configured as '100' to make on-fly configuration;
+		  		If it is configured as '0', '1' and '2', then Deep Color configured as '8', '10', '12';
+		  		
+
+
+Jan.23rd, 2018
+		Add more validations for Playlist updateing operations, make every update is more reliable;				
+		Add more strong logic of check window handler when window is moving;
+		More mutex protections between controller thread, player thread and SDK threads;
+		Testing these with layout from webpage;
+
+Jan.7th, 2018
+		Add MAC authentication validation;
+
+Jan,5th, 2018
+		Add new command for CEC control commmands: cecStandby, cecImageOn, cecVolumeUp, cecVolumeDown, cecMute, cecInfo;
+				cecStandby, cecImage: passed in SAMSUNGCN40JU6500;
+				cecVolumeUp, cecVolumeDown, cecMute: not tested in suitable TV;
+				cecInfo: 
+						Retrieve and return the formats list, which TV supports, through CEC control channel, such as '1080P_60', '4090X2160_60'; For example, return list from SAMSUNGUN40JU6500 TV:
+							[{
+									"Manufacture":	"SAM",
+									"NativeFormat":	"3840X2160P_60",
+									"Formats":	[
+										"1080P_60", "1080P_50", "1080P_30", "1080P_25", "1080P_24", "1080i_60", "1080i_50", "720P_60", "720P_50", "576P_50", "480P_60", "PAL", "NTSC", 
+										"VESA_800X600_60", "VESA_1024X768_60", "VESA_1280X800_60", "VESA_1280X1024_60", "VESA_1440X900_60", "VESA_1600X900_60_RB", "VESA_1680X1050_60", 
+										"3840X2160P_24", "3840X2160P_25", "3840X2160P_30", "3840X2160P_50", "3840X2160P_60", "4090X2160_24", 
+										"4090X2160_25", "4090X2160_30", "4090X2160_50", "4090X2160_60"]
+							}],
+
+						This format can be used in /etc/mLab/muxPlayer.conf to configure the resolution of TV;
+					Note: 
+						Some format returned from TV can not used now;
+						Different TV has different format list;
+		Add new configuration item of 'VideoFormat' in /etc/mLab/muxPlayer.conf	to configure the resolution of TV;
+		Release packaging of all: packaging as zip format;
+		
+
+		Add secure code checking;
+		
+		
+About release packages and update of 769 firmware:
+		Total 2 packages:
+				resources.font.zip: 
+						contains 2 font files in /etc/sys/fonts;
+						Only install once when new system is installing;
+				muxMedia_4.9.2_arm_$RELEASE_$DATE.zip		
+						$RELEASE: can be 'release' or 'debug', means release version or debug version;
+						$DATE: building date, such as '2018_01_04';
+						Version info and build datetime can be checked with API: 'apiClient -c verInfo', for example:
+							[{
+								"name":	"mediaMain",
+								"version":	"01.0.01-01, Jan  3 2018 16:46:51"
+							}, {
+								"name":	"mediaPlayer",
+								"version":	"01.0.01-01, Jan  4 2018 15:45:49"
+							}, {
+								"name":	"mediaRecorder",
+								"version":	"01.0.01-01, Jan  3 2018 16:46:56"
+						}],
+						
+						
+						It contains 4 directories, such as '/etc', '/lib', '/sbin' and 'usr/bin';
+						This package can be used as firmware updating package when new version will be released;
+						
+						
+						
+		About installation:
+				uncompress these 2 package into '/', eg. root directory of filesystem;
+				add one command line in startup script to start it, such as 'muxMedia' or '/sbin/muxMedia';
+				
+
+		Add version and building date/time information when every module start:
+				6 modules: main, player, recorder, web, server, apiClient;
+
+Dec.29th,2017
+	Debug: 'osdBackground' command or some OSD commands will fail after reposition this OSD;
+	Debug: command of 'osdTranpanrency' soes not work in apiClient: bug comes from changing osdBackground in format of '0xTTRRGGBB';
+	Bugs: Timers work abnormal after progra, daemonized;
+			
+Dec.28th, 2017
+		Release version:
+				Don't save any playlist in Player;
+				Play next one and show error message when playing fails;
+					Add configuring item of 'TimeoutErrorMsg' in muxPlayer.conf to define the delay for msg when playing fails;
+					default timeout is 10 seconds;
+				Release version:
+					Run as daemon, defaultly;
+					Save log into log file in '/tmp/muxMedia.log';
+					Set debug level as 3(ERR);
+					Optimizing the log output;
+				Remove all debugging log message;
+				Only load the essential modules, others are not built and upload to board;
+				Other bugs for crash: 
+					Mixed OSD of PIP4 with OSD of SUBTITLE;
+					Protection of OSD operations between PLAYER, SetMediaX-XX, SetMedia0-1(subtitle) and timer thread;
+				
+
+Dec.27th, 2017
+		debug the problem of subtitle callback on OSD object with PIP4, not SUBTITLE OSD;
+		Modify the mutual lock for HIGO access between PLAYER, SetMedia and Timer for Alert:
+			JSON command for OSD/window control and subtitle callback:
+					muxRxPlayCmdWindow.c: only locateWindow
+					muxRxPlaySubtitleCb.c: Clear () + Draw(only text subtitle: muxOsdOutputText() )
+					muxPlayerJsonMedia.c
+					muxRxOsdOutput.c: only for timer;ps
+					
+		Disable warns of 'pRefer is null' and 'cache time is 0' in HiPlayer open media;
+
+Dec.22nd, 2017
+		Add error message display when error happens in playing, and continue to the next one;
+		Found mutual access of higo object from PLAYER thread and setMedia thread of HiPlayer;
+
+Dec.20, 2017
+		Add function of configuration/control for aspect of video playing window: only used in when playing video:
+				Configuration: modification of muxPlayer.conf
+						Configuring item of 'DisplayMode' for every window:
+								# 0: stretch to fill, default; 
+								# 1: show all video, adding black border; 
+								# 2: show central part, keeping ratio of video;
+								# 3: show central part, squeezing about 10%, eg not keeping ratio of video;
+						
+				Control:
+							API command of 'aspect' for dynamic control
+Request:
+'{
+	"comment":	"Play one local media file or playlist",
+	"targ":	"11:11:11:11:11:11",
+	"cmd":	"play_media",
+	"login_ack":	"root",
+	"pwd_msg":	"123",
+	"data":	[{
+			"comment":	"set display mode/aspect of one window",
+			"action":	"aspect",
+			"objects":	[{
+					"window":	1,
+					"mode":	0
+				}]
+		}]
+}'
+reply:
+'{
+	"comment":	"Play one local media file or playlist",
+	"targ":	"11:11:11:11:11:11",
+	"cmd":	"play_media",
+	"login_ack":	"OK",
+	"pwd_msg":	"OK",
+	"data":	[{
+			"comment":	"set display mode/aspect of one window",
+			"action":	"aspect",
+			"objects":	[{
+					"window":	1,
+					"mode":	0
+				}],
+			"status":	200
+		}]
+}'
+
+
+Dec.19, 2017, Update 2
+		Set location of playing window and OSD window based on current state: PLAY_IMAGE or PLAY;
+		KeepLastFrame for video playing, default is 'NO' to hidden last frame of last video when switch;
+		Add script for integrated test: testing location and playing image/video;
+
+Dec.19, 2017
+		Change OSD background command, set background color in format of '0xFFRRGGBB';
+		Tested EoF replay, Play->Stop->Play commands;
+		Debugging ther response when wrong URL is input;
+		Debugging timeout handler for playing image;
+		Debugging switch between playing image and playing video;
+		Test re-location window when playing stopped;
+		Put build options together to accelerate the build for program;
+		Add test scripts in tests/scripts/testCaseXXXX.sh;
+		Other bugs, such as save configuration file;
+
+Dec.14, 2017
+		Debug the problem of segment fault from SetMedia of HiPlayer;
+		Modify configuration file to suit the requirements of release;
+		Add test codes for SDK: higo, players, muxWin and code:
+			higo: 14+1 programs;
+			players: ipplayer, localplayer, mosaic players, 5 players;
+			muxWin: player with window controlling, one program;
+			code: transcode and capture, 2 programs;
+		Add testing scripts;
+		Clear the build environments: using Rules.mak and Makefile.pre in the top level directory of repository;
+		
+
+Dec.8, 2017
+		New features:
+				Configuration item for the window after playing ends:
+						'WindowKeepLastFrame' in /etc/mLab/muxPlayer.conf: keep last frame of playing or make window black;
+				IP command 'audio': control audio state (enable/disable) of every window;
+				IP command 'osdInfo': retrieve all info about OSD:location, font size, font color, background, etc.;
+				
+				Modify IP command 'playlistAdd', 'playlist': every media (image file/stream file/Network URL) is defined as 2 fields of 'URL' and 'Duration';
+				Modify IP command 'play' to support media(video or/and audio) and image file with assigned timeout value;
+				
+				Debug the problem of crash when playing about 300 times;
+				Debug the problem of capture/record: can't capturing any data after several times of successful capture/record;
+				
+				IP command 'threads': get info about main threads;
+				IP command 'verinfo': get version info about modules;
+				
+				Add *.mpg file supports;
+
+		Performance:
+				6 Windows playing simultaneously:
+						Memory about 650MB, about 37.7%;
+						CPU : %20.o;
+
+
+Nov.22, 2017
+		Background color and transparency of OSD box in one command of 'osdBackground';
+		
+
+Nov.20, 2017
+	Funcations about audio control in every window:
+			IP commands of 'mute', 'vol+' and 'vol-' are used to control the audio of one window:
+					add 'index' parameter for these 3 commands;
+			Add IP command of 'muteAll' to mute sound card for all windows;
+			
+			Recording based on state of main window:
+					when no playing in main window, record can not be started;
+
+nov.16, 2017:
+	Function of PLAYER:
+			Dynamic Playlist:
+					New IP command: playlistAdd
+					add playlist and play the newly-added playlist without restart program;
+					one playlist can be played with different repeat number;
+					when repeat number is 0, it will play again after the playing ends;
+		
+			File playing:
+					one local media or URL can be played with different repeat number;
+			
+			IP command of 'Files'/'File':
+					return duration and size of local media files/file;
+			
+			Scan local files:
+					scan image file type: git, jpg, png, bmp, etc.
+					scan audio file: aac and MP3;
+			
+			Play audio file in MAIN window:
+					aac and mp3 audio file;
+			
+			Banner/Alert:
+					Set background: background color is in format of '0xFFRRGGBB', where the most significant 8 bits is always 0xFF;
+					Set transparency: 0~255, 0: banner is invisible; 255 is fully visible;
+					Set font color: every 'alert' command is sent with parameter of color and message, so set font color command may be not used;
+					Enable/Disable playing info in banner OSD, which can be configured in muxPlayer.conf;
+					
+			Audio of one Window:
+					Every window has one configuration item of 'AudioEnable', when it is 'YES', the audio of this window will be output;
+					For MAIN window, AudioEnable is 'YES' defaultly; for other PIP windows, it is 'NO' defaultly;
+		

@@ -1,0 +1,160 @@
+					Tests for MuxMedia
+																		Oct. 10th, 2017						Jack Lee
+
+
+Support formats:
+hi_unf_video.h
+
+typedef enum hiUNF_VCODEC_TYPE_E
+{
+    HI_UNF_VCODEC_TYPE_MPEG2,       /**<MPEG2*/
+    HI_UNF_VCODEC_TYPE_MPEG4,       /**<MPEG4 DIVX4 DIVX5*/
+    HI_UNF_VCODEC_TYPE_AVS,         /**<AVS*/
+    HI_UNF_VCODEC_TYPE_H263,        /**<H263*/
+    HI_UNF_VCODEC_TYPE_H264,        /**<H264*/
+    HI_UNF_VCODEC_TYPE_REAL8,       /**<REAL, 5*/
+    HI_UNF_VCODEC_TYPE_REAL9,       /**<REAL*/
+    HI_UNF_VCODEC_TYPE_VC1,         /**<VC-1*/
+    HI_UNF_VCODEC_TYPE_VP6,         /**<VP6*/
+    HI_UNF_VCODEC_TYPE_VP6F,        /**<VP6F*/
+    HI_UNF_VCODEC_TYPE_VP6A,        /**<VP6A, 10*/
+    HI_UNF_VCODEC_TYPE_MJPEG,       /**<MJPEG*/
+    HI_UNF_VCODEC_TYPE_SORENSON,    /**<SORENSON SPARK*/
+    HI_UNF_VCODEC_TYPE_DIVX3,       /**<DIVX3*/
+    HI_UNF_VCODEC_TYPE_RAW,         /**RAW*/
+    HI_UNF_VCODEC_TYPE_JPEG,        /**JPEG,added for VENC, 16 */
+    HI_UNF_VCODEC_TYPE_VP8,         /**<VP8*/
+    HI_UNF_VCODEC_TYPE_MSMPEG4V1,   /**< MS private MPEG4 */
+    HI_UNF_VCODEC_TYPE_MSMPEG4V2,
+    HI_UNF_VCODEC_TYPE_MSVIDEO1,    /**< MS video */
+    HI_UNF_VCODEC_TYPE_WMV1,			/* 20 */
+    HI_UNF_VCODEC_TYPE_WMV2,
+    HI_UNF_VCODEC_TYPE_RV10,
+    HI_UNF_VCODEC_TYPE_RV20,
+    HI_UNF_VCODEC_TYPE_SVQ1,        /**< Apple video */
+    HI_UNF_VCODEC_TYPE_SVQ3,        /**< Apple video, 25 */
+    HI_UNF_VCODEC_TYPE_H261,
+    HI_UNF_VCODEC_TYPE_VP3,
+    HI_UNF_VCODEC_TYPE_VP5,
+    HI_UNF_VCODEC_TYPE_CINEPAK,
+    HI_UNF_VCODEC_TYPE_INDEO2,		/* 30 */
+    HI_UNF_VCODEC_TYPE_INDEO3,
+    HI_UNF_VCODEC_TYPE_INDEO4,
+    HI_UNF_VCODEC_TYPE_INDEO5,
+    HI_UNF_VCODEC_TYPE_MJPEGB,
+    HI_UNF_VCODEC_TYPE_MVC,
+    HI_UNF_VCODEC_TYPE_HEVC,  		/* H265, 36 */
+    HI_UNF_VCODEC_TYPE_DV,
+    HI_UNF_VCODEC_TYPE_VP9,
+    HI_UNF_VCODEC_TYPE_BUTT
+}HI_UNF_VCODEC_TYPE_E;
+
+
+
+H265 video: HEVC, High Efficiency Video Coding;
+				Format profile: Main@L5.1@Main
+		successor to Advanced Video Coding (AVC, H.264)
+		format range extensions, scalable coding extensions (SHVC), and multi-view extensions (MV-HEVC)
+
+HEVC was developed with the goal of providing twice the compression efficiency of the previous standard, H.264 / AVC
+
+Memory Test:
+	One HiPlayer: VSZ:152M, %VSZ:8.9%; %CPU:2.2%
+			Threads: 
+					Global: HiSys(HI_SYS_Init), Display(HIADP_Disp_Init)
+					AvPlay: 3 thread(HI_UNF_AVPLAY_Create), SndTrack(HI_UNF_SND_CreateTrack)
+					HiPlayer: HiPlay(HI_SVR_PLAYER_Create), SetMedia(HI_SVR_PLAYER_SetMedia)
+					main
+					total: 9 threads;
+					
+	muxMedia: 6 HiPlayer: VSZ:770M, %VSZ:44.5%; %CPU:12.0%;
+
+
+Debug threads in ARM
+		command line: 
+				press 'H' after 'top' has been running: display running status of every thread;
+				'ps -T': show threads of every process; 'ps -wlT': show long list
+				
+				Status: R: running/runnable; S: interruptible sleeping;
+				PID: pthread ID;
+				PPID: parent thread ID, normally PID of shell;
+				VSZ: virtual memory size;
+				RSS: Resident Memory size;
+				CPU:
+				%CPU:
+				STIME:
+				TIME:
+		
+		ID of thread:
+				pid_t getpid(): ID of parent thread;
+				pid_t gettid():
+				pthread_t pthread_self(): handler of thread;
+				syscall(SYS_gettid): ID of child thread, same as ID in /proc file system;
+
+		Number of threads in ARM board:
+				HiSiCon  threads:
+						Global threads: 
+								HiSys (HI_SYS_INIT)
+								HiDisplay (HIADP_DIsp_init)
+						5 Threads in every player:
+								3 AVPLAY threads: video+audio+sync ??
+								1 AVPlay audio channel thread;
+								1 HiPlayer thread;
+						Audio Encoder thread for main window/audio capture		
+						So, number=Nx5 + 3. For example, 6 windows(players)=6x5+3=33 threads;
+						
+						MuxPlayCapturer thread: 2 threads, monitoring encoder forever for every channel, audio and video;
+						Net-reconnecting thread;
+						SetMedia Threads: N, dynamic threads;
+				Main thread;
+				CmnTimer thread;
+				FTP thread;
+				Controller thread;
+				
+				Recorder thread;
+				
+				SERVER threads:
+						SvrFeed thread: file feed;
+						SvrServer: protocol thread;
+				
+				WEB thread:
+						One thread;		
+				
+		
+
+
+Testing on X86:
+		source init.sh: export path for library and plugins;
+		./Linux.bin.X86/sbin/muxMedia
+		
+		browser: 
+				http://192.168.:6080/
+				
+
+
+
+Basis Tests:
+		Server:
+				http://192.168.168.101:9090/index.html: list all networking media streams:
+
+		Web service:
+				http://host:6080/index.html
+
+
+Use play command line:
+		play .test.mkv -loglevel 99 
+
+
+Difference of run environments between X86 and ARM
+		Web service:
+				ARM: Listen eth0
+				X86: Listen enp0s3
+
+
+Components of MuxMedia:
+		1. main program;
+		2. PLAYER;
+		3. SERVER;
+		4. RECORDER;
+		5. WEB service;
+

@@ -1,0 +1,12 @@
+[
+      	{
+		      "comment": "get basic configuration of web service",
+      		"action": "infos",
+      		"objects": 
+      		[
+      			{
+      			}
+      		]
+      	}
+
+ ]

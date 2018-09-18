@@ -1,0 +1,42 @@
+
+								README for schema 
+
+Debugging:
+		Mutex adding event into FSM of PLAY_T:
+			1. Event callback of HI_PLAYER
+			2. SetMedia() thread or timer emits events except;
+			
+			Event function is re-entery.
+
+
+File Lists:
+		Name rules:
+				PLAYER: this program;
+				PLAY: one player for one window in this program;
+				
+		'Player' directory:
+				muxPlayerXXX.c : Functions for PLAYER program;
+				
+		'Player/libRx' directory: RX board for PLAYER program;
+				muxRxXXX.c : Functions dependent on RX board;
+				muxRxInitXXX.c: Initialization functions for RX board;
+				muxRxCBXXX.c: CallBack functions of HiPlayer for one PLAY in RX board;
+				muxRxCmdXXX.c: Command handlers for RX board;
+				mxuRxPlayXXX.c: functions for one PLAY;
+				
+
+
+About build of link options for Hisilicon:
+		1. '--start-group' and '--end-group' must be used in build:
+		No these options, it also build OK, but the size of result is different (1700K-2240K), and some binary can not be found when runs;
+		
+		2. If linking to shared libraries from Hisilicon, 
+		failed to create the font: '/etc/sys/fonts/DroidSansFallbackLegacy.ttf'
+		The function of 'HI_GO_CreateTextEx' failed: because some functions called by this function are not built into the binary.
+		
+
+Build Requirements:
+		1. Dynamic link for lixRxMux and Hisilicon
+		2. PLAYER: only dependent on libRxMux, never link to libraries from HiSilicon directly;
+		3. Only HiDrm is build-it, the symbol of 'HI_DRM_METADATA_Get' can't be found. Why?
+		

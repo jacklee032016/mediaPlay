@@ -1,0 +1,32 @@
+
+					README for Mux libraries
+										Oct.5, 2017, Jack Lee
+
+LibMux
+		library for all MuxLab board, RX or TX. All routines are not dependent on board type;
+
+
+
+api/cmnMuxClient.c:
+		Common routines for client of API in C language;
+
+api/cmnMuxClientAPI.c:
+		APIs for client of API in C language, in form of 'muxApiXXXX';
+		
+api/cmnMuxController.c:
+		Thread pf API controller, receiving IP command and transmit it into JSON object;
+
+api/cmnMuxJson.c:
+		IP commands are transmitted into JSON objects, and handled;
+		
+api/cmnMuxJsonMedia.c:
+		JSON Objects of Media commands are handled in this file;
+
+cmnMuxFtpThread.c:
+		FTP thread for downloading task;
+
+cmnMuxPlaylist.c:
+		Management of Playlist and save of RECT;
+
+cmnMuxUtils.c:
+		Type name and some utilities CRC32;

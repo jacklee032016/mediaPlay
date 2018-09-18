@@ -1,0 +1,23 @@
+
+					README for shared libraries
+										August, 9, 2017, Jack Lee
+
+Libraries:	
+		shared:
+				shared library which can be used in X86/ARM, TX/RX;
+				libCmn.h
+		media:
+				Media access library which dependent on ffmpeg and shared, it encapsulate and hide ffmpeg.
+				Any programs call this librariy has no ideal about ffmpeg.
+				It is mainly for scan disk, recorder and media server.
+				libMedia.h
+		cmnRx:
+				Common library for MuxLab receiviers which can also run in X86;
+				libCmnRx.h
+				cmnMuxApi.h: client API library
+				
+
+		Build order of these libraries:
+						
+		
+

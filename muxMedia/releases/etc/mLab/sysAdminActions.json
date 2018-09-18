@@ -1,0 +1,21 @@
+[
+      	{
+		      "comment": "get info of all threads",
+      		"action": "threads",
+      		"objects": 
+      		[
+      			{
+      			}
+      		]
+      	},
+      	{
+		      "comment": "get info of all threads",
+      		"action": "verInfo",
+      		"objects": 
+      		[
+      			{
+      			}
+      		]
+      	}
+
+ ]

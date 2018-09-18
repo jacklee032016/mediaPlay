@@ -1,0 +1,50 @@
+[
+      	{
+		      "comment": "begin video/audio recording for main window",
+      		"action": "start",
+      		"objects": 
+      		[
+      			{
+      				"media": "/media/usb/record.mkv",
+      				"duration" : 48
+      			}
+      		]
+      	},
+      	{
+		      "comment": "stop video/audio recording for main window",
+      		"action": "stop",
+      		"objects": 
+      		[
+      			{
+      			}
+      		]
+      	},
+      	{
+		      "comment": "pause recording",
+      		"action": "pause",
+      		"objects": 
+      		[
+      			{
+      			}
+      		]
+      	},
+      	{
+		      "comment": "resume the paused recording",
+      		"action": "resume",
+      		"objects": 
+      		[
+      			{
+      			}
+      		]
+      	},
+      	{
+		      "comment": "retrieve status about recorder",
+      		"action": "status",
+      		"objects": 
+      		[
+      			{
+      			}
+      		]
+      	}
+
+ ]

@@ -1,0 +1,53 @@
+[
+      	{
+		      "comment": "get all media files(audio/video/image) from board, 1 in get_media",
+      		"action": "files",
+      		"objects": [{}]
+      	},
+      	{
+		      "comment": "get all playlists from board, 2 in get_media",
+      		"action": "playlists",
+      		"objects": [{}]
+      	},
+      	{
+		      "comment": "get details about one file from board, 3 in get_media",
+      		"action": "file",
+      		"objects": [ "mediaFileName"]
+      	},
+      	{
+		      "comment": "get details about one playlist from board, 4 in get_media",
+      		"action": "playlist",
+      		"objects": ["playlistName"]
+      	},
+
+
+      	{
+		      "comment": "delete one media file(audio/video/image) from board, 1 in set_media",
+      		"action": "fileDelete",
+      		"objects": ["fileName"]
+      	},
+      	
+      	{
+		      "comment": "delete one playlist from board, 2 in set_media",
+      		"action": "playlistDelete",
+      		"objects": ["playlistName"]
+      	},
+      	
+      	{
+		      "comment": "delete one playlist from board, 3 in set_media",
+      		"action": "playlistAdd",
+		      "media": "newPlaylistName",
+      		"objects": ["file1", "file2"]
+      	},
+      	
+      	{
+		      "comment": "download file from FTP server, 4 in set_media",
+      		"action": "download",
+		      "ftpServer": "192.168.168.102",
+		      "ftpUser": "root",
+		      "ftpPwd": "lzj320",
+		      "ftpPath": "/ftpRoot",
+      		"objects": ["1.avi","2.avi","3.avi"]
+      	}
+
+ ]

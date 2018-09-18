@@ -1,0 +1,39 @@
+[
+      	{
+		      "comment": "get main configuration info about server",
+      		"action": "config",
+      		"objects": 
+      		[
+      			{
+      			}
+      		]
+      	},
+      	{
+		      "comment": "get all servicing media sources",
+      		"action": "feeds",
+      		"objects": 
+      		[
+      			{
+      			}
+      		]
+      	},
+      	{
+		      "comment": "get all active connections",
+      		"action": "connnects",
+      		"objects": 
+      		[
+      			{
+      			}
+      		]
+      	},
+      	{
+		      "comment": "get all protocols and URLs",
+      		"action": "urls",
+      		"objects": 
+      		[
+      			{
+      			}
+      		]
+      	}
+
+ ]

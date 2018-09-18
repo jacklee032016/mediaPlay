@@ -1,0 +1,14 @@
+
+								README for schema 
+
+Main Program for all modules:
+		Only dependent on libShare, libMedia and libMux .
+
+Plugins:
+		Recorder: dependent on libShared, libMedia, libMux and ffpmeg;
+		
+		Web: only dependent on libShared;
+		
+		Server: dependent on libShared, libMedia, libMux and ffpmeg;
+
+		Player: dependent on libShared, libMedia, libMux and libraries from Hisilicon;
