@@ -227,7 +227,6 @@ static int	_playMedia(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSON_EVEN
 	
 	if(! PLAYER_CHECK_STATE(play, HI_SVR_PLAYER_STATE_STOP) && 
 		! PLAYER_CHECK_STATE(play, HI_SVR_PLAYER_STATE_INIT) &&
-		 PLAYER_CHECK_STATE(play, HI_SVR_PLAYER_STATE_PAUSE) && /* 09.18, 2018*/
 		! PLAYER_CHECK_STATE(play, HISVR_PLAYER_STATE_IMAGE) )
 	{/* when playing stream */
 
@@ -278,7 +277,6 @@ static int	_stopMedia(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSON_EVEN
 	
 	if(! PLAYER_CHECK_STATE(play, HI_SVR_PLAYER_STATE_STOP) && 
 		! PLAYER_CHECK_STATE(play, HI_SVR_PLAYER_STATE_INIT) && 
-		PLAYER_CHECK_STATE(play, HI_SVR_PLAYER_STATE_PAUSE) && /* 09.18,2018 */
 		! PLAYER_CHECK_STATE(play, HISVR_PLAYER_STATE_IMAGE) )
 	{
 		res = muxPlayerStopPlaying(play);
