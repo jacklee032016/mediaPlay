@@ -9,9 +9,9 @@
 
 HI_S32 muxSubtitleClear(MUX_PLAY_T *play, HI_UNF_SO_CLEAR_PARAM_S *param)
 {
+#if PLAYER_ENABLE_SUBTITLE
 	int res = 0;
 
-#if PLAYER_ENABLE_SUBTITLE
 	MUX_PLAY_DEBUG( "CLEAR Subtitle!");
 	res = OSD_DESKTOP_TRY_LOCK(&play->muxRx->higo);
 	if(res != 0)
@@ -53,7 +53,7 @@ int	_muxOutTextSubtitle(MUX_PLAY_T *play, const HI_UNF_SO_SUBTITLE_INFO_S *pstIn
 //	HI_RECT rect = {50, 200, 620, 200};
 //	(HI_VOID)_outputText(&play->muxRx->higo, (const HI_CHAR*)pstInfo->unSubtitleParam.stText.pu8Data, &rect );
 
-	res = muxOsdOutputText(play->muxRx->higo.subtitle, (const HI_CHAR*)pstInfo->unSubtitleParam.stText.pu8Data);
+	res = muxOsdOutputText(play->muxRx->higo.subtitle, ALERT_DEFAULT_LAYOUT, (const HI_CHAR*)pstInfo->unSubtitleParam.stText.pu8Data);
 
 	res = OSD_DESKTOP_UNLOCK( &play->muxRx->higo);
 	if(res != 0)
@@ -97,7 +97,7 @@ int	_muxOutAssSubtitle(MUX_PLAY_T *play, const HI_UNF_SO_SUBTITLE_INFO_S *pstInf
 		}
 		else
 		{
-			s32Ret = muxOsdOutputText(play->muxRx->higo.subtitle, pszOutHand);//, &rc);
+			s32Ret = muxOsdOutputText(play->muxRx->higo.subtitle, ALERT_DEFAULT_LAYOUT, pszOutHand);//, &rc);
 			MUX_PLAY_DEBUG("OUTPUT: %s \n", pszOutHand);
 		}
 	}

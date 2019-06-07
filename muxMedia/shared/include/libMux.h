@@ -79,6 +79,7 @@
 
 #define	IPCMD_EDID_RESOLUTION					"resolution"
 #define	IPCMD_EDID_DEEP_COLOR				"color"
+#define	IPCMD_EDID_COLOR_SPACE				"colorSpace"		/* added. 06.03, 2019 */
 
 
 #define	IPCMD_NAME_KEYWORD_DATA			"data"
@@ -124,6 +125,20 @@
 #define	_MUX_JSON_NAME_LOCATION_Y		"top"
 #define	_MUX_JSON_NAME_LOCATION_W		"width"
 #define	_MUX_JSON_NAME_LOCATION_H		"height"
+
+
+#define	_MUX_ALERT_COMMAND					"alert"
+#define	_MUX_ALERT_H_ALIGN					"halign"
+#define	_MUX_ALERT_V_ALIGN					"valign"
+
+#define	_BANNER_H_ALIGN_LEFT					1
+#define	_BANNER_H_ALIGN_CENTER				2
+#define	_BANNER_H_ALIGN_RIGHT				3
+
+
+#define	_BANNER_V_ALIGN_TOP					1
+#define	_BANNER_V_ALIGN_CENTER				2
+#define	_BANNER_V_ALIGN_BOTTOM				3
 
 
 #define	PLAYLIST_NAME_URL						"URL"
@@ -284,6 +299,8 @@ typedef	enum _CMD_TYPE
 	CMD_TYPE_EDID_RESOLUTION,
 	CMD_TYPE_EDID_DEEP_COLOR,
 
+	CMD_TYPE_EDID_COLOR_SPACE,	/* added. 06.03, 2019 */
+	
 	CMD_TYPE_QUIT,
 	CMD_TYPE_UNKNOWN
 }CMD_TYPE_T;
@@ -679,9 +696,10 @@ typedef	struct _MuxThread
 typedef struct _MuxPlayerConfig
 {
 	/* data structure for configuration */
-	cmn_list_t				windows;	/* list of RECT_CONFIG */
+	cmn_list_t				windows;	/* list of RECT_CONFIG, only window */
 
-	cmn_list_t				osds;	/* list of RECT_CONFIG */
+	cmn_list_t				osds;	/* list of RECT_CONFIG, windows and other 3  */
+	cmn_list_t				miscs;	/* only for save 3 RECTs except window into configuration file */
 
 	/* configuration items for player */
 	int						aspectRatioWindow;
@@ -689,6 +707,7 @@ typedef struct _MuxPlayerConfig
 	char						displayFormat[CMN_NAME_LENGTH];/* like 1080P_60, etc., used to initialize display HIADP_Disp_Init */
 	
 	int						deepColor;
+	int						colorSpace;	/* refer to HI_UNF_HDMI_VIDEO_MODE_E in hi_unf_hdmi.h */
 	
 	int						audioVolume;
 	char						drmCommand[CMN_NAME_LENGTH];

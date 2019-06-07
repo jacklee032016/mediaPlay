@@ -77,10 +77,19 @@ static int _savePlayerGlobalConfig(FILE *f, MuxPlayerConfig *cfg)
 
 	res = fprintf(f, "VideoFormat\t\t%s\n", cfg->displayFormat);
 
+	res = fprintf(f, "DeepColor\t\t%d\n", cfg->deepColor);
+	res = fprintf(f, "ColorSpace\t\t%d\n", cfg->colorSpace );
+
 	res = fprintf(f, "AudioVolume\t\t%d\n", cfg->audioVolume );
 
 	res = fprintf(f, "TimeoutLocal\t\t%d\n", cfg->playTimeoutLocal);
 	res = fprintf(f, "TimeoutNetwork\t\t%d\n", cfg->playTimeoutNetwork);
+
+	res = fprintf(f, "TimeoutErrorMsg\t\t%d\n", cfg->timeoutErrorMsg);
+
+	res = fprintf(f, "EnableScreenDebug\t\t%s\n", STR_BOOL_VALUE(cfg->enableScreenDebug));
+	res = fprintf(f, "WindowKeepLastFrame\t\t%s\n", STR_BOOL_VALUE(cfg->keepLastFrame) );
+	res = fprintf(f, "EnableLowDelay\t\t%s\n", STR_BOOL_VALUE(cfg->enableLowDelay) );
 
 
 	res = fprintf(f, "CaptureName\t\t%s\n", cfg->captureName);
@@ -108,6 +117,7 @@ static int _saveRectConfig(int index, void *ele,  void *data)
 	if(win->type == RECT_TYPE_LOGO)
 		type = "LOGO";
 	
+	res = fprintf(f, "### No.#%d\n", index);
 	res = fprintf(f, "<Window  %s>\n", type);
 
 	res = fprintf(f, "\tLeft\t\t%d\n", win->left);
@@ -161,7 +171,7 @@ int cmnMuxSavePlayerConfig( MuxPlayerConfig *cfg)
 	res = _savePlayerGlobalConfig(f, cfg);
 
 	res = fprintf(f, "\n### OSD configuration items## \n");
-	cmnMuxRectsSave(f, &cfg->osds);
+	cmnMuxRectsSave(f, &cfg->miscs);
 #if 0	
 	for(i=0; i< cmn_list_size(&cfg->osds); i++)
 	{

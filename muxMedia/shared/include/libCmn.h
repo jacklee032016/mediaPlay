@@ -202,7 +202,8 @@ typedef	enum _MUX_MEDIA_TYPE
 
 #define	WARN_TEXT_BEGIN			""ANSI_COLOR_MAGENTA"WARN:"
 
-#define	INFO_TEXT_BEGIN			""ANSI_COLOR_BLUE"INFO:"
+//#define	INFO_TEXT_BEGIN			""ANSI_COLOR_BLUE"INFO:"
+#define	INFO_TEXT_BEGIN			""ANSI_COLOR_CYAN"INFO:"
 
 
 
@@ -269,7 +270,7 @@ int cmn_log_init(log_stru_t *lobj);
 
 #if CMN_SHARED_DEBUG
 	#ifndef	TRACE
-	#define	TRACE()	CMN_MSG_LOG(CMN_LOG_DEBUG,"" )
+	#define	TRACE()		CMN_MSG_DEBUG(CMN_LOG_DEBUG,"" )
 	#endif
 #else
 	#ifndef	TRACE
@@ -278,12 +279,12 @@ int cmn_log_init(log_stru_t *lobj);
 #endif
 
 
-#define	FILE_TO_STDOUT			0
+#define	FILE_TO_STDOUT			1
 
 #ifndef   __CMN_RELEASE__
 #if FILE_TO_STDOUT
 #define	CMN_MSG_LOG(level, format ,...)   \
-	do{ char buf[4096]; snprintf(buf, sizeof(buf), __FILE__".%d|%s\n", __LINE__, format ) ;\
+	do{ char buf[4096]; snprintf(buf, sizeof(buf),ERROR_TEXT_BEGIN  __FILE__".%d|%s:%s" ERROR_TEXT_END "\n" , __LINE__, cmnThreadGetName(), format ) ;\
 		printf(buf, ##__VA_ARGS__);			\
 		}while(0)
 #else
@@ -301,6 +302,27 @@ int cmn_log_init(log_stru_t *lobj);
 	}while(0)
 #endif
 
+#ifndef   __CMN_RELEASE__
+#if FILE_TO_STDOUT
+#define	CMN_MSG_INFO(level, format ,...)   \
+	do{ char buf[4096]; snprintf(buf, sizeof(buf), INFO_TEXT_BEGIN __FILE__".%d|%s:%s"ANSI_COLOR_RESET  "\n", __LINE__, cmnThreadGetName(), format ) ;\
+		printf(buf, ##__VA_ARGS__);			\
+		}while(0)
+#else
+#define	CMN_MSG_INFO(level, format ,...)   \
+	do{ 					\
+		if ( level <= CMN_LOG_DEBUG && get_current_level() >= level) \
+			log_information(level, __FILE__, __LINE__, format, ##__VA_ARGS__);	\
+	}while(0)
+#endif
+#else
+#define	CMN_MSG_INFO(level, format ,...) \
+	do{ 					\
+		if ( level <= CMN_LOG_DEBUG && get_current_level() >= level) \
+			log_information(level, format, ##__VA_ARGS__);	\
+	}while(0)
+#endif
+
 
 #define	CMN_ABORT(format ,...)		\
 			{CMN_MSG_LOG(CMN_LOG_ERR, format, ##__VA_ARGS__); CMN_MSG_LOG(CMN_LOG_ERR,"ABORT Now!!!");abort();}
@@ -308,7 +330,7 @@ int cmn_log_init(log_stru_t *lobj);
 #ifndef   __CMN_RELEASE__
 #if FILE_TO_STDOUT
 #define	CMN_MSG_DEBUG(level, format ,...) 	 \
-	do{ char buf[4096]; snprintf(buf, sizeof(buf), __FILE__".%d|%s\n", __LINE__, format ) ;\
+	do{ char buf[4096]; snprintf(buf, sizeof(buf), __FILE__".%d|%s:%s\n", __LINE__, cmnThreadGetName(), format ) ;\
 		printf(buf, ##__VA_ARGS__);			\
 		}while(0)
 
@@ -489,9 +511,9 @@ int cmnParseGetIpAddress(struct in_addr *ipAddress, const char *p);
 
 #define  MUX_DEBUG(...)		{CMN_MSG_DEBUG(CMN_LOG_DEBUG, __VA_ARGS__);}
 
-#define  MUX_INFO(...)		{CMN_MSG_LOG(CMN_LOG_INFO, __VA_ARGS__);}
+#define  MUX_INFO(...)		{CMN_MSG_INFO(CMN_LOG_INFO, __VA_ARGS__);}
 
-#define  MUX_WARN(...)		{CMN_MSG_LOG(CMN_LOG_WARNING, __VA_ARGS__);}
+#define  MUX_WARN(...)		{CMN_MSG_INFO(CMN_LOG_WARNING, __VA_ARGS__);}
 
 #define  MUX_ERROR(...)		{CMN_MSG_LOG(CMN_LOG_ERR, __VA_ARGS__);}
 

@@ -111,8 +111,9 @@ int _muxOsdRefresh(MUX_OSD *osd)
 	return EXIT_SUCCESS;
 }
 
-int muxOsdOutputText(MUX_OSD *osd, const HI_CHAR* pszText)
+int muxOsdOutputText(MUX_OSD *osd, int align, const HI_CHAR* pszText)
 {
+#define	__TEXT_BORDER_WIDTH		10
 	if(osd == NULL)
 	{
 		MUX_PLAY_WARN("Set OSD is not initialized" );
@@ -122,9 +123,18 @@ int muxOsdOutputText(MUX_OSD *osd, const HI_CHAR* pszText)
 	if (HIGO_INVALID_HANDLE != osd->fontHandle && HIGO_INVALID_HANDLE != osd->desktop)
 	{
 		int res  = 0;
+		HI_RECT					rect;
+		rect.x = __TEXT_BORDER_WIDTH;
+		rect.y = __TEXT_BORDER_WIDTH;
+		rect.w = osd->cfg->width -__TEXT_BORDER_WIDTH - __TEXT_BORDER_WIDTH;
+		rect.h = osd->cfg->height -__TEXT_BORDER_WIDTH - __TEXT_BORDER_WIDTH ;
+
 //		res = HI_GO_TextOutEx(higo->fontHandle, higo->layerSurfaceHandle, pszText, pstRect, HIGO_LAYOUT_WRAP | HIGO_LAYOUT_HCENTER | HIGO_LAYOUT_BOTTOM);
 
-		res = HI_GO_TextOutEx(osd->fontHandle, osd->winSurface, pszText, &osd->rect, HIGO_LAYOUT_WRAP | HIGO_LAYOUT_HCENTER | HIGO_LAYOUT_BOTTOM);
+//		res = HI_GO_TextOutEx(osd->fontHandle, osd->winSurface, pszText, &osd->rect, HIGO_LAYOUT_WRAP | HIGO_LAYOUT_HCENTER | HIGO_LAYOUT_BOTTOM);
+		/* 06.05, 2019, changed as following */
+//		MUX_PLAY_DEBUG("OSD Aler box ['%d, %d],[%d, %d]'", osd->rect.x, osd->rect.y, osd->rect.w, osd->rect.h );
+		res = HI_GO_TextOutEx(osd->fontHandle, osd->winSurface, pszText, &rect, align);
 		if (HI_SUCCESS != res)
 		{
 			MUX_PLAY_ERROR("TextOutEx on OSD %s failed: 0x%x (0x%x)", osd->name, res, osd->winSurface);
@@ -171,18 +181,18 @@ int muxOsdClear(MUX_OSD *osd)
 #endif
 
 	/* comment on Dec.27, 2017, and must be commented for mutex access OsdClear and OsdOutputText */
-//	res = muxOsdOutputText(osd, "");
+//	res = muxOsdOutputText(osd, ALERT_DEFAULT_LAYOUT, "");
 
 	return res;
 }
 
-static int _muxOsdPrint(MUX_OSD *osd, int color, const char* buf)
+static int _muxOsdPrint(MUX_OSD *osd, int color, int align, const char* buf)
 {
 	int res;
 	
 	res = muxOsdClear(osd);
 	res |= HI_GO_SetTextColor( osd->fontHandle, color);
-	res = muxOsdOutputText(osd, buf);
+	res = muxOsdOutputText(osd, align, buf);
 	
 	return res;
 }
@@ -209,7 +219,7 @@ static int _alertwinTimeoutCallback(int interval, void *param)
 }
 #endif
 
-int muxOutputAlert(MUX_RX_T *muxRx, int color, const char* frmt,...)
+int muxOutputAlert(MUX_RX_T *muxRx, int color, int align, const char* frmt,...)
 {
 	int res = 0;
 	
@@ -228,7 +238,7 @@ int muxOutputAlert(MUX_RX_T *muxRx, int color, const char* frmt,...)
 	va_end(ap);
 	
 
-	res = _muxOsdPrint(muxRx->higo.alert, color, buf);
+	res = _muxOsdPrint(muxRx->higo.alert, color, align, buf);
 
 #if ALERT_WITH_TIMER
 	/* comments for testing. Dec.7th, 2017 */	
@@ -254,7 +264,7 @@ int muxOsdImageLoad(MUX_OSD *osd, char *imageFile)
 		return EXIT_FAILURE;
 	}
 	
-//	muxOutputAlert(osd->higo->muxPlayer->muxRx, COLOR_GREEN,  "OSD Decoded!" );
+//	muxOutputAlert(osd->higo->muxPlayer->muxRx, COLOR_GREEN, ALERT_DEFAULT_LAYOUT, "OSD Decoded!" );
 #if OSD_ENABLE_DOUBLE_BUFFER
 	if(osd->higo->muxPlayer->playerConfig.enableLowDelay)
 	{
@@ -445,7 +455,13 @@ int muxOsdPosition(MUX_OSD *osd, HI_RECT_S *rect, MUX_PLAY_T *play)
 	osd->cfg->width = rect->s32Width;
 	osd->cfg->height = rect->s32Height;
 
-#if WITH_HIGO_DEBUG
+	/* added for show test in new position. 06.05, 2019 */
+	osd->rect.x = rect->s32X;
+	osd->rect.y = rect->s32Y;
+	osd->rect.w = rect->s32Width;
+	osd->rect.h = rect->s32Height;
+
+#if 1//WITH_HIGO_DEBUG
 	MUX_PLAY_DEBUG("OSD %s position at [(%d, %d), (%d, %d)]", osd->name, rect->s32X, rect->s32Y, rect->s32Width, rect->s32Height);
 #endif
 

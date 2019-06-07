@@ -48,7 +48,7 @@ RECT_CONFIG *muxGetRectConfig(MuxPlayer *muxPlayer, enum RECT_TYPE type)
 			return rect;
 	}
 
-	MUX_PLAY_WARN( "Can't found RECT for '%d'", type );
+	MUX_PLAY_ERROR( "Can't found RECT for '%d'", type );
 	return NULL;
 }
 

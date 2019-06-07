@@ -142,7 +142,7 @@ cJSON *muxApiPlayMediaOsdIndex(char *action, int osdIndex);
 cJSON *muxApiPlayMediaLogo(char *media);
 
 cJSON *muxApiPlayMediaSubtitle( char *media);
-cJSON *muxApiPlayMediaAlert(int fontcolor, char *message);
+cJSON *muxApiPlayMediaAlert(int fontcolor, char *message, int hAlign, int vAlign);
 
 
 cJSON *_muxApiPlayMediaGenericOsd(int osdIndex, char *action, char *key, int value);
@@ -206,6 +206,7 @@ int	muxApiGetStatus(cJSON *ipCmdReply);
 
 cJSON *muxApiEdidResolution( char *resolution);
 cJSON *muxApiEdidColorDepth( int colorDepth);
+cJSON *muxApiEdidColorSpace( int colorSapce);
 
 
 #ifdef __cplusplus

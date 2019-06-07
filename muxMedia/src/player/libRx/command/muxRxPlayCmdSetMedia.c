@@ -172,7 +172,7 @@ static int _mediaTimeoutCallback(int interval, void *param)
 	MUX_PLAY_T *play = (MUX_PLAY_T *)param;
 
 	PLAY_LOCK(play);
-	MUX_PLAY_DEBUG("timer callback : canceling Media Thread...");
+	MUX_PLAY_DEBUG("timer callback : canceling Media Thread %s...", (play->mediaThread)?play->mediaThread->name:"Unknown");
 
 //	HI_SVR_PLAYER_Invoke(play->playerHandler, HI_FORMAT_INVOKE_PRE_CLOSE_FILE, NULL);
 #if MUX_THREAD_SUPPORT_DYNAMIC	
@@ -180,7 +180,7 @@ static int _mediaTimeoutCallback(int interval, void *param)
 	{
 		PLAY_UNLOCK(play);
 
-		MUX_PLAY_ERROR("timer callback error, the Media Thread has removed");
+		MUX_PLAY_ERROR("timer callback error, the Media Thread has been removed");
 //		CMN_ABORT("timer callback error, the Media Thread has removed");
 		return 0;
 	}
@@ -192,14 +192,30 @@ static int _mediaTimeoutCallback(int interval, void *param)
 		MUX_PLAY_ERROR("Send signal SIGUSR1 to thread '%s(%d)' failed: %s", play->mediaThread->name, play->mediaThread->pId, strerror(errno));
 	}
 #else
-	if(pthread_cancel(play->mediaThread->id) )
+	/* maybe delay sometime to cancel this thread again. 06.06, 2019 */
+	if(play->mediaThread->id == 0)
 	{
-		MUX_PLAY_ERROR("Cancel to thread '%s(%d)' failed: %s", play->mediaThread->name, play->mediaThread->pId, strerror(errno));
+		MUX_PLAY_ERROR("Cancel to thread '%s' failed: it is still in startup", play->mediaThread->name);
+	}
+	else
+	{
+		/* send signal=0, check this is a validate thread in system */
+		if(pthread_kill(play->mediaThread->id, 0) != 0 )
+		{
+			MUX_PLAY_ERROR("thread '%s(%d)' is not validate: %s", play->mediaThread->name, strerror(errno));
+		}
+		else 
+		{
+			if(pthread_cancel(play->mediaThread->id) )
+			{
+				MUX_PLAY_ERROR("Cancel to thread '%s(%d)' failed: %s", play->mediaThread->name, play->mediaThread->pId, strerror(errno));
+			}
+		}	
 	}
 #endif
 
-	play->mediaThread = NULL;
-	play->mediaTimer = NULL;
+//	play->mediaThread = NULL;
+//	play->mediaTimer = NULL;
 #else
 	MUX_PLAY_WARN("MediaTimer for '%s' callback handler is running, send signal to thread %d....", play->muxFsm.name, play->mediaThread );
 	if(pthread_kill(play->mediaThread, SIGUSR1) != 0 )
@@ -549,7 +565,7 @@ int _setMediaThread(void *data)
 	}
 	else
 	{
-		MUX_PLAY_INFO("Success: SetMedia '%s' on %s-%d sucess",play->currentUrl, play->muxFsm.name, play->countOfPlay);
+		MUX_PLAY_INFO("Success: SetMedia '%s' on %s-%d SUCCESS",play->currentUrl, play->muxFsm.name, play->countOfPlay);
 	}
 
 	res |= HI_SVR_PLAYER_GetParam( play->playerHandler, HI_SVR_PLAYER_ATTR_SO_HDL, &hSo);

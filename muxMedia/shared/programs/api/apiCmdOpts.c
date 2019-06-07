@@ -195,6 +195,8 @@ static int	_alertOptions(struct API_CLIENT_OPT_HANDLER *handler, char *optarg, s
 	{
 		"color",
 		"media",
+		"halign",
+		"valign",
 		NULL
 	};
 
@@ -230,6 +232,34 @@ static int	_alertOptions(struct API_CLIENT_OPT_HANDLER *handler, char *optarg, s
 				{
 					fprintf(stderr, "'%s'='%s'\n", token[1], value);
 					snprintf(clientParams->media, sizeof(clientParams->media), "%s", value);
+				}
+				break;
+
+			case 2:
+				if (value == NULL)
+				{
+					fprintf(stderr, "Missing value of '%s'\n", token[2]);
+					ret = EXIT_FAILURE;
+					goto _ret;
+				}
+				else
+				{
+					clientParams->left = cmnParseGetHexIntValue(value);
+					fprintf(stderr, "'%s'='%s' (%d)\n", token[2], value, clientParams->left );
+				}
+				break;
+
+			case 3:
+				if (value == NULL)
+				{
+					fprintf(stderr, "Missing value of '%s'\n", token[3]);
+					ret = EXIT_FAILURE;
+					goto _ret;
+				}
+				else
+				{
+					clientParams->width = cmnParseGetHexIntValue(value);
+					fprintf(stderr, "'%s'='%s' (%d)\n", token[3], value, clientParams->width );
 				}
 				break;
 
@@ -1042,7 +1072,7 @@ static int	_edidDeepColorOptions(struct API_CLIENT_OPT_HANDLER *handler, char *o
 				{
 					fprintf(stderr, "'%s'='%s'\n", token[0], value);
 					clientParams->color = atoi(value);
-					if(clientParams->color< 0 || clientParams->color > 2)
+					if(clientParams->color< 0 || ( (clientParams->color > 2) && (clientParams->color != 100) ))
 					{
 						ret = EXIT_FAILURE;
 						goto _ret;
@@ -1067,6 +1097,61 @@ _ret:
 	return ret;
 }
 
+
+static int	_edidColorSpaceOptions(struct API_CLIENT_OPT_HANDLER *handler, char *optarg, struct API_PARAMETERS *clientParams)
+{
+	char *subopts;
+	char *value;
+	int ret = EXIT_SUCCESS;
+
+	char *const token[] =
+	{
+		IPCMD_EDID_DEEP_COLOR,
+		NULL
+	};
+
+	
+	subopts = optarg;
+	
+	while (*subopts != '\0' && ret != EXIT_FAILURE )
+	{
+		switch (getsubopt(&subopts, token, &value))
+		{
+			case 0:
+				if (value == NULL)
+				{
+					fprintf(stderr, "Missing value of '%s'\n", token[0]);
+					ret= EXIT_FAILURE;
+					goto _ret;
+				}
+				else
+				{
+					fprintf(stderr, "'%s'='%s'\n", token[0], value);
+					clientParams->color = atoi(value);
+					if(clientParams->color< 0 || ( (clientParams->color > 3) &&  (clientParams->color != 100)))
+					{
+						ret = EXIT_FAILURE;
+						goto _ret;
+					}
+				}
+				break;
+
+			default:
+				fprintf(stderr, "No match found for token: /%s/\n", value);
+				ret = EXIT_FAILURE;
+				goto _ret;
+				break;
+		}
+	}
+
+_ret:
+	if(ret)
+	{
+		fprintf(stderr, "option for %s : /%s/\n", clientParams->cmd, handler->prompt);
+	}
+
+	return ret;
+}
 
 static int	_edidResolutionOptions(struct API_CLIENT_OPT_HANDLER *handler, char *optarg, struct API_PARAMETERS *clientParams)
 {
@@ -1199,8 +1284,8 @@ static API_CLIENT_OPT_HANDLER _optionHandlers[] =
 	},
 	{
 		CLIENT_CMD_ALERT,
-		"alert",
-		"color='COLOR(0xFFRRGGBB)',media='text message'",
+		_MUX_ALERT_COMMAND,
+		"color='COLOR(0xFFRRGGBB)',media='text message', halign=1(left)|2(center)|3(right), valign=1(up)|2(center)|3(bottom)",
 		_alertOptions,
 	},
 	{
@@ -1416,8 +1501,15 @@ static API_CLIENT_OPT_HANDLER _optionHandlers[] =
 	{
 		CLIENT_CMD_EDID_DEEP_COLOR,
 		IPCMD_EDID_DEEP_COLOR,
-		"color='0|1|2', for 8|10|12 bits color respectively",
+		"color='0|1|2|100', for 8|10|12|auto bits color respectively",
 		_edidDeepColorOptions,
+	},
+	
+	{
+		CLIENT_CMD_EDID_COLOR_SPACE,/* added 06.04, 2019 */
+		IPCMD_EDID_COLOR_SPACE,
+		"color='0|1|2|3|100', for RGB444|YCBCR422|YCBCR444|YCBCR420|auto respectively",
+		_edidColorSpaceOptions,
 	},
 
 	/* commands for SERVER */

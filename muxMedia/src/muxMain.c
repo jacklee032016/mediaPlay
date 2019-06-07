@@ -57,6 +57,8 @@ static void termExit(void)
 	{
 		tcsetattr (0, TCSANOW, &_oldtty);
 	}
+
+	exit(1);
 }
 
 static void sigTermHandler(int sig)
@@ -69,7 +71,11 @@ static void sigTermHandler(int sig)
 	
 	while(plugin)
 	{
-		plugin->signalExit(plugin, 1);
+		if(plugin->enable)
+		{
+			MUX_INFO("Plugin '%s' exit...", plugin->name );
+			plugin->signalExit(plugin, 1);
+		}
 		plugin = plugin->next;
 	}
 
@@ -334,6 +340,22 @@ int main(int argc, char **argv)
 
 	cmnMediaInit(&muxMain->mediaCaptureConfig);
 
+#if 1
+	res = muxMain->initThread(muxMain, &threadCmnFtp, muxMain->mediaCaptureConfig.usbHome);
+	if(res < 0 )
+	{
+		MUX_ERROR("failed when '%s' initializing", threadCmnFtp.name);
+		exit(1);
+	}
+
+	res =  muxMain->initThread(muxMain, &threadController, muxMain);
+	if(res < 0)
+	{
+		MUX_ERROR("failed when '%s' initializing", threadController.name );
+		exit(1);
+	}
+#endif
+
 	plugin = muxMain->plugins;
 	while(plugin)
 	{
@@ -355,6 +377,7 @@ int main(int argc, char **argv)
 
 //	usleep(10*1000);
 
+#if 0
 	res = muxMain->initThread(muxMain, &threadCmnFtp, muxMain->mediaCaptureConfig.usbHome);
 	if(res < 0 )
 	{
@@ -368,6 +391,7 @@ int main(int argc, char **argv)
 		MUX_ERROR("failed when '%s' initializing", threadController.name );
 		exit(1);
 	}
+#endif
 
 	/* start Capture thread in PLAYER and FileFeed thread in SERVER, and register thread in threadlist of muxMain */
 	mediaCapture = muxMain->mediaCaptures;

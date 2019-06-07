@@ -378,7 +378,14 @@ typedef	struct MUX_RX
 	MUXLAB_HIGO_T					higo;
 
 	HI_SVR_PLAYER_PARAM_S			playerParam;	/* for all players */
-	cmn_list_t						players;	
+	cmn_list_t						players;
+
+	/* add this lock to make callback of HDMI plugin should wait for everything has been inited. 
+	* But it is not the reason HDMI thread is blocked: maybe some configuration(Format, Depth, Color Space)  of HDMI is wrong, so it is blocked:
+	* After change the sequences and commands, the block of threads disappeared. JL 06.06, 2019
+	*/
+	cmn_mutex_t						*initLock;		
+
 
 	HI_BOOL							isMute;
 
@@ -449,7 +456,6 @@ int muxHdmiCECSetDeviceOsdName(void);
 
 void muxHdmiReplugMonitor(HI_UNF_ENC_FMT_E enForm);
 int muxHdmiConfigDeepColor(HI_UNF_HDMI_DEEP_COLOR_E deepColor);
-int muxHdmiConfigDeepColor(HI_UNF_HDMI_DEEP_COLOR_E deepColor);
 
 
 /****  Higo functions ********/
@@ -458,9 +464,11 @@ HI_S32 muxSubtitleOnDrawCallback(HI_VOID * u32UserData, const HI_UNF_SO_SUBTITLE
 HI_S32 muxSubtitleOnClearCallback(HI_VOID * u32UserData, HI_VOID *pArg);
 HI_S32 muxSubtitleClear(MUX_PLAY_T *play, HI_UNF_SO_CLEAR_PARAM_S *param);
 
-int muxOsdOutputText(MUX_OSD *osd, const HI_CHAR* pszText);
+int muxOsdOutputText(MUX_OSD *osd, int align, const HI_CHAR* pszText);
 int muxOsdClear(MUX_OSD *osd);
-int muxOutputAlert(MUX_RX_T *muxRx, int color, const char* frmt,...);
+int muxOutputAlert(MUX_RX_T *muxRx, int color, int align, const char* frmt,...);
+
+#define	ALERT_DEFAULT_LAYOUT				(LAYOUT_WRAP|LAYOUT_HCENTER|LAYOUT_VCENTER)
 
 
 #define	MUX_SUBTITLE_CLEAR_ALL(play)		\
@@ -480,7 +488,7 @@ int muxOutputAlert(MUX_RX_T *muxRx, int color, const char* frmt,...);
 
 #define	PLAY_ALERT_MSG( play, color, ...)	\
 			{	if((play)->muxRx->muxPlayer->playerConfig.enableScreenDebug) 	{ \
-					muxOutputAlert((play)->muxRx, (color),  __VA_ARGS__); }	}
+					muxOutputAlert((play)->muxRx, (color), ALERT_DEFAULT_LAYOUT, __VA_ARGS__); }	}
 
 
 #define	PLAY_LOCK(play)			cmn_mutex_lock((play)->mutexLock )
@@ -601,6 +609,29 @@ void muxRxCaptureInitDefault(MUX_RX_T *muxRx);
 
 extern	MUX_RX_T  		_muxRx;
 
+/* auto for Color Depth and Color Space */
+#define	_COLOR_DEPETH_SPACE_AUTO	100
+
+/* used when auto is selected */
+typedef	struct
+{
+	HI_UNF_ENC_FMT_E			format;
+	
+	HI_UNF_HDMI_VIDEO_MODE_E	colorSpace;
+	HI_UNF_HDMI_DEEP_COLOR_E	colorDepth;
+
+	HI_UNF_DISP_HDR_TYPE_E		hdrType;
+}MUX_HDMI_CFG_T;
+
+int muxHdmiGetAutoConfig(MUX_HDMI_CFG_T *autoCfg);
+
+HI_UNF_HDMI_DEEP_COLOR_E muxHdmiFindNewColorDepth(HI_UNF_HDMI_DEEP_COLOR_E colorDepthCfg, HI_UNF_EDID_DEEP_COLOR_S *sinkCapColorDepthes);
+HI_UNF_HDMI_VIDEO_MODE_E muxHdmiFindNewColorSpace(HI_UNF_HDMI_VIDEO_MODE_E colorSpaceCfg, HI_UNF_EDID_COLOR_SPACE_S *sinkCapColorSpace);
+
+int muxHdmiConfigFormat(HI_UNF_ENC_FMT_E enForm);
+int muxHdmiConfigColorSpace(HI_UNF_HDMI_VIDEO_MODE_E colorSpace);
+
+extern HI_S32 HI_UNF_HDMI_GetDeepColor(HI_UNF_HDMI_ID_E enHdmi, HI_UNF_HDMI_DEEP_COLOR_E *penDeepColor);
 
 #ifdef __cplusplus
 #if __cplusplus

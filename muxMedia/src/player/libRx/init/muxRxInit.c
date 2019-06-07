@@ -219,9 +219,13 @@ HI_S32 muxRxInit(MUX_RX_T *muxRx)
 		muxRx->videoFormat = muxHdmiFormatCode(muxRx->muxPlayer->playerConfig.displayFormat);
 	}
 	MUX_PLAY_INFO("Display Format:%s:%d", muxPlayer->playerConfig.displayFormat, muxRx->videoFormat);
-	
+
+	muxRx->initLock = cmn_mutex_init();
+	cmn_mutex_lock(muxRx->initLock);
+#if 1	
 	cmnThreadSetName("HiDevice");
 	res = _muxRxUnfDeviceInit(muxRx);
+#endif
 
 	cmnThreadSetName("HiPlayer");
 	res |= _muxHiPlayerInit( muxRx);
@@ -234,16 +238,23 @@ HI_S32 muxRxInit(MUX_RX_T *muxRx)
 		return HI_FAILURE;
 	}
 
-	muxRxCaptureInitDefault( muxRx );
-
 	cmnThreadSetName("Players");
 
 	res |= cmn_list_iterate(&muxPlayer->playerConfig.windows, HI_TRUE, muxRxCreatePlayer, muxRx);
 	if (HI_SUCCESS != res)
 	{
+		cmn_mutex_unlock(muxRx->initLock);
 		MUX_PLAY_ERROR("Initialized window failed, please check your configuration!");
 		return HI_FAILURE;
 	}
+	cmn_mutex_unlock(muxRx->initLock);
+
+	muxRxCaptureInitDefault( muxRx );
+
+#if 0
+	cmnThreadSetName("HiDevice");
+	res = _muxRxUnfDeviceInit(muxRx);
+#endif
 
 	cmnThreadSetName("PlayCapture");
 	res = muxRxCaptureInit(muxRx);

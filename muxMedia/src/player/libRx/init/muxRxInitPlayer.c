@@ -280,7 +280,7 @@ int _createWindowChannel(MUX_PLAY_T *play )
 	stWinAttr.stOutputRect.s32Height = play->cfg->height;
 
 
-	MUX_PLAY_DEBUG("create window [(%d,%d), (%d, %d)]", play->cfg->left, play->cfg->top, play->cfg->width, play->cfg->height);
+	MUX_PLAY_DEBUG("create window#%d [(%d,%d), (%d, %d)]", play->windowIndex, play->cfg->left, play->cfg->top, play->cfg->width, play->cfg->height);
 
 	cmnThreadSetName("Window-%d", play->windowIndex);
 

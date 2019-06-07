@@ -400,7 +400,8 @@ CmnThread  threadWeb =
 static int _muxWebReportEvent(struct _MuxPlugin *plugin, CMN_PLAY_JSON_EVENT *jEvent)
 {
 	MUX_DEBUG("WEB receiving JSON/API event");
-	return cmnThreadAddEvent(&threadWeb, jEvent);
+//	return cmnThreadAddEvent(&threadWeb, jEvent);
+	return EXIT_SUCCESS;
 }
 
 

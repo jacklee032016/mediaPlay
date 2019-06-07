@@ -630,7 +630,7 @@ static int _playerFailedHandler(void *ctx, EVENT *_event)
 		MUX_PLAY_WARN( "Lock PlayFailed for AlertMsg: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
-	muxOutputAlert((play)->muxRx, COLOR_RED,  "playing '%s' failed", play->currentUrl);//, muxPlayerStateName( play->muxFsm.currentState));
+	muxOutputAlert((play)->muxRx, COLOR_RED, ALERT_DEFAULT_LAYOUT, "playing '%s' failed", play->currentUrl);//, muxPlayerStateName( play->muxFsm.currentState));
 	res= OSD_DESKTOP_UNLOCK(&play->muxRx->higo);
 	if(res != 0)
 	{
@@ -658,7 +658,7 @@ static int _playerFailedHandler(void *ctx, EVENT *_event)
 		return HI_SUCCESS;
 	}
 //	muxOsdClear(play->muxRx->higo.alert);
-	muxOutputAlert((play)->muxRx, COLOR_RED,  "");//, muxPlayerStateName( play->muxFsm.currentState));
+	muxOutputAlert((play)->muxRx, COLOR_RED, ALERT_DEFAULT_LAYOUT, "");//, muxPlayerStateName( play->muxFsm.currentState));
 	res= OSD_DESKTOP_UNLOCK(&play->muxRx->higo);
 	if(res != 0)
 	{

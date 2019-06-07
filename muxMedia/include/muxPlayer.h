@@ -37,9 +37,9 @@ extern "C" {
 
 #define  MUX_PLAY_DEBUG(...)		{CMN_MSG_DEBUG(CMN_LOG_DEBUG, __VA_ARGS__);}
 
-#define  MUX_PLAY_INFO(...)		{CMN_MSG_LOG(CMN_LOG_INFO, __VA_ARGS__);}
+#define  MUX_PLAY_INFO(...)		{CMN_MSG_INFO(CMN_LOG_INFO, __VA_ARGS__);}
 
-#define  MUX_PLAY_WARN(...)		{CMN_MSG_LOG(CMN_LOG_WARNING, __VA_ARGS__);}
+#define  MUX_PLAY_WARN(...)		{CMN_MSG_INFO(CMN_LOG_WARNING, __VA_ARGS__);}
 
 #define  MUX_PLAY_ERROR(...)		{CMN_MSG_LOG(CMN_LOG_ERR, __VA_ARGS__);}
 

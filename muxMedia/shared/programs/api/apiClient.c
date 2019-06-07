@@ -36,13 +36,13 @@ static void usage(char* base, struct API_PARAMETERS *params)
 		"\t\t Current command:  " \
 		"\n\t\t\tplay, stop, pause, resume, forward, backforwar, subtitle, playerInfo, mediaInfo, " \
 		"\n\t\t\tsawpWindow, rotateWindow, locateWindow, " IPCMD_NAME_ASPECT_WINDOW", vol+, vol-, "IPCMD_NAME_PLAYER_MUTE", "IPCMD_NAME_PLAYER_MUTE_ALL", "IPCMD_NAME_PLAYER_AUDIO", " \
-		"\n\t\t\talert, logo, osdEnable, osdBackground, osdTransparency, osdFontColor, osdFontSize, osdPosition, " IPCMD_NAME_OSD_INFO ", "\
+		"\n\t\t\t"_MUX_ALERT_COMMAND", logo, osdEnable, osdBackground, osdTransparency, osdFontColor, osdFontSize, osdPosition, " IPCMD_NAME_OSD_INFO ", "\
 		"\n\t\t\trecordStart, recordStop, recordStatus, recordPause, recordResume, "\
 		"\n\t\t\tfiles, playlists, playlist, fileDelete, playlistDelete, playlistAdd, download," \
 		"\n\t\t\t"CLIENT_CMD_NAME_SVR_CONFIG", "CLIENT_CMD_NAME_SVR_FEEDS", "CLIENT_CMD_NAME_SVR_CONNS", "CLIENT_CMD_NAME_SVR_URLS", " \
 		"\n\t\t\t"CLIENT_CMD_NAME_WEB_INFO ", " \
 		"\n\t\t\t"IPCMD_CEC_STAND_BY ", " IPCMD_CEC_IMAGE_VIEW_ON", " IPCMD_CEC_VOLUME_UP ", " IPCMD_CEC_VOLUME_DOWN ", " IPCMD_CEC_MUTE ", " IPCMD_CEC_INFO ", " \
-		"\n\t\t\t"IPCMD_EDID_RESOLUTION ", " IPCMD_EDID_DEEP_COLOR", "  \
+		"\n\t\t\t"IPCMD_EDID_RESOLUTION ", " IPCMD_EDID_DEEP_COLOR", "  IPCMD_EDID_COLOR_SPACE", " \
 		"\n\t\t\t"IPCMD_SYS_ADMIN_THREADS ", " IPCMD_SYS_ADMIN_VER_INFO", quit \n" \
 		"\n\t\t windowIndex: default is 0; media : URL/Local file/Playlist; \n" \
 		"\t\t ipaddress/fqdn: default localhost; -d duration: duration for recording; \n", 
@@ -221,12 +221,25 @@ static int _validateOsdBanner(struct API_CLIENT_CMD_HANDLER *handle, struct API_
 		printf("WARNS: No 'fontcolor' for the '%s' command, default green is used;\n", params->cmd);
 		params->color = 0x0000FF00;
 	}
+
+	if(params->left != _BANNER_H_ALIGN_LEFT && params->left != _BANNER_H_ALIGN_CENTER && params->left != _BANNER_H_ALIGN_RIGHT )
+	{
+		printf("WARNS: '-"_MUX_ALERT_H_ALIGN"' for the '%s' command is wrong:%d, default Central Align is used;\n", params->cmd, params->left);
+		params->left = _BANNER_H_ALIGN_CENTER;
+	}
+
+	if(params->width != _BANNER_V_ALIGN_TOP && params->width != _BANNER_V_ALIGN_CENTER && params->width != _BANNER_V_ALIGN_BOTTOM  )
+	{
+		printf("WARNS: '-"_MUX_ALERT_V_ALIGN"' for the '%s' command is wrong:%d, default Central Align is used;\n", params->cmd, params->width);
+		params->width = _BANNER_V_ALIGN_CENTER;
+	}
+
 	return EXIT_SUCCESS;
 }
 
 static int _osdBannerExec(struct API_CLIENT_CMD_HANDLER *handle, struct API_PARAMETERS *params)
 {
-	params->result = muxApiPlayMediaAlert(params->color, params->media);
+	params->result = muxApiPlayMediaAlert(params->color, params->media, params->left, params->width );
 	return EXIT_SUCCESS;
 }
 
@@ -714,12 +727,31 @@ static int _edidDeepColorExec(struct API_CLIENT_CMD_HANDLER *handle, struct API_
 	params->result = muxApiEdidColorDepth(params->color);
 	return EXIT_SUCCESS;
 }
-	
+
 static int _validateEdidColor(struct API_CLIENT_CMD_HANDLER *handle, struct API_PARAMETERS *params, char *Program)
 {
 	if(params->color == -1)
 	{
 		printf("WARNS: No 'color' of deep color for the '%s' command\n", params->cmd);
+		params->color = 0;
+		return EXIT_FAILURE;
+	}
+	return EXIT_SUCCESS;
+}
+	
+
+static int _edidColorSpaceExec(struct API_CLIENT_CMD_HANDLER *handle, struct API_PARAMETERS *params)
+{
+	params->result = muxApiEdidColorSpace(params->color);
+	return EXIT_SUCCESS;
+}
+	
+	
+static int _validateEdidColorSpace(struct API_CLIENT_CMD_HANDLER *handle, struct API_PARAMETERS *params, char *Program)
+{
+	if(params->color == -1)
+	{
+		printf("WARNS: No 'color' of color space for the '%s' command\n", params->cmd);
 		params->color = 0;
 		return EXIT_FAILURE;
 	}
@@ -848,7 +880,7 @@ API_CLIENT_CMD_HANDLER apiClientCmdHandlers[]=
 
 	/* OSD commands */
 	{
-		.name = "alert",
+		.name = _MUX_ALERT_COMMAND,
 		.validate = _validateOsdBanner,
 		.execute = _osdBannerExec
 	},
@@ -956,6 +988,11 @@ API_CLIENT_CMD_HANDLER apiClientCmdHandlers[]=
 		.execute = _edidDeepColorExec
 	},
 
+	{
+		.name = IPCMD_EDID_COLOR_SPACE,
+		.validate = _validateEdidColorSpace,
+		.execute = _edidColorSpaceExec
+	},
 	
 	{
 		.name = "playerInfo",

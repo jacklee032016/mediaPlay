@@ -16,7 +16,6 @@
 #include "hi_adp.h"
 #include "hi_adp_hdmi.h"
 
-extern HI_S32 HI_UNF_HDMI_GetDeepColor(HI_UNF_HDMI_ID_E enHdmi, HI_UNF_HDMI_DEEP_COLOR_E *penDeepColor);
 
 
 typedef struct hiHDMI_ARGS_S
@@ -39,7 +38,9 @@ User_HDMI_CallBack pfnHdmiUserCallback = NULL;
 const HI_CHAR * pstencryptedHdcpKey = "EncryptedKey_332bytes.bin";
 #endif
 
+#define	__DEBUG_HDMI_CEC		0
 
+#if __DEBUG_HDMI_CEC
 static HI_VOID HDMI_PrintAttr(HI_UNF_HDMI_ATTR_S *pstHDMIAttr, char *title)
 {
 	MUX_PLAY_DEBUG("\n=====HDMI Attributes : %s=====\n"
@@ -80,6 +81,7 @@ static void _hdmiStatus(HI_UNF_HDMI_STATUS_S *hdmiStatus)
 		hdmiStatus->u8Bksv[0], hdmiStatus->u8Bksv[1], hdmiStatus->u8Bksv[2], hdmiStatus->u8Bksv[3], hdmiStatus->u8Bksv[4]);
 	return;
 }
+#endif
 
 #if 0
 void HDMI_HotPlug_Proc(HI_VOID *pPrivateData)
@@ -224,133 +226,6 @@ void HDMI_HotPlug_Proc(HI_VOID *pPrivateData)
 }
 #else
 
-HI_UNF_ENC_FMT_E itemResolution(HI_CHAR * res, HI_U32 i)
-{
-	//printf("	res=%s, fps=%u\n", res, i);
-	if (strcmp(res, "720x480") == 0)
-	{
-		switch (i)
-		{
-			case 60:
-				return HI_UNF_ENC_FMT_480P_60;
-		}
-	}
-	/* else if (strcmp(res, "720x576") == 0) {
-	switch (i) {
-	case 50:
-	return HI_UNF_ENC_FMT_576P_50;
-	}
-	}*/
-	else if (strcmp(res, "1280x720") == 0)
-	{
-		switch (i)
-		{
-			case 50:
-				return HI_UNF_ENC_FMT_720P_50;
-			case 60:
-				return HI_UNF_ENC_FMT_720P_60;
-		}
-	}
-	else if (strcmp(res, "1920x1080p") == 0)
-	{
-		switch (i)
-		{
-			case 24:
-				return HI_UNF_ENC_FMT_1080P_24;
-			case 25:
-				return HI_UNF_ENC_FMT_1080P_25;
-			case 30:
-				return HI_UNF_ENC_FMT_1080P_30;
-			case 50:
-				return HI_UNF_ENC_FMT_1080P_50;
-			case 60:
-				return HI_UNF_ENC_FMT_1080P_60;
-		}
-	}
-	else if (strcmp(res, "1920x1080i") == 0)
-	{
-		switch (i)
-		{
-			case 50:
-				return HI_UNF_ENC_FMT_1080i_50;
-			case 60:
-				return HI_UNF_ENC_FMT_1080i_60;
-		}
-	}
-	/* else if (strcmp(res, "4096x2160") == 0) {
-		switch (i) {
-		case 24:
-		return HI_UNF_ENC_FMT_4096X2160_24;
-		case 25:
-		return HI_UNF_ENC_FMT_4096X2160_25;
-		case 30:
-		return HI_UNF_ENC_FMT_4096X2160_30;
-		case 50:
-		return HI_UNF_ENC_FMT_4096X2160_50;
-		case 60:
-		return HI_UNF_ENC_FMT_4096X2160_60;
-	}
-	}*/
-	else if (strcmp(res, "3840x2160") == 0)
-	{
-		switch (i)
-		{
-			case 24:
-				return HI_UNF_ENC_FMT_3840X2160_24;
-			case 25:
-				return HI_UNF_ENC_FMT_3840X2160_25;
-			case 30:
-				return HI_UNF_ENC_FMT_3840X2160_30;
-			case 50:
-				return HI_UNF_ENC_FMT_3840X2160_50;
-			case 60:
-				return HI_UNF_ENC_FMT_3840X2160_60;
-		}
-	}
-	else if (i == 60)
-	{
-		/*if (strcmp(res, "640x480") == 0)
-		 return HI_UNF_ENC_FMT_861D_640X480_60;
-		 else if (strcmp(res, "800x600") == 0)
-		 return HI_UNF_ENC_FMT_VESA_800X600_60;
-		 else if (strcmp(res, "1024x768") == 0)
-		 return HI_UNF_ENC_FMT_VESA_1024X768_60;
-		 else if (strcmp(res, "1280x720") == 0)
-		 return HI_UNF_ENC_FMT_VESA_1280X720_60;
-		 else if (strcmp(res, "1280x800") == 0)
-		 return HI_UNF_ENC_FMT_VESA_1280X800_60;
-		 else if (strcmp(res, "1280x1024") == 0)
-		 return HI_UNF_ENC_FMT_VESA_1280X1024_60;
-		 else if (strcmp(res, "1360x768") == 0)
-		 return HI_UNF_ENC_FMT_VESA_1360X768_60;
-		 else if (strcmp(res, "1366x768") == 0)
-		 return HI_UNF_ENC_FMT_VESA_1366X768_60;
-		 else if (strcmp(res, "1400x1050") == 0)
-		 return HI_UNF_ENC_FMT_VESA_1400X1050_60;
-		 else if (strcmp(res, "1440x900") == 0)
-		 return HI_UNF_ENC_FMT_VESA_1440X900_60;
-		 else if (strcmp(res, "1600x1200") == 0)
-		 return HI_UNF_ENC_FMT_VESA_1600X1200_60;
-		 else if (strcmp(res, "1680x1050") == 0)
-		 return HI_UNF_ENC_FMT_VESA_1680X1050_60;
-		 else if (strcmp(res, "1920x1080") == 0)
-		 return HI_UNF_ENC_FMT_VESA_1920X1080_60;
-		 else if (strcmp(res, "1920x1200") == 0)
-		 return HI_UNF_ENC_FMT_VESA_1920X1200_60;
-		 else if (strcmp(res, "1920x1440") == 0)
-		 return HI_UNF_ENC_FMT_VESA_1920X1440_60;
-		 else if (strcmp(res, "2048x1152") == 0)
-		 return HI_UNF_ENC_FMT_VESA_2048X1152_60;
-		 else*/
-		if (strcmp(res, "2560x1440") == 0)
-			return HI_UNF_ENC_FMT_VESA_2560X1440_60_RB;
-		else if (strcmp(res, "2560x1600") == 0)
-			return HI_UNF_ENC_FMT_VESA_2560X1600_60_RB;
-	}
-
-	return HI_UNF_ENC_FMT_BUTT;
-}
-
 
 void HDMI_HotPlug_Proc(HI_VOID *pPrivateData)
 {
@@ -358,16 +233,24 @@ void HDMI_HotPlug_Proc(HI_VOID *pPrivateData)
 	HDMI_ARGS_S *pArgs = (HDMI_ARGS_S*) pPrivateData;
 	HI_UNF_HDMI_ID_E hHdmi = pArgs->enHdmi;
 	HI_UNF_HDMI_ATTR_S stHdmiAttr;
-	//HI_UNF_HDMI_INFOFRAME_S        stInfoFrame;
-	HI_UNF_EDID_BASE_INFO_S stSinkCap;
+//	//HI_UNF_HDMI_INFOFRAME_S        stInfoFrame;
+//	HI_UNF_EDID_BASE_INFO_S stSinkCap;
 	HI_UNF_HDMI_STATUS_S stHdmiStatus;
 
-	HI_UNF_ENC_FMT_E	autoTvFormat = HI_UNF_ENC_FMT_BUTT;
 #ifdef HI_HDCP_SUPPORT
 	static HI_U8 u8FirstTimeSetting = HI_TRUE;
 #endif
 
+	MUX_RX_T  	*muxRx = &_muxRx;
+	MuxPlayerConfig *cfg = &muxRx->muxPlayer->playerConfig;
+	MUX_HDMI_CFG_T	muxHdmiCfg;
+	
+	HI_UNF_ENC_FMT_E			_format = HI_UNF_ENC_FMT_BUTT;
+	HI_UNF_HDMI_VIDEO_MODE_E	_colorSpace;
+	HI_UNF_HDMI_DEEP_COLOR_E	_colorDepth;
+
 	MUX_PLAY_DEBUG("--- Get HDMI event: HOTPLUG. ---");
+	cmn_mutex_lock(muxRx->initLock);
 
 	ret = HI_UNF_HDMI_GetStatus(hHdmi, &stHdmiStatus);
 	if(ret != HI_SUCCESS)
@@ -378,136 +261,60 @@ void HDMI_HotPlug_Proc(HI_VOID *pPrivateData)
 	if (HI_FALSE == stHdmiStatus.bConnected)
 	{
 		MUX_PLAY_ERROR("No HDMI Connect");
+		cmn_mutex_unlock(muxRx->initLock);
 		return;
 	}
 
-	HI_UNF_HDMI_GetAttr(hHdmi, &stHdmiAttr);
-	ret = HI_UNF_HDMI_GetSinkCapability(hHdmi, &stSinkCap);
-	if (ret == HI_SUCCESS)
+
+	if(muxHdmiGetAutoConfig(&muxHdmiCfg) == EXIT_FAILURE)
 	{
-		HI_UNF_EDID_TIMING_S *pt = &(stSinkCap.stPerferTiming);
+		MUX_PLAY_ERROR("HDMI Auto params select failed");
+	}
+	
+	_format = muxHdmiFormatCode(cfg->displayFormat);
+	if(_format==HI_UNF_ENC_FMT_BUTT)
+	{
+		_format = muxHdmiCfg.format;
+	}
 
-		HI_U32 hh = pt->u32HACT + pt->u32HBB + pt->u32HFB;
-		HI_U32 vv = pt->u32VACT + pt->u32VBB + pt->u32VFB;
-		HI_U32 fps = 0;
-		if (hh && vv)
-		{
-			fps = (HI_U32) (pt->u32PixelClk * 1000.0 / hh / vv + 0.5);
+	_colorDepth = cfg->deepColor;
+	if(_colorDepth < HI_UNF_HDMI_DEEP_COLOR_24BIT || _colorDepth > HI_UNF_HDMI_DEEP_COLOR_36BIT )
+	{
+		_colorDepth = muxHdmiCfg.colorDepth;
+	}
 
-			char res[20];
-			char interlaced = pt->bInterlace ? 'i' : 'p';
-			if (pt->u32HACT == 1920 && pt->u32VACT == 1080)
-			{
-				sprintf(res, "%dx%d%c", pt->u32HACT, pt->u32VACT, interlaced);
-			}
-			else
-			{
-				sprintf(res, "%dx%d", pt->u32HACT, pt->u32VACT);
-			}
+	_colorSpace = cfg->colorSpace;
+	if(_colorSpace < HI_UNF_HDMI_VIDEO_MODE_RGB444 || _colorSpace > HI_UNF_HDMI_VIDEO_MODE_YCBCR420 )
+	{
+		_colorSpace = muxHdmiCfg.colorSpace;
+	}
 
-			MUX_PLAY_DEBUG("Check profile from EDID: fps:%d; resolution:%s; mode:%c", fps, res, interlaced);
+	/* 1: set format */
+//	muxHdmiReplugMonitor(_format);
+	muxHdmiConfigFormat(_format);
 
-			HI_UNF_ENC_FMT_E enFormat = itemResolution(res, fps);
-			MUX_PLAY_DEBUG("calculated resolution is :%s!", muxHdmiFormatName(enFormat) );
-			if (enFormat == HI_UNF_ENC_FMT_BUTT)
-			{
-				autoTvFormat = stSinkCap.enNativeFormat;
-				MUX_PLAY_ERROR("Failed to get preferred resolution[%s] from PTB\n", res);
-			}
-			else
-			{
-				autoTvFormat = enFormat;
-			}
-		}
-		else
-		{
-			autoTvFormat = stSinkCap.enNativeFormat;
-			MUX_PLAY_WARN("No H/V params in EDDI, set as native format", muxHdmiFormatName(autoTvFormat) );
-		}
+	/* 2: set Color Depth */
+	muxHdmiConfigDeepColor(_colorDepth);
 
-		MUX_PLAY_DEBUG("set resolution is :%s!", muxHdmiFormatName(autoTvFormat) );
-		muxHdmiReplugMonitor(autoTvFormat);
-
-		if (HI_TRUE == stSinkCap.bSupportHdmi)
-		{
-			stHdmiAttr.bEnableHdmi = HI_TRUE;
-			if (HI_TRUE == stSinkCap.stColorSpace.bRGB444)
-			{
-				stHdmiAttr.enVidOutMode = HI_UNF_HDMI_VIDEO_MODE_RGB444;
-			}
-			else if (HI_TRUE == stSinkCap.stColorSpace.bYCbCr444)
-			{
-				stHdmiAttr.enVidOutMode = HI_UNF_HDMI_VIDEO_MODE_YCBCR444;
-			}
-			else if (HI_TRUE == stSinkCap.stColorSpace.bYCbCr422)
-			{
-				stHdmiAttr.enVidOutMode = HI_UNF_HDMI_VIDEO_MODE_YCBCR422;
-			}
-			else
-			{
-				stHdmiAttr.enVidOutMode = HI_UNF_HDMI_VIDEO_MODE_YCBCR420; /* user can chooce RGB/YUV*/
-			}
-
-			//Dolby or HDR or SDR
-			HI_S32 s32Ret;
-			//if (s32Ret == HI_SUCCESS)
-			{
-				if (HI_TRUE == stSinkCap.bDolbySupport)
-				{
-					s32Ret = HI_UNF_DISP_SetHDRType(HI_UNF_DISPLAY1, HI_UNF_DISP_HDR_TYPE_DOLBY);
-					if (HI_SUCCESS != s32Ret)
-					{
-						MUX_PLAY_ERROR("call HI_UNF_DISP_SetHDRType Dolby failed %#x.\n", s32Ret);
-					}
-					else
-					{
-						MUX_PLAY_DEBUG("call HI_UNF_DISP_SetHDRType Dolby succeed %#x.\n", s32Ret);
-					}
-				}
-				else if (HI_TRUE == stSinkCap.bHdrSupport)
-				{
-					s32Ret = HI_UNF_DISP_SetHDRType(HI_UNF_DISPLAY1, HI_UNF_DISP_HDR_TYPE_HDR10);
-					if (HI_SUCCESS != s32Ret)
-					{
-						MUX_PLAY_ERROR("call HI_UNF_DISP_SetHDRType HDR10 failed %#x.\n", s32Ret);
-					}
-					else
-					{
-						MUX_PLAY_DEBUG("call HI_UNF_DISP_SetHDRType HDR10 succeed %#x.\n", s32Ret);
-					}
-				}
-				else
-				{
-					s32Ret = HI_UNF_DISP_SetHDRType(HI_UNF_DISPLAY1, HI_UNF_DISP_HDR_TYPE_NONE);
-					if (HI_SUCCESS != s32Ret)
-					{
-						MUX_PLAY_ERROR("call HI_UNF_DISP_SetHDRType SDR failed %#x.\n", s32Ret);
-					}
-				}
-			}
-
-			//deep color : for phase 1, hardcode it to 8bit per channel
-			/*if (stSinkCap.stDeepColor.bDeepColor30Bit)
-				stHdmiAttr.enDeepColorMode = HI_UNF_HDMI_DEEP_COLOR_30BIT;
-			else if (stSinkCap.stDeepColor.bDeepColorY444)
-				stHdmiAttr.enDeepColorMode = HI_UNF_HDMI_DEEP_COLOR_24BIT;*/
-		}
-		else
-		{
-			stHdmiAttr.enVidOutMode = HI_UNF_HDMI_VIDEO_MODE_RGB444;
-			//读取到了edid，并且不支持hdmi则进入dvi模式
-			//read real edid ok && sink not support hdmi,then we run in dvi mode
-			stHdmiAttr.bEnableHdmi = HI_FALSE;
-		}
+	/* after set format and Depth, then get Attributes of HDMI, and set Color Space, HDR type by attributes */
+	HI_UNF_HDMI_GetAttr(hHdmi, &stHdmiAttr);
+	
+	/* 2: set HDR type */
+	ret = HI_UNF_DISP_SetHDRType(HI_UNF_DISPLAY1, muxHdmiCfg.hdrType);
+	if (HI_SUCCESS != ret)
+	{
+		MUX_PLAY_ERROR("set DISP HDRType %d failed %#x.\n", muxHdmiCfg.hdrType, ret);
 	}
 	else
 	{
-		//when get capability fail,use default mode
-		if (g_enDefaultMode != HI_UNF_HDMI_DEFAULT_ACTION_DVI)
-			stHdmiAttr.bEnableHdmi = HI_TRUE;
-		else
-			stHdmiAttr.bEnableHdmi = HI_FALSE;
+		MUX_PLAY_DEBUG("set DISP HDRType %d succeed %#x.\n", muxHdmiCfg.hdrType, ret);
 	}
+
+#if 0
+	muxHdmiConfigColorSpace(_colorSpace);
+#else
+	stHdmiAttr.enVidOutMode = _colorSpace;
+#endif
 
 	if (HI_TRUE == stHdmiAttr.bEnableHdmi)
 	{
@@ -552,10 +359,38 @@ void HDMI_HotPlug_Proc(HI_VOID *pPrivateData)
 	}
 #endif
 
+
 	ret = HI_UNF_HDMI_SetAttr(hHdmi, &stHdmiAttr);
+	if (ret != HI_SUCCESS)
+	{
+		MUX_PLAY_ERROR("HDMI set Attr failed:0x%x.\n", ret);
+	}
 
 	/* HI_UNF_HDMI_SetAttr must before HI_UNF_HDMI_Start! */
 	ret = HI_UNF_HDMI_Start(hHdmi);
+	if (ret != HI_SUCCESS)
+	{
+		MUX_PLAY_ERROR("HDMI start failed:0x%x.\n", ret);
+	}
+
+//	usleep(300 * 1000);
+	
+#if __DEBUG_HDMI_CEC
+	ret = HI_UNF_HDMI_CEC_Enable(HI_UNF_HDMI_ID_0);
+	if (ret != HI_SUCCESS)
+	{
+		MUX_PLAY_ERROR("HDMI CEC Enable failed:0x%x.\n", ret);
+	}
+
+	/* HDMI thread will block in some TV when following commands are used. JL. 06.07, 2019 */
+	muxHdmiCECCommand(HI_UNF_CEC_LOGICALADD_TUNER_1, HI_UNF_CEC_LOGICALADD_TV, CEC_OPCODE_IMAGE_VIEW_ON, 0, NULL, 0);
+
+	muxHdmiCECSetDeviceOsdName();
+
+	HDMI_PrintAttr(&stHdmiAttr, "After SetAttr");
+
+	muxHdmiPrintSinkCap();
+#endif
 
 #if 0
 	{
@@ -578,6 +413,10 @@ void HDMI_HotPlug_Proc(HI_VOID *pPrivateData)
 		MUX_PLAY_INFO("Resolution:%s; deepColor=%d",muxHdmiFormatName(fmtTmp), enDeepColor) ;
 	}
 #endif
+
+	cmn_mutex_unlock(muxRx->initLock);
+
+	MUX_PLAY_DEBUG("HDMI initialized now\n");
 	
 	return;
 

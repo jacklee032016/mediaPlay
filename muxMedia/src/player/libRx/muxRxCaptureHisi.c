@@ -255,7 +255,7 @@ static int _muxCaptureAudio(MuxPlayer *muxPlayer)
 {
 	HI_S32	ret;
 	HI_UNF_ES_BUF_S			audioStream;
-	unsigned int	_dts;
+//	unsigned int	_dts;
 	double _sysTime, diff;
 	int	newPts;
 	MuxMediaCapture *muxCapture = &muxPlayer->mediaCapture;
@@ -422,12 +422,13 @@ int muxRxPlayCaptureAudio(MuxPlayer *muxPlayer)
 HI_S32 muxRxPlayCaptureStart(MuxPlayer *muxPlayer)
 {
 	HI_S32 ret;
+#if 0	
 	struct tm *_time;
 	time_t	currentTime;
 
 	time(&currentTime);
 	_time = localtime( &currentTime);
-
+#endif
 	ret = HI_UNF_SND_Attach(muxPlayer->muxRx->virtualTrack, muxPlayer->muxRx->masterAvPlayer);
 	
 	ret = HI_UNF_VO_AttachWindow( muxPlayer->muxRx->virtualWindow, muxPlayer->muxRx->masterAvPlayer);

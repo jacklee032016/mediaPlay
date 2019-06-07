@@ -271,9 +271,18 @@ static int _parseGlobalConfig(const char **p, MuxPlayerConfig *cfg)
 	{
 		cfg->deepColor = cmnParseGetIntValue(p);
 #if DEBUG_CONFIG_FILE
-		fprintf(stderr, "TimeoutLocal: %d\n", cfg->playTimeoutLocal);
+		fprintf(stderr, "DeepColor: %d\n", cfg->deepColor);
 #endif
 	}
+
+	else if (IS_STRING_EQUAL(cmd, "ColorSpace"))
+	{
+		cfg->colorSpace = cmnParseGetIntValue(p);
+#if DEBUG_CONFIG_FILE
+		fprintf(stderr, "ColorSpace: %d\n", cfg->colorSpace);
+#endif
+	}
+
 
 	else if (IS_STRING_EQUAL(cmd, "AudioVolume"))
 	{
@@ -370,6 +379,7 @@ int cmnMuxPlayerParseConfig(const char *filename, MuxPlayerConfig *cfg)
 	
 	cmn_list_init(&cfg->windows);
 	cmn_list_init(&cfg->osds);
+	cmn_list_init(&cfg->miscs);
 
 	snprintf(cfg->configFileName, CMN_NAME_LENGTH, "%s", filename );
 
@@ -426,16 +436,19 @@ int cmnMuxPlayerParseConfig(const char *filename, MuxPlayerConfig *cfg)
 				 {
 				 	window->type = RECT_TYPE_SUBTITLE;
 					cmn_list_append( &cfg->osds, window);
+					cmn_list_append( &cfg->miscs, window);
 				 }
 				 else if (IS_STRING_EQUAL(window->name, "ALERT"))
 				 {
 				 	window->type = RECT_TYPE_ALERT;
 					cmn_list_append( &cfg->osds, window);
+					cmn_list_append( &cfg->miscs, window);
 				 }
 				 else if (IS_STRING_EQUAL(window->name, "LOGO"))
 				 {
 				 	window->type = RECT_TYPE_LOGO;
 					cmn_list_append( &cfg->osds, window);
+					cmn_list_append( &cfg->miscs, window);
 				 }
 				 else
 				 {

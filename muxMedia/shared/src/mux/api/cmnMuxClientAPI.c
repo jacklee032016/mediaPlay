@@ -161,7 +161,7 @@ cJSON *muxApiPlayMediaLogo(char *media)
 }
 
 
-cJSON *muxApiPlayMediaAlert(int fontcolor, char *message)
+cJSON *muxApiPlayMediaAlert(int fontcolor, char *message, int hAlign, int vAlign)
 {
 	cJSON *obj = NULL;
 
@@ -169,6 +169,9 @@ cJSON *muxApiPlayMediaAlert(int fontcolor, char *message)
 	cJSON_AddItemToObject(obj, MEDIA_CTRL_STATUS_MSG, cJSON_CreateString(message));
 
 	cJSON_AddItemToObject(obj, "fontcolor", cJSON_CreateNumber((double) fontcolor));
+
+	cJSON_AddItemToObject(obj, _MUX_ALERT_H_ALIGN, cJSON_CreateNumber((double) hAlign));
+	cJSON_AddItemToObject(obj, _MUX_ALERT_V_ALIGN, cJSON_CreateNumber((double) vAlign));
 	
 	return cmnMuxClientRequest( IPCMD_NAME_MEDIA_PLAY, "alert", obj);
 }
@@ -383,6 +386,17 @@ cJSON *muxApiEdidColorDepth( int colorDepth)
 	cJSON_AddItemToObject(obj, IPCMD_EDID_DEEP_COLOR, cJSON_CreateNumber((double) colorDepth));
 
 	return cmnMuxClientRequest( IPCMD_NAME_MEDIA_PLAY, IPCMD_EDID_DEEP_COLOR, obj);
+}
+
+
+cJSON *muxApiEdidColorSpace( int colorSapce)
+{
+	cJSON *obj = NULL;
+
+	obj = cJSON_CreateObject();
+	cJSON_AddItemToObject(obj, IPCMD_EDID_COLOR_SPACE, cJSON_CreateNumber((double) colorSapce));
+
+	return cmnMuxClientRequest( IPCMD_NAME_MEDIA_PLAY, IPCMD_EDID_COLOR_SPACE, obj);
 }
 
 

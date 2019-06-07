@@ -83,7 +83,8 @@ static int	_muxJSonAlertMsg(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSO
 	MUX_RX_T *muxRx = (MUX_RX_T *)priv;
 	int res = EXIT_SUCCESS, ret;
 	int fontColor; 
-	char *message;	
+	char *message;
+	int hAlign, vAlign, align;
 
 	message = cmnGetStrFromJsonObject(jsonEvent->object, "message");
 	if( IS_STRING_NULL( message) )
@@ -97,6 +98,31 @@ static int	_muxJSonAlertMsg(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSO
 	{
 		fontColor = COLOR_GREEN;
 	}
+
+	hAlign = cmnGetIntegerFromJsonObject(jsonEvent->object, _MUX_ALERT_H_ALIGN);
+	if(hAlign != _BANNER_H_ALIGN_LEFT && hAlign != _BANNER_H_ALIGN_CENTER && hAlign != _BANNER_H_ALIGN_RIGHT )
+	{
+		MUX_PLAY_WARN("'-"_MUX_ALERT_H_ALIGN"' for the '%s' command is wrong:%d, default Central Align is used;\n", _MUX_ALERT_COMMAND, hAlign);
+		hAlign = LAYOUT_HCENTER;
+	}
+	else
+	{
+		hAlign = (hAlign==_BANNER_H_ALIGN_LEFT)?LAYOUT_LEFT:(hAlign==_BANNER_H_ALIGN_RIGHT)?LAYOUT_RIGHT:LAYOUT_HCENTER;
+	}
+
+	vAlign = cmnGetIntegerFromJsonObject(jsonEvent->object, _MUX_ALERT_V_ALIGN);
+	if(vAlign != _BANNER_V_ALIGN_TOP && vAlign != _BANNER_V_ALIGN_CENTER && vAlign != _BANNER_V_ALIGN_BOTTOM  )
+	{
+		MUX_PLAY_WARN("'-"_MUX_ALERT_V_ALIGN"' for the '%s' command is wrong:%d, default Central Align is used;\n", _MUX_ALERT_COMMAND, vAlign);
+		vAlign = LAYOUT_VCENTER;
+	}
+	else
+	{
+		vAlign = (vAlign==_BANNER_V_ALIGN_TOP)?LAYOUT_TOP:(vAlign==_BANNER_V_ALIGN_BOTTOM)?LAYOUT_BOTTOM:LAYOUT_VCENTER;
+	}
+
+	align = LAYOUT_WRAP|hAlign|vAlign;
+	
 #if 0
 	fontSize = cmnGetIntegerFromJsonObject(jsonEvent->object, "fontsize");
 	if(fontSize == -1)
@@ -112,7 +138,7 @@ static int	_muxJSonAlertMsg(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSO
 		return HI_SUCCESS;
 	}
 	
-	res = muxOutputAlert(muxRx, fontColor, message);
+	res = muxOutputAlert(muxRx, fontColor, align, message);
 	
 	ret = OSD_DESKTOP_UNLOCK(&muxRx->higo);
 	if(ret != 0)
@@ -678,10 +704,13 @@ static int	_muxJSonCecInfo(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSON
 F0:64:00:48:65:6C:6C:6F:20:77:6F:72:6C:64	
 00 is the "display control" parameter set to "display for default time", and 48:65:6C:6C:6F:20:77:6F:72:6C:64 is the "OSD String" parameter set to "Hello world". 
 	*/
+	char name[256];
 #endif
 	int i;
 	HI_UNF_EDID_BASE_INFO_S sinkAttr;
+	HI_UNF_HDMI_ATTR_S stHdmiAttr;
 	cJSON *formats = NULL;
+	cJSON *colorObj = NULL;
 
 	ret = HI_UNF_HDMI_GetSinkCapability(HI_UNF_HDMI_ID_0, &sinkAttr);
 	if( ret != HI_SUCCESS)
@@ -703,6 +732,46 @@ F0:64:00:48:65:6C:6C:6F:20:77:6F:72:6C:64
 		}
 	}
 
+	JEVENT_ADD_ARRAY(jsonEvent->object, "ColorSpaces", formats);
+	colorObj = cJSON_CreateObject();
+	cJSON_AddItemToArray(formats, colorObj);
+	cJSON_AddItemToObject((colorObj), "RGB444", cJSON_CreateBool(sinkAttr.stColorSpace.bRGB444) );
+	cJSON_AddItemToObject((colorObj), "YCBCR422", cJSON_CreateBool(sinkAttr.stColorSpace.bYCbCr422) );
+	cJSON_AddItemToObject((colorObj), "YCBCR444", cJSON_CreateBool(sinkAttr.stColorSpace.bYCbCr444) );
+	cJSON_AddItemToObject((colorObj), "YCBCR420", cJSON_CreateBool(sinkAttr.stColorSpace.bYCbCr420) );
+
+	JEVENT_ADD_ARRAY(jsonEvent->object, "ColorDepthes", formats);
+	colorObj = cJSON_CreateObject();
+	cJSON_AddItemToArray(formats, colorObj);
+	cJSON_AddItemToObject((colorObj), "8", cJSON_CreateBool(sinkAttr.stDeepColor.bDeepColorY444) );
+	cJSON_AddItemToObject((colorObj), "10", cJSON_CreateBool(sinkAttr.stDeepColor.bDeepColor30Bit) );
+	cJSON_AddItemToObject((colorObj), "12", cJSON_CreateBool(sinkAttr.stDeepColor.bDeepColor36Bit) );
+	cJSON_AddItemToObject((colorObj), "16", cJSON_CreateBool(sinkAttr.stDeepColor.bDeepColor48Bit) );
+
+
+	/* current configuration */
+	formats = cJSON_CreateObject();
+	cJSON_AddItemToObject( jsonEvent->object, "Current", formats);
+	
+	HI_UNF_ENC_FMT_E fmtTmp = HI_UNF_ENC_FMT_BUTT;
+	HI_UNF_DISP_GetFormat(HI_UNF_DISPLAY1, &fmtTmp);
+
+	JEVENT_ADD_STRING(formats, "Format", muxHdmiFormatName(fmtTmp) );
+
+	if(HI_UNF_HDMI_GetAttr(HI_UNF_HDMI_ID_0, &stHdmiAttr) == HI_SUCCESS)
+	{
+		JEVENT_ADD_STRING(formats, "ColorSpace", muxHdmiVideoModeName(stHdmiAttr.enVidOutMode) );
+#if 0
+	HI_UNF_HDMI_DEEP_COLOR_E dc = HI_UNF_HDMI_DEEP_COLOR_BUTT;
+	HI_UNF_HDMI_GetDeepColor(HI_UNF_HDMI_ID_0, &dc);
+	snprintf(name, sizeof(name), "%s(%d)", (dc==HI_UNF_HDMI_DEEP_COLOR_24BIT)?"24:"(dc==HI_UNF_HDMI_DEEP_COLOR_30BIT)?"30":"36", dc )
+	JEVENT_ADD_STRING(formats, "ColorDepth", name );
+#else
+		JEVENT_ADD_STRING(formats, "ColorDepth", muxHdmiDeepColorName(stHdmiAttr.enDeepColorMode) );
+#endif
+	}
+
+
 	if(ret != HI_SUCCESS)
 	{
 		cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_SERVER_INTERNEL_ERROR, "CEC Command failed");
@@ -720,8 +789,10 @@ static int	_muxJSonEdidResolution(void *priv, struct DATA_CONN *dataConn, CMN_PL
 {
 	int ret = EXIT_SUCCESS;
 	HI_UNF_ENC_FMT_E enForm;
-
+	MUX_RX_T  	*muxRx = &_muxRx;
+	MuxPlayerConfig *cfg = &muxRx->muxPlayer->playerConfig;
 	char *formatStr;
+	
 	formatStr = cmnGetStrFromJsonObject(jsonEvent->object, IPCMD_EDID_RESOLUTION);
 	if( IS_STRING_NULL( formatStr) )
 	{
@@ -729,14 +800,26 @@ static int	_muxJSonEdidResolution(void *priv, struct DATA_CONN *dataConn, CMN_PL
 		return ret;
 	}
 
+	/* type of Auto and save configuration */
 	enForm = (HI_UNF_ENC_FMT_E ) muxHdmiFormatCode(formatStr);
-	if( (enForm < HI_UNF_ENC_FMT_1080P_60) || (enForm >= HI_UNF_ENC_FMT_BUTT) )
+	if( (enForm < HI_UNF_ENC_FMT_1080P_60) || (enForm > HI_UNF_ENC_FMT_BUTT) )
 	{
 		cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_DATA_ERROR, "'%s' parameter '%d' error", IPCMD_EDID_RESOLUTION, enForm);
 		return ret;
 	}
+	if(enForm == HI_UNF_ENC_FMT_BUTT)
+	{
+		MUX_HDMI_CFG_T autoCfg;
+		if(muxHdmiGetAutoConfig(&autoCfg) == EXIT_FAILURE)
+		{
+			cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_DATA_ERROR, "Can't read parameter for command '%s' automatically", IPCMD_EDID_RESOLUTION);
+			return ret;
+		}
+		
+		enForm = autoCfg.format;
+	}
 
-	ret = muxHdmiConfigFormat(enForm );
+	ret = muxHdmiConfigFormat(enForm);
 	if(ret != HI_SUCCESS)
 	{
 		cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_SERVER_INTERNEL_ERROR, "'%s' Command failed", IPCMD_EDID_RESOLUTION);
@@ -744,6 +827,15 @@ static int	_muxJSonEdidResolution(void *priv, struct DATA_CONN *dataConn, CMN_PL
 	else
 	{
 		dataConn->errCode = IPCMD_ERR_NOERROR;
+
+		//fmtStr = muxHdmiFormatName(enForm);
+		snprintf(cfg->displayFormat, sizeof(cfg->displayFormat), "%s", formatStr);
+
+		if(cmnMuxSavePlayerConfig(cfg) == EXIT_FAILURE)
+		{
+			MUX_PLAY_ERROR("Save format %s failed", muxHdmiFormatName(enForm) );
+		}
+
 	}
 
 	return ret;
@@ -753,12 +845,30 @@ static int	_muxJSonEdidDeepColor(void *priv, struct DATA_CONN *dataConn, CMN_PLA
 {
 	int ret = EXIT_SUCCESS;
 	int deepColor;
+	int saveDeepColor;
+	MUX_RX_T  	*muxRx = &_muxRx;
+	MuxPlayerConfig *cfg = &muxRx->muxPlayer->playerConfig;
 
 	deepColor = cmnGetIntegerFromJsonObject(jsonEvent->object, IPCMD_EDID_DEEP_COLOR);
-	if( (deepColor < HI_UNF_HDMI_DEEP_COLOR_24BIT) || (deepColor> HI_UNF_HDMI_DEEP_COLOR_36BIT) )
+	/* type of Auto and save configuration */
+	if( (deepColor < HI_UNF_HDMI_DEEP_COLOR_24BIT) || 
+		((deepColor> HI_UNF_HDMI_DEEP_COLOR_36BIT) && (deepColor != _COLOR_DEPETH_SPACE_AUTO) ) )
 	{
 		cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_DATA_ERROR, "'%s' parameter '%d' error", IPCMD_EDID_DEEP_COLOR, deepColor);
 		return ret;
+	}
+	saveDeepColor = deepColor;
+
+	if(deepColor> HI_UNF_HDMI_DEEP_COLOR_36BIT)
+	{
+		MUX_HDMI_CFG_T autoCfg;
+		if(muxHdmiGetAutoConfig(&autoCfg) == EXIT_FAILURE)
+		{
+			cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_DATA_ERROR, "Can't read parameter for command '%s' automatically", IPCMD_EDID_DEEP_COLOR);
+			return ret;
+		}
+		
+		deepColor = autoCfg.colorDepth;
 	}
 
 	ret = muxHdmiConfigDeepColor((HI_UNF_HDMI_DEEP_COLOR_E) deepColor);
@@ -769,10 +879,69 @@ static int	_muxJSonEdidDeepColor(void *priv, struct DATA_CONN *dataConn, CMN_PLA
 	else
 	{
 		dataConn->errCode = IPCMD_ERR_NOERROR;
+
+//		cfg->deepColor = (colorDepth==HI_UNF_HDMI_DEEP_COLOR_BUTT)?_COLOR_DEPETH_SPACE_AUTO:colorDepth;
+		cfg->deepColor = saveDeepColor; //(saveDeepColor ==_COLOR_DEPETH_SPACE_AUTO)?_COLOR_DEPETH_SPACE_AUTO:saveDeepColor;
+		if(cmnMuxSavePlayerConfig(cfg) == EXIT_FAILURE)
+		{
+			MUX_PLAY_ERROR("Save deepColor failed" );
+		}
 	}
 
 	return ret;
 }
+
+
+static int	_muxJSonEdidColorSpace(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSON_EVENT *jsonEvent)
+{
+	int ret = EXIT_SUCCESS;
+	int colorSpace;
+	int	saveColorSpace;
+	MUX_RX_T  	*muxRx = &_muxRx;
+	MuxPlayerConfig *cfg = &muxRx->muxPlayer->playerConfig;
+
+	colorSpace = cmnGetIntegerFromJsonObject(jsonEvent->object, IPCMD_EDID_COLOR_SPACE);
+	/* type of Auto and save configuration */
+	if( (colorSpace < HI_UNF_HDMI_VIDEO_MODE_RGB444) || (colorSpace> HI_UNF_HDMI_VIDEO_MODE_YCBCR420 && colorSpace != _COLOR_DEPETH_SPACE_AUTO ) )
+	{
+		cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_DATA_ERROR, "'%s' parameter '%d' error", IPCMD_EDID_COLOR_SPACE, colorSpace);
+		return ret;
+	}
+	saveColorSpace = colorSpace;
+	
+	if(colorSpace > HI_UNF_HDMI_VIDEO_MODE_YCBCR420)
+	{
+		MUX_HDMI_CFG_T autoCfg;
+		if(muxHdmiGetAutoConfig(&autoCfg) == EXIT_FAILURE)
+		{
+			cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_DATA_ERROR, "Can't read parameter for command '%s' automatically", IPCMD_EDID_COLOR_SPACE);
+			return ret;
+		}
+		
+		colorSpace = autoCfg.colorSpace;
+	}
+
+	ret = muxHdmiConfigColorSpace((HI_UNF_HDMI_VIDEO_MODE_E) colorSpace);
+	if(ret != HI_SUCCESS)
+	{
+		cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_SERVER_INTERNEL_ERROR, "'%s' Command failed", IPCMD_EDID_COLOR_SPACE);
+	}
+	else
+	{
+		dataConn->errCode = IPCMD_ERR_NOERROR;
+		
+//		cfg->colorSpace = (stHdmiAttr.enVidOutMode==HI_UNF_HDMI_VIDEO_MODE_BUTT)?_COLOR_DEPETH_SPACE_AUTO:stHdmiAttr.enVidOutMode;
+		cfg->colorSpace = saveColorSpace;//(saveColorSpace ==_COLOR_DEPETH_SPACE_AUTO)?_COLOR_DEPETH_SPACE_AUTO:saveColorSpace;
+		if(cmnMuxSavePlayerConfig(cfg) == EXIT_FAILURE)
+		{
+			MUX_PLAY_ERROR("Save ColorSpace failed" );
+		}
+	}
+
+	return ret;
+}
+
+
 
 
 
@@ -891,6 +1060,11 @@ PluginJSonHandler jsonMuxPlayActionHandlers[] =
 		handler	: _muxJSonEdidDeepColor
 	},
 
+	{/* added. 06.03, 2019 */
+		type	: CMD_TYPE_EDID_COLOR_SPACE,
+		name 	: IPCMD_EDID_COLOR_SPACE,
+		handler	: _muxJSonEdidColorSpace
+	},
 
 	{
 		type	: CMD_TYPE_UNKNOWN,

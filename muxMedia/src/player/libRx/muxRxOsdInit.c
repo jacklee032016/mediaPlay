@@ -84,10 +84,13 @@ static int _muxCreateOSD(int index, void *element, void *pHigo)
 	winInfo.rect.h = osd->rect.h;
 
 	/* this rect is used to output text, relative correlation in OSD object */
+#if 0
+	/* Why? 06.05, 2019 */
 	osd->rect.x = 50;
 	osd->rect.y = 10;
 	osd->rect.w = 1400;
 	osd->rect.h = 180;
+#endif
 
 	winInfo.LayerNum = 0;
 	winInfo.PixelFormat = HIGO_PF_8888;

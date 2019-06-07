@@ -326,7 +326,7 @@
       		]
       	},
        	{
-		      "comment": "Change color depth of TV on-fly, color 0(8bits),1(10bits), 2(12bits)",
+		      "comment": "Change color depth of TV on-fly, color 0(8bits),1(10bits), 2(12bits), 100(auto)",
       		"action": "color",
       		"objects": 
       		[
@@ -336,6 +336,16 @@
       		]
       	},
 
+       	{
+		    "comment": "Change color space of TV on-fly, color 0(RGB444),1(YCBCR444), 2(YCBCR422), 3(YCBCR420), 100(auto)",
+      		"action": "colorSpace",
+      		"objects": 
+      		[
+      			{
+      				"color": 0
+      			}
+      		]
+      	},
 
        	{
 		      "comment": "player will exit for reboot",
