@@ -322,7 +322,17 @@ int muxOsdImageDisplay(MUX_OSD *osd, int isShow)
 
 	if(isShow)
 	{
+#if 0
+		/* when OSD of logo is created, put it to top of ZOrder. J.L. 06.11, 2019 */
+		MUX_OSD *logoOsd = muxOsdFind(osd->higo, MUX_OSD_TYPE_LOGO);
+		ret = HI_GO_ChangeWindowZOrder(logoOsd->winHandle, HIGO_ZORDER_MOVETOP);
+		if (HI_SUCCESS != ret )
+		{
+			MUX_PLAY_WARN("Set ZOrder of OSD %s failed:0x%x", logoOsd->name, ret );
+		}
+#endif		
 		ret = HI_GO_SetWindowOpacity( osd->winHandle, (osd->type == MUX_OSD_TYPE_LOGO)? osd->cfg->alpha: 255);
+
 	}
 	else
 	{

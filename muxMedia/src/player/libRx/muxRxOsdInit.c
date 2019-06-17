@@ -326,6 +326,14 @@ HI_S32 muxRxHigoInit(MUX_RX_T *muxRx)
 	res |= cmn_list_iterate(&muxPlayer->playerConfig.osds, HI_TRUE, _muxCreateOSD, higo);
 
 	MUX_OSD *logoOsd = muxOsdFind(higo, MUX_OSD_TYPE_LOGO);
+
+	/* set OSD logo to the top in ZOrder. J.L. 06.11, 2019 */
+	res = HI_GO_ChangeWindowZOrder(logoOsd->winHandle, HIGO_ZORDER_MOVETOP);
+	if (HI_SUCCESS != res )
+	{
+		MUX_PLAY_WARN("Set ZOrder of OSD %s failed:0x%x", logoOsd->name, res );
+	}
+
 	muxOsdImageShow(logoOsd, logoOsd->cfg->url);
 
 	pthread_mutex_init(&higo->winMutex, NULL);

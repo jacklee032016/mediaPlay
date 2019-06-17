@@ -72,8 +72,13 @@ Configure Color Space of HDMI Sink device; if success, then new configuration is
 
 ::
 
-   apiClient -c colorSpace –o o color='0|1|2|3|100' # for RGB444|YCBCR422|YCBCR422|YCBCR420|auto respectively
+   apiClient -c colorSpace –o o color='0|1|2|3|100' # for RGB444|YCBCR422|YCBCR444|YCBCR420|auto respectively
    
+When 100(Auto) is selected, Color Space is used in following order:
+* RGB444
+* YCBCR444
+* YCBCR422
+* YCBCR420
 
 
 Set and save Color Depth
@@ -83,6 +88,11 @@ Configure Color Depth of HDMI Sink device; if success, then new configuration is
 ::
 
    apiClient -c color –o o color='0|1|2|100' # for 8|10|12|auto bits color depth respectively'
+
+When 100(Auto) is selected, depth is used in following order:
+* 24BIT
+* 30BIT
+* 36BIT2
 
 
 
