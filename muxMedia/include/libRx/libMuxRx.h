@@ -455,7 +455,7 @@ HI_U32 muxHdmiCECCommand(HI_U8 srcAddr, HI_U8 destAddr, HI_U8 u8Opcode, HI_U8 us
 int muxHdmiCECSetDeviceOsdName(void);
 
 void muxHdmiReplugMonitor(HI_UNF_ENC_FMT_E enForm);
-int muxHdmiConfigDeepColor(HI_UNF_HDMI_DEEP_COLOR_E deepColor);
+int muxHdmiConfigDeepColor(HI_UNF_HDMI_DEEP_COLOR_E deepColor, int isConfig);
 
 
 /****  Higo functions ********/
@@ -628,7 +628,7 @@ int muxHdmiGetAutoConfig(MUX_HDMI_CFG_T *autoCfg);
 HI_UNF_HDMI_DEEP_COLOR_E muxHdmiFindNewColorDepth(HI_UNF_HDMI_DEEP_COLOR_E colorDepthCfg, HI_UNF_EDID_DEEP_COLOR_S *sinkCapColorDepthes);
 HI_UNF_HDMI_VIDEO_MODE_E muxHdmiFindNewColorSpace(HI_UNF_HDMI_VIDEO_MODE_E colorSpaceCfg, HI_UNF_EDID_COLOR_SPACE_S *sinkCapColorSpace);
 
-int muxHdmiConfigFormat(HI_UNF_ENC_FMT_E enForm);
+int muxHdmiConfigFormat(HI_UNF_ENC_FMT_E enForm, int isConfig);
 int muxHdmiConfigColorSpace(HI_UNF_HDMI_VIDEO_MODE_E colorSpace);
 
 extern HI_S32 HI_UNF_HDMI_GetDeepColor(HI_UNF_HDMI_ID_E enHdmi, HI_UNF_HDMI_DEEP_COLOR_E *penDeepColor);

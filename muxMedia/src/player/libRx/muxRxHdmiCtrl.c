@@ -606,7 +606,7 @@ int muxHdmiCECSetDeviceOsdName(void)
 	return ret;
 }
 
-
+#if 0
 /* it is called when TV is plugined */
 void muxHdmiReplugMonitor(HI_UNF_ENC_FMT_E enForm)
 {
@@ -662,10 +662,10 @@ void muxHdmiReplugMonitor(HI_UNF_ENC_FMT_E enForm)
 	s32Ret = muxHdmiConfigDeepColor(deepColor);
 
 }
-
+#endif
 
 /* called by IP command and when TX is plugin. isConfig: called from IP command */
-int muxHdmiConfigDeepColor(HI_UNF_HDMI_DEEP_COLOR_E deepColor)
+int muxHdmiConfigDeepColor(HI_UNF_HDMI_DEEP_COLOR_E deepColor, int isConfig)
 {
 	HI_S32 ret = 0;
 	HI_UNF_EDID_BASE_INFO_S stSinkCap;
@@ -695,34 +695,37 @@ int muxHdmiConfigDeepColor(HI_UNF_HDMI_DEEP_COLOR_E deepColor)
 	}
 	else
 	{
-		HI_UNF_HDMI_DEEP_COLOR_E dc = HI_UNF_HDMI_DEEP_COLOR_BUTT;
-
-		ret = HI_UNF_HDMI_Start(HI_UNF_HDMI_ID_0);
-		if (ret != HI_SUCCESS)
+		if(isConfig)
 		{
-			MUX_PLAY_ERROR("HDMI start failed:0x%x.\n", ret);
-			return EXIT_FAILURE;
-		}
+			HI_UNF_HDMI_DEEP_COLOR_E dc = HI_UNF_HDMI_DEEP_COLOR_BUTT;
 
-		HI_UNF_HDMI_GetDeepColor(HI_UNF_HDMI_ID_0, &dc);
+			ret = HI_UNF_HDMI_Start(HI_UNF_HDMI_ID_0);
+			if (ret != HI_SUCCESS)
+			{
+				MUX_PLAY_ERROR("HDMI start failed:0x%x.\n", ret);
+				return EXIT_FAILURE;
+			}
 
-		MUX_PLAY_DEBUG("After Set DeepColor %s(%s), GetDeepColor:%s", 
-			muxHdmiDeepColorName(deepColor), muxHdmiDeepColorName(colorDepth), muxHdmiDeepColorName(dc));
-		if(dc != deepColor)
-		{
-			MUX_PLAY_ERROR("DeepColor %s(%s) has been set, but it is not working now, DeepColor %s is still used", 
+			HI_UNF_HDMI_GetDeepColor(HI_UNF_HDMI_ID_0, &dc);
+
+			MUX_PLAY_DEBUG("After Set DeepColor %s(%s), GetDeepColor:%s", 
 				muxHdmiDeepColorName(deepColor), muxHdmiDeepColorName(colorDepth), muxHdmiDeepColorName(dc));
-			return EXIT_FAILURE;
-		}
+			if(dc != deepColor)
+			{
+				MUX_PLAY_ERROR("DeepColor %s(%s) has been set, but it is not working now, DeepColor %s is still used", 
+					muxHdmiDeepColorName(deepColor), muxHdmiDeepColorName(colorDepth), muxHdmiDeepColorName(dc));
+				return EXIT_FAILURE;
+			}
 
-		/*
-		//for "AUTO", we still save the setting even if setup failed, since in case of 4K60 RGB444, it can only support
-		//8 bit, however even if we set it up with 10 bit, the HI_UNF_HDMI_SetDeepColor will still return HI_TRUE
-		*/
+			/*
+			//for "AUTO", we still save the setting even if setup failed, since in case of 4K60 RGB444, it can only support
+			//8 bit, however even if we set it up with 10 bit, the HI_UNF_HDMI_SetDeepColor will still return HI_TRUE
+			*/
 #if 0		
-		if (decoder_state.deep_color != DEEP_COLOR_AUTO && dc != HI_UNF_HDMI_DEEP_COLOR_BUTT)
-			decoder_state.deep_color = dc;
+			if (decoder_state.deep_color != DEEP_COLOR_AUTO && dc != HI_UNF_HDMI_DEEP_COLOR_BUTT)
+				decoder_state.deep_color = dc;
 #endif		
+		}
 	}
 
 
@@ -730,7 +733,7 @@ int muxHdmiConfigDeepColor(HI_UNF_HDMI_DEEP_COLOR_E deepColor)
 }
 
 /* called by IP command and when TX is plugin. isConfig: called from IP command. enForm is validate value */
-int muxHdmiConfigFormat(HI_UNF_ENC_FMT_E enForm)
+int muxHdmiConfigFormat(HI_UNF_ENC_FMT_E enForm, int isConfig)
 {
 	HI_S32 s32Ret;
 //	char *fmtStr = NULL;
@@ -762,21 +765,23 @@ int muxHdmiConfigFormat(HI_UNF_ENC_FMT_E enForm)
 	}
 	else
 	{
-
-		s32Ret = HI_UNF_HDMI_Start(HI_UNF_HDMI_ID_0);
-		if (s32Ret != HI_SUCCESS)
+		if(isConfig)
 		{
-			MUX_PLAY_ERROR("HDMI start failed:0x%x.\n", s32Ret);
-			return EXIT_FAILURE;
-		}
+			s32Ret = HI_UNF_HDMI_Start(HI_UNF_HDMI_ID_0);
+			if (s32Ret != HI_SUCCESS)
+			{
+				MUX_PLAY_ERROR("HDMI start failed:0x%x.\n", s32Ret);
+				return EXIT_FAILURE;
+			}
 
-		MUX_PLAY_DEBUG("SetFormat %s on DISPLAY success", muxHdmiFormatName(enForm) );
-		HI_UNF_DISP_GetFormat(HI_UNF_DISPLAY1, &fmtTmp);
-		if(enForm != fmtTmp)
-		{
-			MUX_PLAY_ERROR("Format %s has been set, but it is not working, format %s is still used", 
-				muxHdmiFormatName(enForm), muxHdmiFormatName(fmtTmp) );
-			return EXIT_FAILURE;
+			MUX_PLAY_DEBUG("SetFormat %s on DISPLAY success", muxHdmiFormatName(enForm) );
+			HI_UNF_DISP_GetFormat(HI_UNF_DISPLAY1, &fmtTmp);
+			if(enForm != fmtTmp)
+			{
+				MUX_PLAY_ERROR("Format %s has been set, but it is not working, format %s is still used", 
+					muxHdmiFormatName(enForm), muxHdmiFormatName(fmtTmp) );
+				return EXIT_FAILURE;
+			}
 		}
 	}
 
@@ -1120,6 +1125,7 @@ HI_UNF_ENC_FMT_E _itemResolution(HI_CHAR * res, HI_U32 i)
 HI_UNF_ENC_FMT_E	_getHdmiResolution(HI_UNF_EDID_BASE_INFO_S *hdmiSinkCap)
 {
 	HI_UNF_ENC_FMT_E resultFormat = HI_UNF_ENC_FMT_BUTT;
+#if 0	
 	HI_UNF_EDID_TIMING_S *pt = &(hdmiSinkCap->stPerferTiming);
 
 	HI_U32 hh = pt->u32HACT + pt->u32HBB + pt->u32HFB;
@@ -1160,6 +1166,9 @@ HI_UNF_ENC_FMT_E	_getHdmiResolution(HI_UNF_EDID_BASE_INFO_S *hdmiSinkCap)
 		resultFormat = hdmiSinkCap->enNativeFormat;
 		MUX_PLAY_WARN("No H/V params in EDDI, set as native format", muxHdmiFormatName(resultFormat) );
 	}
+#else
+	resultFormat = hdmiSinkCap->enNativeFormat;
+#endif
 
 	MUX_PLAY_DEBUG("select resolution is :%s!", muxHdmiFormatName(resultFormat) );
 

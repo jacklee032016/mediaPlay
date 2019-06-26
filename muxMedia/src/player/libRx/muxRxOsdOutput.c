@@ -113,7 +113,10 @@ int _muxOsdRefresh(MUX_OSD *osd)
 
 int muxOsdOutputText(MUX_OSD *osd, int align, const HI_CHAR* pszText)
 {
-#define	__TEXT_BORDER_WIDTH		10
+/* 06.25, 2019, change border to 0 pixel */
+//#define	__TEXT_BORDER_WIDTH		10
+#define	__TEXT_BORDER_WIDTH		0
+
 	if(osd == NULL)
 	{
 		MUX_PLAY_WARN("Set OSD is not initialized" );

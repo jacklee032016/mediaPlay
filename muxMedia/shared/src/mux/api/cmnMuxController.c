@@ -283,7 +283,11 @@ void cmnMuxDataConnClose(struct DATA_CONN *dataConn)
 //		cJSON_Delete( (dataConn)->resultObject);
 	}
 
-	close((dataConn)->sock);
+	if(dataConn->sock > 0)
+	{
+		close((dataConn)->sock);
+	}
+	
 	cmn_mutex_destroy(dataConn->mutexLock);
 	
 #if MUX_OPTIONS_DEBUG_IP_COMMAND			

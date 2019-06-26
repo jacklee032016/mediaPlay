@@ -819,7 +819,7 @@ static int	_muxJSonEdidResolution(void *priv, struct DATA_CONN *dataConn, CMN_PL
 		enForm = autoCfg.format;
 	}
 
-	ret = muxHdmiConfigFormat(enForm);
+	ret = muxHdmiConfigFormat(enForm, TRUE);
 	if(ret != HI_SUCCESS)
 	{
 		cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_SERVER_INTERNEL_ERROR, "'%s' Command failed", IPCMD_EDID_RESOLUTION);
@@ -871,7 +871,7 @@ static int	_muxJSonEdidDeepColor(void *priv, struct DATA_CONN *dataConn, CMN_PLA
 		deepColor = autoCfg.colorDepth;
 	}
 
-	ret = muxHdmiConfigDeepColor((HI_UNF_HDMI_DEEP_COLOR_E) deepColor);
+	ret = muxHdmiConfigDeepColor((HI_UNF_HDMI_DEEP_COLOR_E) deepColor, TRUE);
 	if(ret != HI_SUCCESS)
 	{
 		cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_SERVER_INTERNEL_ERROR, "'%s' Command failed", IPCMD_EDID_DEEP_COLOR);

@@ -1,6 +1,30 @@
 									ChangeLog of MuxMedia
 																		Nov, 2017						Jack Lee
 
+06.25, 2019
+---------------------------
+* text shown without border in text box;
+* Auto video format: select native_format in EDID parameters;
+* Tune configuration of format, depth and color space: 
+	* only startup once when plugged in; 
+	* startup when every command is executed;
+	* Disable CEC disable operation in the callback of unplugin;
+	* Test delay of every configuration operations;
+* Test fault when HDMI plugged in:
+    * works fine when plug off and plug in after program starts up: so callback of plugin operation is good;
+	* works fine when program starts up if HDMI is plugged off;
+	* Sometimes jamed when program starts up if HDMI is connected;
+		* Change the activities sequence of startup to fix it;
+
+		
+
+Before 06.17
+---------------------------
+* logo is always on the top of other higo objects;
+* save and dynamically configure video format(h, w, framerate), color depth, color space;
+* alignment of text: horizontal and vertical;
+* add new commands and parameters in commands to support these new features;
+
 Aug,17, 2018
 	Modified Secure chip validating code: cmnMuxDs.c;
 

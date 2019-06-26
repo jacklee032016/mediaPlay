@@ -291,25 +291,28 @@ void HDMI_HotPlug_Proc(HI_VOID *pPrivateData)
 
 	/* 1: set format */
 //	muxHdmiReplugMonitor(_format);
-	muxHdmiConfigFormat(_format);
-
+	muxHdmiConfigFormat(_format, FALSE);
+//	usleep(200 * 1000);
+	
 	/* 2: set Color Depth */
-	muxHdmiConfigDeepColor(_colorDepth);
+	muxHdmiConfigDeepColor(_colorDepth, FALSE);
+//	usleep(200 * 1000);
+	
+	/* 3: set HDR type */
+	ret = HI_UNF_DISP_SetHDRType(HI_UNF_DISPLAY1, muxHdmiCfg.hdrType);
+	if (HI_SUCCESS != ret)
+	{
+		MUX_PLAY_ERROR("set DISP HDRType %d failed %#x.", muxHdmiCfg.hdrType, ret);
+	}
+	else
+	{
+		MUX_PLAY_DEBUG("set DISP HDR Type %d succeed %#x.", muxHdmiCfg.hdrType, ret);
+	}
+//	usleep(200 * 1000);
 
 	/* after set format and Depth, then get Attributes of HDMI, and set Color Space, HDR type by attributes */
 	HI_UNF_HDMI_GetAttr(hHdmi, &stHdmiAttr);
 	
-	/* 2: set HDR type */
-	ret = HI_UNF_DISP_SetHDRType(HI_UNF_DISPLAY1, muxHdmiCfg.hdrType);
-	if (HI_SUCCESS != ret)
-	{
-		MUX_PLAY_ERROR("set DISP HDRType %d failed %#x.\n", muxHdmiCfg.hdrType, ret);
-	}
-	else
-	{
-		MUX_PLAY_DEBUG("set DISP HDRType %d succeed %#x.\n", muxHdmiCfg.hdrType, ret);
-	}
-
 #if 0
 	muxHdmiConfigColorSpace(_colorSpace);
 #else
@@ -359,22 +362,21 @@ void HDMI_HotPlug_Proc(HI_VOID *pPrivateData)
 	}
 #endif
 
-
 	ret = HI_UNF_HDMI_SetAttr(hHdmi, &stHdmiAttr);
 	if (ret != HI_SUCCESS)
 	{
-		MUX_PLAY_ERROR("HDMI set Attr failed:0x%x.\n", ret);
+		MUX_PLAY_ERROR("HDMI set Attr failed:0x%x.", ret);
 	}
 
 	/* HI_UNF_HDMI_SetAttr must before HI_UNF_HDMI_Start! */
 	ret = HI_UNF_HDMI_Start(hHdmi);
 	if (ret != HI_SUCCESS)
 	{
-		MUX_PLAY_ERROR("HDMI start failed:0x%x.\n", ret);
+		MUX_PLAY_ERROR("HDMI start failed:0x%x.", ret);
 	}
 
-//	usleep(300 * 1000);
 	
+//	usleep(300 * 1000);
 #if __DEBUG_HDMI_CEC
 	ret = HI_UNF_HDMI_CEC_Enable(HI_UNF_HDMI_ID_0);
 	if (ret != HI_SUCCESS)
@@ -431,13 +433,20 @@ HI_VOID HDMI_UnPlug_Proc(HI_VOID *pPrivateData)
 	int ret;
 
 	MUX_PLAY_DEBUG("--- Get HDMI event: UnPlug. --- ");
-	HI_UNF_HDMI_Stop(hHdmi);
+	ret = HI_UNF_HDMI_Stop(hHdmi);
+	if(ret != HI_SUCCESS)
+	{
+		MUX_PLAY_ERROR("HDMI stop failed: %#x", ret);
+	}
 
+#if 0 
+	/* disable this because CEC is not enabled in callback of plugin. 06.25, 2019. JL */
 	ret = HI_UNF_HDMI_CEC_Disable(hHdmi);
 	if(ret != HI_SUCCESS)
 	{
 		MUX_PLAY_ERROR("HDMI ECE enable failed: %#x", ret);
 	}
+#endif
 
 	return;
 }
