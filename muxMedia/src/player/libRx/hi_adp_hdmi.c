@@ -376,14 +376,14 @@ void HDMI_HotPlug_Proc(HI_VOID *pPrivateData)
 	}
 
 	
-//	usleep(300 * 1000);
-#if __DEBUG_HDMI_CEC
+	usleep(300 * 1000);
 	ret = HI_UNF_HDMI_CEC_Enable(HI_UNF_HDMI_ID_0);
 	if (ret != HI_SUCCESS)
 	{
 		MUX_PLAY_ERROR("HDMI CEC Enable failed:0x%x.\n", ret);
 	}
 
+#if __DEBUG_HDMI_CEC
 	/* HDMI thread will block in some TV when following commands are used. JL. 06.07, 2019 */
 	muxHdmiCECCommand(HI_UNF_CEC_LOGICALADD_TUNER_1, HI_UNF_CEC_LOGICALADD_TV, CEC_OPCODE_IMAGE_VIEW_ON, 0, NULL, 0);
 
@@ -439,14 +439,12 @@ HI_VOID HDMI_UnPlug_Proc(HI_VOID *pPrivateData)
 		MUX_PLAY_ERROR("HDMI stop failed: %#x", ret);
 	}
 
-#if 0 
 	/* disable this because CEC is not enabled in callback of plugin. 06.25, 2019. JL */
 	ret = HI_UNF_HDMI_CEC_Disable(hHdmi);
 	if(ret != HI_SUCCESS)
 	{
 		MUX_PLAY_ERROR("HDMI ECE enable failed: %#x", ret);
 	}
-#endif
 
 	return;
 }

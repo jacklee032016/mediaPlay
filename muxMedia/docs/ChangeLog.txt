@@ -1,6 +1,22 @@
 									ChangeLog of MuxMedia
 																		Nov, 2017						Jack Lee
 
+07.05, 2019
+---------------------------
+Enable CEC when plugin HDMI cable to support commands of cecStandby, cecImageOn, cecVolumeUp, cecVolumeDown and cecMute;
+
+
+07.02, 2019
+---------------------------
+Program crash:
+   * play non-existed media file;
+   * play existed media file;
+   * alert message;
+   
+   * it is very slow to play media file, after play nonexisted file;
+   * It is quick to report error when playing non-existed file;
+
+
 06.25, 2019
 ---------------------------
 * text shown without border in text box;
