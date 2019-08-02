@@ -15,6 +15,9 @@
 send JSON request from json file and parse JSON response, used in CGI and other client, such as controller 811
 */
 
+/* some operation in player is slow, such as play or forward */
+//#define	CLIENT_TIMEOUT_SECONDS		15
+#define	CLIENT_TIMEOUT_SECONDS		30
 
 static void usage(char* base, struct API_PARAMETERS *params)
 {
@@ -32,7 +35,7 @@ static void usage(char* base, struct API_PARAMETERS *params)
 		  base, base);
 #else
 	printf("%s: \n\tCommand line interface for JSON API.\n"\
-		"\t%s-a ipaddress/fqdn -p 0(UDP)|1(TCP, default)|2(UnixSys) -b port(3600)  -c command -o options\n"\
+		"\t%s -a ipaddress/fqdn -p 0(UDP)|1(TCP, default)|2(UnixSys) -b port(3600)  -c command -t timeout(%d seconds) -o options\n"\
 		"\t\t Current command:  " \
 		"\n\t\t\tplay, stop, pause, resume, forward, backforwar, subtitle, playerInfo, mediaInfo, " \
 		"\n\t\t\tsawpWindow, rotateWindow, locateWindow, " IPCMD_NAME_ASPECT_WINDOW", vol+, vol-, "IPCMD_NAME_PLAYER_MUTE", "IPCMD_NAME_PLAYER_MUTE_ALL", "IPCMD_NAME_PLAYER_AUDIO", " \
@@ -46,7 +49,7 @@ static void usage(char* base, struct API_PARAMETERS *params)
 		"\n\t\t\t"IPCMD_SYS_ADMIN_THREADS ", " IPCMD_SYS_ADMIN_VER_INFO", quit \n" \
 		"\n\t\t windowIndex: default is 0; media : URL/Local file/Playlist; \n" \
 		"\t\t ipaddress/fqdn: default localhost; -d duration: duration for recording; \n", 
-		  base, base);
+		  base, base, CLIENT_TIMEOUT_SECONDS);
 
 	if(!IS_STRING_NULL(apiClientOptionsPrompt(params)))
 	{
@@ -1177,7 +1180,7 @@ static int	_apiHandleCmd(struct API_PARAMETERS *params, char *programName)
 						linkType = CTRL_LINK_UNIX;
 					
 					fprintf(stderr, "Client connectting to %s:%d on %s protocol.....\n", params->address, params->port, (linkType == CTRL_LINK_TCP)?"TCP":(linkType == CTRL_LINK_UDP)?"UDP":"Unix");
-					ret = cmnMuxClientInit(params->port, linkType, params->address);
+					ret = cmnMuxClientInit(params->port, linkType, params->address, params->timeoutSeconds);
 					if(ret == EXIT_FAILURE)
 					{
 						printf("JSON API initialization failed, please check your configuration and server address\n");
@@ -1224,9 +1227,12 @@ int main(int argc, char *argv[])
 	params.height = -1;
 	params.duration = -1;
 	params.color = -1;
+	params.timeoutSeconds = CLIENT_TIMEOUT_SECONDS;
+
+	printf(CMN_MODULE_APICLIENT_NAME" " CMN_VERSION_INFO(CMN_MODULE_APICLIENT_NAME) "\n" );
 
 //	while ((opt = getopt (argc, argv, "a:p:b:c:i:m:l:t:w:h:a:d:C:s:u:f:P:p:b:")) != -1)
-	while ((opt = getopt (argc, argv, "a:p:b:c:o:")) != -1)
+	while ((opt = getopt (argc, argv, "a:p:b:c:o:t:")) != -1)
 	{
 		switch (opt)
 		{
@@ -1238,6 +1244,15 @@ int main(int argc, char *argv[])
 				params.protocol = atoi(optarg);
 				if(params.protocol >= PROTOCOL_UNKNOWN)
 					params.protocol = PROTOCOL_UDP;
+				break;
+
+			case 't':
+				params.timeoutSeconds = atoi(optarg);
+				if(params.timeoutSeconds <= 0)
+				{
+					fprintf(stderr, "timeout invalidate value, use default value: %d seconds\n", CLIENT_TIMEOUT_SECONDS);
+					params.timeoutSeconds = CLIENT_TIMEOUT_SECONDS;
+				}
 				break;
 
 			case 'b':
@@ -1330,8 +1345,6 @@ int main(int argc, char *argv[])
 	}
 
 //	res = cmnMuxPlayerParseConfig(MUX_PLAYER_CONFIG_FILE, &_cfg);
-
-	printf(CMN_VERSION_INFO(CMN_MODULE_APICLIENT_NAME));
 
 	if( IS_STRING_NULL(params.cmd) )
 	{

@@ -7,7 +7,7 @@
 	{
 #endif
 
-int cmnMuxClientInit(int port, CTRL_LINK_TYPE type, char *serverAddress);
+int cmnMuxClientInit(int port, CTRL_LINK_TYPE type, char *serverAddress, int timeoutSeconds);
 void cmnMuxClientDestroy(void);
 
 /* PlayMedia command and its actions */

@@ -27,11 +27,11 @@ static int	_muxJSonSetSubtitle(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_
 	memcpy(player->playerMedia.aszExtSubUrl[0], media, strlen(media) );
 	player->playerMedia.u32ExtSubNum = 1;
 
-	MUX_PLAY_INFO( "### open external sub file is %s \n", player->playerMedia.aszExtSubUrl[0]);
+	PLAY_INFO(player,  "### open external sub file is %s \n", player->playerMedia.aszExtSubUrl[0]);
 	res = HI_SVR_PLAYER_SetMedia(player->playerHandler, HI_SVR_PLAYER_MEDIA_SUBTITLE, &player->playerMedia);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_WARN("Set sub file '%s' failed: 0x%x", player->playerMedia.aszExtSubUrl[0], res);
+		PLAY_WARN(player, "Set sub file '%s' failed: 0x%x", player->playerMedia.aszExtSubUrl[0], res);
 		cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_SERVER_INTERNEL_ERROR, "Maybe subtitle has been set now");
 	}
 	else
@@ -121,7 +121,7 @@ static int	_muxJSonAlertMsg(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSO
 		vAlign = (vAlign==_BANNER_V_ALIGN_TOP)?LAYOUT_TOP:(vAlign==_BANNER_V_ALIGN_BOTTOM)?LAYOUT_BOTTOM:LAYOUT_VCENTER;
 	}
 
-	align = LAYOUT_WRAP|hAlign|vAlign;
+	align = LAYOUT_WRAP|LAYOUT_WORDELLIPSIS|hAlign|vAlign;
 	
 #if 0
 	fontSize = cmnGetIntegerFromJsonObject(jsonEvent->object, "fontsize");
@@ -192,7 +192,7 @@ static int	_muxJSonOsdPosition(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_
 	ret= OSD_DESKTOP_LOCK(&muxRx->higo);
 	if(ret != 0)
 	{
-		MUX_PLAY_WARN( "Higo is locked for OsdPosition: %s", strerror(errno) );
+		OSD_WARN(osd, "Higo is locked for OsdPosition: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
 	res = muxOsdPosition(osd, &rect, NULL);
@@ -200,7 +200,7 @@ static int	_muxJSonOsdPosition(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_
 	ret = OSD_DESKTOP_UNLOCK(&muxRx->higo);
 	if(ret != 0)
 	{
-		MUX_PLAY_WARN( "Higo is unlocked for OsdPosition: %s", strerror(errno) );
+		OSD_WARN(osd, "Higo is unlocked for OsdPosition: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
 
@@ -234,7 +234,7 @@ static int	_muxJSonOsdEnable(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JS
 	ret= OSD_DESKTOP_LOCK(&muxRx->higo);
 	if(ret != 0)
 	{
-		MUX_PLAY_WARN( "Higo is locked for OsdEnable: %s", strerror(errno) );
+		OSD_WARN(osd, "Higo is locked for OsdEnable: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
 
@@ -243,7 +243,7 @@ static int	_muxJSonOsdEnable(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JS
 	ret = OSD_DESKTOP_UNLOCK(&muxRx->higo);
 	if(ret != 0)
 	{
-		MUX_PLAY_WARN( "Higo is unlocked for OsdEnable: %s", strerror(errno) );
+		OSD_WARN(osd, "Higo is unlocked for OsdEnable: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
 	
@@ -281,7 +281,7 @@ static int	_muxJSonOsdBackground(void *priv, struct DATA_CONN *dataConn, CMN_PLA
 #if BACKGROUND_AS_STRING	
 	bgStr = cmnGetStrFromJsonObject(jsonEvent->object, "background");
 	background = cmnParseGetHexIntValue(bgStr);
-	MUX_PLAY_DEBUG("background is :%s:%#x", bgStr, background);
+	OSD_DEBUG(osd, "background is :%s:%#x", bgStr, background);
 #else
 	background = cmnGetIntegerFromJsonObject(jsonEvent->object, "background");
 	if(background == -1)
@@ -294,7 +294,7 @@ static int	_muxJSonOsdBackground(void *priv, struct DATA_CONN *dataConn, CMN_PLA
 	ret= OSD_DESKTOP_LOCK(&muxRx->higo);
 	if(ret != 0)
 	{
-		MUX_PLAY_WARN( "Higo is locked for OsdBackground: %s", strerror(errno) );
+		OSD_WARN(osd, "Higo is locked for OsdBackground: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
 
@@ -303,7 +303,7 @@ static int	_muxJSonOsdBackground(void *priv, struct DATA_CONN *dataConn, CMN_PLA
 	ret = OSD_DESKTOP_UNLOCK(&muxRx->higo);
 	if(ret != 0)
 	{
-		MUX_PLAY_WARN( "Higo is unlocked for OsdBackground: %s", strerror(errno) );
+		OSD_WARN(osd, "Higo is unlocked for OsdBackground: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
 	
@@ -345,7 +345,7 @@ static int	_muxJSonOsdTransparency(void *priv, struct DATA_CONN *dataConn, CMN_P
 	ret= OSD_DESKTOP_LOCK(&muxRx->higo);
 	if(ret != 0)
 	{
-		MUX_PLAY_WARN( "Higo is locked for OsdTransparency: %s", strerror(errno) );
+		OSD_WARN(osd, "Higo is locked for OsdTransparency: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
 
@@ -354,7 +354,7 @@ static int	_muxJSonOsdTransparency(void *priv, struct DATA_CONN *dataConn, CMN_P
 	ret = OSD_DESKTOP_UNLOCK(&muxRx->higo);
 	if(ret != 0)
 	{
-		MUX_PLAY_WARN( "Higo is unlocked for OsdTransparency: %s", strerror(errno) );
+		OSD_WARN(osd, "Higo is unlocked for OsdTransparency: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
 	
@@ -396,7 +396,7 @@ static int	_muxJSonOsdFontColor(void *priv, struct DATA_CONN *dataConn, CMN_PLAY
 	ret= OSD_DESKTOP_LOCK(&muxRx->higo);
 	if(ret != 0)
 	{
-		MUX_PLAY_WARN( "Higo is locked for OsdFontColor: %s", strerror(errno) );
+		OSD_WARN(osd, "Higo is locked for OsdFontColor: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
 
@@ -405,7 +405,7 @@ static int	_muxJSonOsdFontColor(void *priv, struct DATA_CONN *dataConn, CMN_PLAY
 	ret = OSD_DESKTOP_UNLOCK(&muxRx->higo);
 	if(ret != 0)
 	{
-		MUX_PLAY_WARN( "Higo is unlocked for OsdFontColor: %s", strerror(errno) );
+		OSD_WARN(osd, "Higo is unlocked for OsdFontColor: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
 	
@@ -446,7 +446,7 @@ static int	_muxJSonOsdFontSize(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_
 	ret= OSD_DESKTOP_LOCK(&muxRx->higo);
 	if(ret != 0)
 	{
-		MUX_PLAY_WARN( "Higo is locked for OsdFontSize: %s", strerror(errno) );
+		OSD_WARN(osd, "Higo is locked for OsdFontSize: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
 
@@ -455,7 +455,7 @@ static int	_muxJSonOsdFontSize(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_
 	ret = OSD_DESKTOP_UNLOCK(&muxRx->higo);
 	if(ret != 0)
 	{
-		MUX_PLAY_WARN( "Higo is unlocked for OsdFontSize: %s", strerror(errno) );
+		OSD_WARN(osd, "Higo is unlocked for OsdFontSize: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
 	
@@ -490,7 +490,7 @@ static int	_muxJSonOsdLogo(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSON
 	ret= OSD_DESKTOP_LOCK(&muxRx->higo);
 	if(ret != 0)
 	{
-		MUX_PLAY_WARN( "Higo is locked for OsdLogo: %s", strerror(errno) );
+		OSD_WARN(logoOsd, "Higo is locked for OsdLogo: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
 
@@ -499,7 +499,7 @@ static int	_muxJSonOsdLogo(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSON
 	ret = OSD_DESKTOP_UNLOCK(&muxRx->higo);
 	if(ret != 0)
 	{
-		MUX_PLAY_WARN( "Higo is unlocked for OsdLogo: %s", strerror(errno) );
+		OSD_WARN(logoOsd, "Higo is unlocked for OsdLogo: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
 	

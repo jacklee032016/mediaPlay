@@ -196,6 +196,7 @@ typedef	struct
 	HI_RECT					rect;
 	struct _RECT_CONFIG		*cfg;
 
+	MuxMain					*muxMain;	/* added for debug option, 07.30, 2019*/
 }MUX_OSD;
 
 #define		WITH_HIGO_SURFACE_HANDLER		0
@@ -300,8 +301,10 @@ typedef	struct
 	/* thread and timer for setMedia() */
 	cmn_mutex_t						*mutexLock;
 
-
-	SET_MEDIA_STATE				mediaState;		/* whether SetMedia thread is waiting */
+	/* whether SetMedia thread is running or waiting, only set and clear by setMedia thread 
+	* for some protocol, such as HTTP, media set will continue for a longer time when the url is wrong
+	*/
+	SET_MEDIA_STATE				mediaState;		
 
 	/* Media Thread and Media Timer are accessed by PLAYER, media Thread and timer's callback */
 #if MUX_THREAD_SUPPORT_DYNAMIC	
@@ -356,10 +359,23 @@ typedef	struct
 	int								sysError;
 
 	HI_FORMAT_FILE_INFO_S			*fileInfo;
+
+	MuxMain 							*muxMain;	/* added for debug options. 07.29, 2019 */
 	
 }MUX_PLAY_T;
 
 struct _MuxPlayer;
+
+
+#define	PLAY_IS_DEBUG_FSM(play)	\
+			MUX_MAIN_IS_DEBUG_FSM((play)->muxMain)
+
+#define	PLAY_IS_DEBUG_MSG(play)	\
+			MUX_MAIN_IS_DEBUG_MSG((play)->muxMain)
+
+
+#define	OSD_IS_DEBUG(osd)	\
+			MUX_MAIN_IS_DEBUG_MSG((osd)->muxMain)
 
 
 typedef	struct
@@ -485,10 +501,19 @@ int muxOutputAlert(MUX_RX_T *muxRx, int color, int align, const char* frmt,...);
 		{((player)->speedIndex = (player)->speedDefault ); muxPlayerPlayspeedSet(player, NULL);}
 
 
-
+#if 0
 #define	PLAY_ALERT_MSG( play, color, ...)	\
 			{	if((play)->muxRx->muxPlayer->playerConfig.enableScreenDebug) 	{ \
 					muxOutputAlert((play)->muxRx, (color), ALERT_DEFAULT_LAYOUT, __VA_ARGS__); }	}
+#else
+#define	PLAY_ALERT_MSG( play, color, format, msg...)	\
+			{	if((play)->muxRx->muxPlayer->playerConfig.enableScreenDebug) 	{ \
+					muxOutputAlert((play)->muxRx, (color), ALERT_DEFAULT_LAYOUT, format, ##msg); } }
+#endif
+
+
+#define	IS_PLAYER_SET_MEDIA(player)		\
+		((player)->mediaState ==  SET_MEDIA_STATE_WAITING)
 
 
 #define	PLAY_LOCK(play)			cmn_mutex_lock((play)->mutexLock )
@@ -508,6 +533,18 @@ int	muxPlayerPlaying(MUX_PLAY_T *play, int isInit, char *media, int repeatNumber
 
 int	muxPlayerStartPlayingTimer(MUX_PLAY_T *play);
 int	muxPlayerRemovePlayingTimer(MUX_PLAY_T *play);
+
+int	mediaPlayerStopMediaThread(MUX_PLAY_T *play);
+
+#if 1
+#define	MUX_PLAY_CLEAR_SET_MEDIA(play)	\
+	do { \
+		muxPlayerRemovePlayingTimer((play)); }while(0)
+#else
+#define	MUX_PLAY_CLEAR_SET_MEDIA(play)	\
+	do {mediaPlayerStopMediaThread((play)); \
+		muxPlayerRemovePlayingTimer((play)); }while(0)
+#endif
 
 int	muxPlayPreloadImage(MUX_PLAY_T *play);
 

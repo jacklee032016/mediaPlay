@@ -1,6 +1,279 @@
 									ChangeLog of MuxMedia
 																		Nov, 2017						Jack Lee
 
+08.02, 2019
+================================================
+Update log:
+	* Debug the problem when UDP multicast is invalidate, av_format_open() will blocked in checkMedia file before player;
+	    * Other procotols work fine even their URLs are invalidate;
+		* Check "UDP://" in string of URL;
+	SDk has same problem because it use ffmpeg also;
+
+Timeout:
+HTTP
+   FLV
+   apiClient -c play -o media=http://192.168.168.74:8083/video1.flv
+   4 minutes
+   
+   HLS URL:
+   http://192.168.168.74:8083/video1.m3u8
+  
+   apiClient -c play -o media=http://192.168.168.74:8083/video1.m3u8
+
+    Normal
+	http://192.168.168.74:8083/video1.ts
+	apiClient -c play -o media=http://192.168.168.74:8083/video1.ts
+
+	wrong URI: 2 seconds
+
+rtsp
+   IP:port: 6 seconds
+   apiClient -c play -o media=rtsp://192.168.168.74:38001/video1.rtsp   
+   
+   Correct IP/port, wrong URI:
+   apiClient -c play -o media=rtsp://192.168.168.74:38001/video12.rtsp
+
+
+UDP
+
+udp://@239.100.0.17:37000
+apiClient -c play -o media=udp://@239.100.0.17:37000
+
+07.30, 2019
+================================================
+Version Update logs:
+*. Fixed the problem: Sometimes program may block working with some old TVs, such as L.G., when program starts;
+*. Fixed the problem about incorrect networked streams: 
+   *. Program can't play again after receiving ``play`` command with incorrect networked stream;
+   *. No response for IP Commands from player after playing the streams which is not exists;
+*. Test the performance of SDK when playing some nonexisted media
+   *. For nonexisted HTTP stream, 4 minutes delay in SDK:
+      * Within 4 minutes, the player of this window will reply 'please try later';
+*. Change the timeout value (from 25 seconds to 10 seconds) for network streams;
+*. Optimizing the internal implementation:
+   *. Rename and re-order starting sequencce of the threads, total about 55 threads;
+   *. Re-implement the dynamically created threads and timers when playing new media;
+   *. Program responses more quickly and more stablely;
+*. Change log and debug options:
+   *. Add time information in every log item;
+   *. Add debug options which can be configured in 
+*. Fixed the bug of showing message when media file/stream is not correct;
+   *. Before this version, message only be shown about 10 seconds, and then cleared;
+   *. Show the message until client clear it;
+
+*. Add timeout configuration of apiClient, and test the timeout of player and client:
+   * default timeout is 25 seconds for apiClient;
+   
+
+   *. For nonexisted RTSP stream:
+      *. When IP or port is wrong, the player of this window will response within 10 seconds;
+	  *. When URI is incorrect, but IP/port is correct, the player of this window will never response again;
+
+Client:
+-----------------------------------------------
+* version info, debugging;
+* configure and display timeout value, default 25 seconds;
+
+
+
+07.26, 2019
+================================================
+Synchrous and Asynchrous APIs
+------------------------------------------------
+First, these APIs is not just function call of a library, it is also call to a thread under the library;
+
+All discussions folliwing are based on this assumption.
+
+Synchrous API
+++++++++++++++++++++++++++++++++++++++++++++++++
+* Client send event to the server(underlying thread) by a function call, as setMedia();
+* Client wait on a condition variable or semaphore;
+
+* Server receive event, and begin to finish the work;
+* Server signal a condition variable or post a semaphore;
+
+* Client is waked and the semaphore/condition variable can be signaled/posted by server again;
+
+
+Asynchrous API
+++++++++++++++++++++++++++++++++++++++++++++++++
+* Client send event to server, then the function returns;
+
+* Server handle the event and finish its job;
+* Server call some callback that client has registered before;
+
+* Callback provided by Client, and called in the context of server;
+* Client is notified by the callback;
+
+
+Debug of SetMedia and stop
+------------------------------------------------
+SetMedia(play) is synchrous API; Stop(play) is asynchronous API;
+
+Problem
+++++++++++++++++++++++++++++++++++++++++++++++++
+* The thread, which is calling setMedia(), is interruptted and killed by timer;
+* call setMedia() or stop() will be blocked forever:
+    * although stop() is asyn API
+	    * that means the underlying ``play`` thread is never waked and run although the API is called;
+		* because ``play`` is still waiting the semaphore/condition variable is released;
+		
+    * SetMedia() should be checked again to assure it is blocked forever;
+	
+	
+New Design
+++++++++++++++++++++++++++++++++++++++++++++++++
+* thread ``SetMedia``:
+    * never be interrupted or killed by timer;
+	* Set the state of SetMedia, if SetMedia is busy, no other command can be used for this player;
+	* All the commands can't be used when SetMedia is busy;
+* timer and its timeout call:
+    * If timeout, reply error to api client;
+	* Never kill thread ``SetMedia`` again;
+
+
+07.24, 2019
+====================================
+* Rename all threads:
+-----------------------------------
+Common threads
+    #. main: main thread;
+	#. timer: thread used to implement timers;
+	#. commu: communication thread, receiving IP commands, send to scheduler, ftp or others;
+    #. schedule: schedule IP commands to different threads or device, and reply IP commands;
+    #. ftp: ftp client, downloading media files from FTP server;
+
+Media devices control:	
+	#. sound: control sound device;
+	#. display: control display device, for example, HDMI cable callback is called by this thread;
+
+Threads for every window player: 6 windows used:
+  	#. wpVideo: 3 threads for video operation;
+	#. wpAudio: audio operations;
+    #. wpDecoder: decoder of media sources, such as network protocol and media container files;
+	#. wpMedia-X: set media, when new media is defined by schedule, this thread is created and destoried after a while;
+
+Threads for record:
+    #. capAudioEnc: audio encoding thread; no corresponding thread for video;
+	#. capVideo: video saving thread;
+	#. capAudio: audio saving thread;
+	#. recorder: receiving recording command and start/stop recording;
+
+Another odd ``display`` thread is created at the end of start up process of the program;
+	
+	
+Program jammed and zombie process
+-----------------------------------
+
+* Program sometimes jamed when HDMI cable plugged:
+    * thread wmDecoder-5 always is the thread keeped after killed the zombie process;
+	    * status of emDecoder-5 is 'D': 
+		* status also is 'D' when program is jammed;
+	* prcess keep as zombie status (Z) after process is killed;
+
+test and debug jammed
+++++++++++++++++++++++++++++++++++++++++++++++++
+
+::
+
+    PROCESS STATE CODES
+       D   uninterruptible sleep (usually IO)
+       R   runnable (on run queue)
+       S   sleeping
+       T   traced or stopped
+       Z   a defunct ("zombie") process 
+
+       For BSD formats and when the "stat" keyword is used, additional letters may be displayed:
+       W   has no resident pages
+       <   high-priority process
+       N   low-priority task
+       L   has pages locked into memory (for real-time and custom IO)
+
+Uninterruptible sleep (usually IO): In this state, a process doesn't wake up right away to process signals. 
+When doing device I/O it's the only way to go (otherwise data corruption could result).
+
+``Analysis``: 
+* ``Uninterruptible sleep`` means waiting data when access data for thread of ``wmDecoder-5``;
+* ``wmDecoder-5`` thread will output video to HDMI;
+* ``display`` thread is executing plugin operation when program starts;
+* when ``display`` is control HDMI device, ``wmDecoder-5`` can't use it, so it is blocked on I/O;
+
+
+``Option-1``:
+* Delay plugin callback more, and after all players have been created, call it;
+* Release init mutex later to start callback later;
+
+* It become more worse;
+
+
+``Option-2``:
+* call plugin callback as early as possible;
+* ``display`` thread created earlier before any window players;
+* Normally all window players are created after callback has been called;
+* It become more worse;
+
+
+	
+test and debug zombie process
+++++++++++++++++++++++++++++++++++++++++++++++++
+
+add following code:
+
+::
+
+	#include <sys/wait.h>
+
+	static void _sigChldHandler(int sig)
+	{
+		int saved_errno = errno;
+		pid_t pid;
+		
+		do
+		{
+			MUX_ERROR("Signal CHLD is called");
+			pid = waitpid((pid_t)(-1), 0, WNOHANG);
+			if(pid> 0)
+			{
+				MUX_INFO("thread %d exit now", pid);
+			}
+			
+		}while(pid> 0);
+		
+		errno = saved_errno;
+	}
+
+	int sysSignalRegisterChild(void)
+	{
+		struct sigaction sa;
+		
+		sa.sa_handler = &_sigChldHandler;
+		sigemptyset(&sa.sa_mask);
+		sa.sa_flags = SA_RESTART | SA_NOCLDSTOP;
+		
+		if (sigaction(SIGCHLD, &sa, 0) == -1)
+		{
+			perror(0);
+			exit(1);
+			return -1;
+		}
+
+		return 0;
+	}
+
+
+* But no signal of CHLD is receivied even if wdMediaX-Y exit normally;
+* No thread exit when program jammed when it starts;
+* So zombie process is not come from CHLD signals;
+* Zombie process is come from state D of wmDecoder-5 which is the last thread of decoder;
+
+	
+3 test cases after fixing
+++++++++++++++++++++++++++++++++++++++++++++++++
+#. Start up normally with HDMI cable pluginned;
+#. Start up without HDMI cable pluginned;
+#. Plugin and plugoff after program runs normally;	
+	
+
 07.05, 2019
 ---------------------------
 Enable CEC when plugin HDMI cable to support commands of cecStandby, cecImageOn, cecVolumeUp, cecVolumeDown and cecMute;
@@ -31,6 +304,9 @@ Program crash:
 	* works fine when program starts up if HDMI is plugged off;
 	* Sometimes jamed when program starts up if HDMI is connected;
 		* Change the activities sequence of startup to fix it;
+		    * add mutex to the start process;
+			* start process catch the mutex, and release mutex after all players have been created;
+			* only all players are created, HDMI plugin callback can be used;
 
 		
 

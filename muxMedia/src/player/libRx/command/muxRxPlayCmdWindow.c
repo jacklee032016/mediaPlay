@@ -35,13 +35,13 @@ static int _swapPlayers(MUX_PLAY_T *currentMainPlayer, MUX_PLAY_T *newMainPlayer
 	res = HI_UNF_AVPLAY_Pause(currentMainPlayer->avPlayHandler, HI_NULL);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("HI_UNF_AVPLAY_Pause 1 failed");
+		PLAY_ERROR(currentMainPlayer, "HI_UNF_AVPLAY_Pause failed");
 		return HI_FAILURE;
 	}
 	res = HI_UNF_AVPLAY_Pause(newMainPlayer->avPlayHandler, HI_NULL);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("HI_UNF_AVPLAY_Pause 2 failed");
+		PLAY_ERROR(newMainPlayer, "HI_UNF_AVPLAY_Pause 2 failed");
 		return HI_FAILURE;
 	}
 
@@ -49,13 +49,13 @@ static int _swapPlayers(MUX_PLAY_T *currentMainPlayer, MUX_PLAY_T *newMainPlayer
 	res = HI_UNF_VO_SetWindowEnable( currentMainPlayer->windowHandle, HI_FALSE);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("HI_UNF_VO_SetWindowEnable failed");
+		PLAY_ERROR(currentMainPlayer, "HI_UNF_VO_SetWindowEnable failed");
 		return HI_FAILURE;
 	}
 	res = HI_UNF_VO_SetWindowEnable( newMainPlayer->windowHandle, HI_FALSE);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("HI_UNF_VO_SetWindowEnable failed");
+		PLAY_ERROR(newMainPlayer, "HI_UNF_VO_SetWindowEnable failed");
 		return HI_FAILURE;
 	}
 
@@ -63,13 +63,13 @@ static int _swapPlayers(MUX_PLAY_T *currentMainPlayer, MUX_PLAY_T *newMainPlayer
 	res = HI_UNF_VO_DetachWindow(currentMainPlayer->windowHandle, currentMainPlayer->avPlayHandler);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("HI_UNF_VO_DetachWindow failed");
+		PLAY_ERROR(currentMainPlayer, "HI_UNF_VO_DetachWindow failed");
 		return HI_FAILURE;
 	}
 	res = HI_UNF_VO_DetachWindow(newMainPlayer->windowHandle, newMainPlayer->avPlayHandler);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("HI_UNF_VO_DetachWindow failed");
+		PLAY_ERROR(newMainPlayer, "HI_UNF_VO_DetachWindow failed");
 		return HI_FAILURE;
 	}
 
@@ -85,13 +85,13 @@ static int _swapPlayers(MUX_PLAY_T *currentMainPlayer, MUX_PLAY_T *newMainPlayer
 	res = HI_UNF_VO_AttachWindow(currentMainPlayer->windowHandle, currentMainPlayer->avPlayHandler);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("HI_UNF_VO_AttachWindow failed");
+		PLAY_ERROR(currentMainPlayer, "HI_UNF_VO_AttachWindow failed");
 		return HI_FAILURE;
 	}
 	res = HI_UNF_VO_AttachWindow(newMainPlayer->windowHandle, newMainPlayer->avPlayHandler);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("HI_UNF_VO_AttachWindow failed");
+		PLAY_ERROR(newMainPlayer, "HI_UNF_VO_AttachWindow failed");
 		return HI_FAILURE;
 	}
 
@@ -99,13 +99,13 @@ static int _swapPlayers(MUX_PLAY_T *currentMainPlayer, MUX_PLAY_T *newMainPlayer
 	res = HI_UNF_VO_SetWindowEnable(newMainPlayer->windowHandle, HI_TRUE);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("HI_UNF_VO_SetWindowEnable failed");
+		PLAY_ERROR(newMainPlayer, "HI_UNF_VO_SetWindowEnable failed");
 		return HI_FAILURE;
 	}
 	res = HI_UNF_VO_SetWindowEnable(currentMainPlayer->windowHandle, HI_TRUE);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("HI_UNF_VO_SetWindowEnable failed");
+		PLAY_ERROR(currentMainPlayer, "HI_UNF_VO_SetWindowEnable failed");
 		return HI_FAILURE;
 	}
 
@@ -114,7 +114,7 @@ static int _swapPlayers(MUX_PLAY_T *currentMainPlayer, MUX_PLAY_T *newMainPlayer
 	res = HI_UNF_SND_SetTrackMute( currentMainPlayer->trackHandle, HI_TRUE); /* mute old master track */
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("HI_UNF_SND_SetTrackMute failed on old master" );
+		PLAY_ERROR(currentMainPlayer, "HI_UNF_SND_SetTrackMute failed on old master" );
 		return HI_FAILURE;
 	}
 	
@@ -123,7 +123,7 @@ static int _swapPlayers(MUX_PLAY_T *currentMainPlayer, MUX_PLAY_T *newMainPlayer
 	res = HI_UNF_SND_SetTrackMute( newMainPlayer->trackHandle, HI_FALSE); /* enable new master track */
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("HI_UNF_SND_SetTrackMute failed on master" );
+		PLAY_ERROR(newMainPlayer, "HI_UNF_SND_SetTrackMute failed on master" );
 		return HI_FAILURE;
 	}
 	
@@ -174,13 +174,13 @@ TRACE();
 	res = HI_UNF_AVPLAY_Resume(currentMainPlayer->avPlayHandler, HI_NULL);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("HI_UNF_AVPLAY_Resume 1 failed");
+		PLAY_ERROR(currentMainPlayer, "HI_UNF_AVPLAY_Resume 1 failed");
 		return HI_FAILURE;
 	}
 	res = HI_UNF_AVPLAY_Resume(newMainPlayer->avPlayHandler, HI_NULL);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("HI_UNF_AVPLAY_Resume 2 failed");
+		PLAY_ERROR(newMainPlayer, "HI_UNF_AVPLAY_Resume 2 failed");
 		return HI_FAILURE;
 	}
 
@@ -273,7 +273,7 @@ int muxPlayerWindowRotate(MUX_PLAY_T *play)
 	res = HI_UNF_VO_SetRotation(play->windowHandle, mode);
 	if( res != HI_SUCCESS)
 	{
-		MUX_PLAY_ERROR("HI_UNF_VO_SetRotation failed : 0x%x", res);
+		PLAY_ERROR(play, "HI_UNF_VO_SetRotation failed : 0x%x", res);
 	}
 
 	return res;
@@ -290,7 +290,7 @@ int muxPlayerWindowLocate(MUX_PLAY_T *play, HI_RECT_S *rect)
 	res = HI_UNF_VO_GetWindowAttr(play->windowHandle, &winAttr);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("get win attr of %s fail: 0x%x!", play->muxFsm.name, res );
+		PLAY_ERROR(play, "get win attr fail: 0x%x!", res );
 		return res;
 	}
 
@@ -301,18 +301,18 @@ int muxPlayerWindowLocate(MUX_PLAY_T *play, HI_RECT_S *rect)
 	{
 		if(res == HI_ERR_VO_OPERATION_DENIED )
 		{
-			MUX_PLAY_ERROR("relocate window of %s to [(%d,%d),(%d,%d)] is denied, because of multi-window overlayed!", play->muxFsm.name, rect->s32X, rect->s32Y, rect->s32Width, rect->s32Height );
+			PLAY_ERROR(play, "relocate window to [(%d,%d),(%d,%d)] is denied, because of multi-window overlayed!", rect->s32X, rect->s32Y, rect->s32Width, rect->s32Height );
 		}
 		else
 		{
-			MUX_PLAY_ERROR("relocate window of %s to [(%d,%d),(%d,%d)] fail: 0x%x!", play->muxFsm.name, rect->s32X, rect->s32Y, rect->s32Width, rect->s32Height, res);
+			PLAY_ERROR(play, "relocate window to [(%d,%d),(%d,%d)] fail: 0x%x!", rect->s32X, rect->s32Y, rect->s32Width, rect->s32Height, res);
 		}
 	}
 
 	res = OSD_DESKTOP_LOCK(&play->muxRx->higo);
 	if(res != 0)
 	{
-		MUX_PLAY_WARN( "Higo is locked for locate %s: %s", play->muxFsm.name, strerror(errno) );
+		PLAY_WARN(play, "Higo is locked for locate: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
 
@@ -320,7 +320,7 @@ int muxPlayerWindowLocate(MUX_PLAY_T *play, HI_RECT_S *rect)
 	res = OSD_DESKTOP_UNLOCK(&play->muxRx->higo);
 	if(res != 0)
 	{
-		MUX_PLAY_WARN( "Higo is unlocked for locate %s: %s", play->muxFsm.name, strerror(errno) );
+		PLAY_WARN(play, "Higo is unlocked for locate: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
 	
@@ -343,18 +343,18 @@ int muxPlayerWindowAspect(MUX_PLAY_T *play, int displayMode)
 	res = HI_UNF_VO_GetWindowAttr(play->windowHandle, &winAttr);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("get win attr of %s for setting aspect fail: 0x%x!", play->muxFsm.name, res );
+		PLAY_ERROR(play, "get win attr for setting aspect fail: 0x%x!", res );
 		return res;
 	}
 
-	MUX_PLAY_DEBUG("Set aspect of window of %s as %d", play->muxFsm.name, displayMode);
+	PLAY_DEBUG(play, "Set aspect of window of %s as %d", displayMode);
 
 	winAttr.stWinAspectAttr.enAspectCvrs = displayMode;
 
 	res = HI_UNF_VO_SetWindowAttr(play->windowHandle, &winAttr);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("Set aspect of window of %s fail: 0x%x!", play->muxFsm.name, res);
+		PLAY_ERROR(play, "Set aspect of window fail: 0x%x!", res);
 	}
 
 	return res;
@@ -371,12 +371,12 @@ int muxPlayerWindowUpdateHandler(MUX_PLAY_T *play)
 	res = HI_SVR_PLAYER_GetParam(play->playerHandler, HI_SVR_PLAYER_ATTR_WINDOW_HDL, &hWindow);
 	if (HI_SUCCESS != res )
 	{
-//		MUX_PLAY_ERROR("%s: Get WINDOW_HDL failed, ret = 0x%x: 0x%x!", play->muxFsm.name, res, play->playerHandler);
+//		PLAY_ERROR(play, "Get WINDOW_HDL failed, ret = 0x%x: 0x%x!", res, play->playerHandler);
 		return EXIT_FAILURE;
 	}
 	if( hWindow != play->windowHandle )
 	{
-		MUX_PLAY_INFO("%s: Old Window Handle is 0x%x, new is 0x%x", play->muxFsm.name, play->windowHandle, hWindow);
+		PLAY_INFO(play, "Old Window Handle is 0x%x, new is 0x%x", play->windowHandle, hWindow);
 		play->windowHandle = hWindow;
 	}
 	
@@ -384,13 +384,13 @@ int muxPlayerWindowUpdateHandler(MUX_PLAY_T *play)
 	res = HI_SVR_PLAYER_GetParam(play->playerHandler, HI_SVR_PLAYER_ATTR_AUDTRACK_HDL, &hTrack);
 	if (HI_SUCCESS != res )
 	{
-//		MUX_PLAY_ERROR( "%: Get AUDTRACK_HDL failed, ret = 0x%x!", play->muxFsm.name, res);
+//		PLAY_ERROR(play, "Get AUDTRACK_HDL failed, ret = 0x%x!", res);
 		return EXIT_FAILURE;
 	}
 	
 	if( hTrack != play->trackHandle)
 	{
-		MUX_INFO("%s: Old Track Handle is 0x%x, new is 0x%x", play->muxFsm.name, play->trackHandle, hTrack);
+		PLAY_INFO(play, "Old Track Handle is 0x%x, new is 0x%x", play->trackHandle, hTrack);
 		play->trackHandle = hTrack;
 	}
 

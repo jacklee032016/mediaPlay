@@ -586,9 +586,10 @@ int	cmnMuxJsonHandle4SysAdmin(MUX_PLUGIN_TYPE dest, struct DATA_CONN *dataConn, 
 			CmnThread *thread = (CmnThread *)cmn_list_get(threads, i);
 			cJSON *obj = NULL;
 
-#if MUX_OPTIONS_DEBUG_IP_COMMAND			
-			MUX_DEBUG( "No. %d thread :'%s' is added", i+1, thread->name);
-#endif
+			if(CONTROLLER_IS_DEBUG(dataConn) )
+			{
+				MUX_DEBUG( "No. %d thread :'%s' is added", i+1, thread->name);
+			}
 
 			obj = cJSON_CreateObject();
 				

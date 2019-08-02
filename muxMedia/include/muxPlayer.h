@@ -37,11 +37,38 @@ extern "C" {
 
 #define  MUX_PLAY_DEBUG(...)		{CMN_MSG_DEBUG(CMN_LOG_DEBUG, __VA_ARGS__);}
 
+
 #define  MUX_PLAY_INFO(...)		{CMN_MSG_INFO(CMN_LOG_INFO, __VA_ARGS__);}
+
 
 #define  MUX_PLAY_WARN(...)		{CMN_MSG_INFO(CMN_LOG_WARNING, __VA_ARGS__);}
 
 #define  MUX_PLAY_ERROR(...)		{CMN_MSG_LOG(CMN_LOG_ERR, __VA_ARGS__);}
+
+
+//#define	PLAY_DEBUG(play, format, ...)		{CMN_MSG_DEBUG(CMN_LOG_DEBUG, "'%s': "format, play->muxFsm.name, __VA_ARGS__);}
+/* this one: no param is needed for format */
+#define	PLAY_DEBUG(play, format, msg...)		{CMN_MSG_DEBUG(CMN_LOG_DEBUG, "'%s': "format, play->muxFsm.name, ##msg);}
+
+#define	PLAY_INFO(play, format, msg...)		{CMN_MSG_INFO(CMN_LOG_INFO, "'%s': "format, play->muxFsm.name, ##msg);}
+
+#define	PLAY_WARN(play, format, msg...)		{CMN_MSG_INFO(CMN_LOG_WARNING, "'%s': "format, play->muxFsm.name, ##msg);}
+
+#define	PLAY_ERROR(play, format, msg...)		{CMN_MSG_LOG(CMN_LOG_ERR, "'%s': "format, play->muxFsm.name, ##msg);}
+
+
+#if WITH_HIGO_DEBUG
+#define	OSD_DEBUG(osd, format, msg...)		{CMN_MSG_DEBUG(CMN_LOG_DEBUG, "OSD '%s(%s)' "format, osd->name, osd->cfg->name, ##msg);}
+#else
+#define	OSD_DEBUG(osd, format, msg...)		{}
+#endif
+
+#define	OSD_INFO(osd, format, msg...)		{CMN_MSG_INFO(CMN_LOG_INFO, "OSD '%s(%s)' "format, osd->name, osd->cfg->name, ##msg);}
+
+#define	OSD_WARN(osd, format, msg...)		{CMN_MSG_INFO(CMN_LOG_WARNING, "OSD '%s(%s)' "format, osd->name, osd->cfg->name, ##msg);}
+
+#define	OSD_ERROR(osd, format, msg...)		{CMN_MSG_LOG(CMN_LOG_ERR, "OSD '%s(%s)' "format, osd->name, osd->cfg->name, ##msg);}
+
 
 
 struct MUX_RX;
@@ -105,6 +132,10 @@ extern	TYPE_NAME_T hiPlayerStates[];
 RECT_CONFIG *muxGetRectConfig(MuxPlayer *muxPlayer, enum RECT_TYPE type);
 
 int muxPlayerReportFsmEvent(void *ownerCtx, int event, int  errorCode, void *data );
+
+
+#define	SEND_EVEVT_TO_PLAYER( play, event, data)		\
+		muxPlayerReportFsmEvent(&(play)->muxFsm, (HI_SVR_PLAYER_EVENT_E)(event), (play)->countOfPlay, (data))
 
 
 #include "cmnFsm.h"

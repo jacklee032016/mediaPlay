@@ -12,21 +12,21 @@ HI_S32 muxSubtitleClear(MUX_PLAY_T *play, HI_UNF_SO_CLEAR_PARAM_S *param)
 #if PLAYER_ENABLE_SUBTITLE
 	int res = 0;
 
-	MUX_PLAY_DEBUG( "CLEAR Subtitle!");
+	PLAY_DEBUG(play, "CLEAR Subtitle!");
 	res = OSD_DESKTOP_TRY_LOCK(&play->muxRx->higo);
 	if(res != 0)
 	{
-		MUX_PLAY_WARN( "Window is locked for subtitle info, waiting next...");
+		PLAY_WARN(play, "Window is locked for subtitle info, waiting next...");
 		return HI_SUCCESS;
 	}
 
-	MUX_PLAY_DEBUG( "CLEAR Subtitle : %s", play->muxRx->higo.subtitle->name );
+	PLAY_DEBUG(play, "CLEAR Subtitle : %s", play->muxRx->higo.subtitle->name );
 	muxOsdClear(play->muxRx->higo.subtitle);
 
 	res = OSD_DESKTOP_UNLOCK(&play->muxRx->higo);
 	if(res != 0)
 	{
-		MUX_PLAY_WARN( "Higo is unlocked for subtitle clear %s: %s", play->muxFsm.name, strerror(errno) );
+		PLAY_WARN(play, "Higo is unlocked for subtitle clear: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
 #endif
@@ -42,11 +42,11 @@ int	_muxOutTextSubtitle(MUX_PLAY_T *play, const HI_UNF_SO_SUBTITLE_INFO_S *pstIn
 		return HI_FAILURE;
 	}
 	
-	MUX_PLAY_DEBUG( "OUTPUT: %s \n", pstInfo->unSubtitleParam.stText.pu8Data);
+	PLAY_DEBUG(play, "OUTPUT: %s \n", pstInfo->unSubtitleParam.stText.pu8Data);
 	res = OSD_DESKTOP_TRY_LOCK(&play->muxRx->higo);
 	if(res != 0)
 	{
-		MUX_PLAY_WARN("Window is locked for subtitle info, waiting next...");
+		PLAY_WARN(play, "Window is locked for subtitle info, waiting next...");
 		return HI_SUCCESS;
 	}
 
@@ -58,7 +58,7 @@ int	_muxOutTextSubtitle(MUX_PLAY_T *play, const HI_UNF_SO_SUBTITLE_INFO_S *pstIn
 	res = OSD_DESKTOP_UNLOCK( &play->muxRx->higo);
 	if(res != 0)
 	{
-		MUX_PLAY_WARN( "Higo is unlocked for subtitle text %s: %s", play->muxFsm.name, strerror(errno) );
+		PLAY_WARN(play, "Higo is unlocked for subtitle text: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
 
@@ -93,17 +93,17 @@ int	_muxOutAssSubtitle(MUX_PLAY_T *play, const HI_UNF_SO_SUBTITLE_INFO_S *pstInf
 
 		if ( s32Ret != HI_SUCCESS || NULL == pszOutHand )
 		{
-			MUX_PLAY_WARN("##########can't parse this Dialog!#########\n");
+			PLAY_WARN(play, "##########can't parse this Dialog!#########");
 		}
 		else
 		{
 			s32Ret = muxOsdOutputText(play->muxRx->higo.subtitle, ALERT_DEFAULT_LAYOUT, pszOutHand);//, &rc);
-			MUX_PLAY_DEBUG("OUTPUT: %s \n", pszOutHand);
+			PLAY_DEBUG(play, "OUTPUT: %s ", pszOutHand);
 		}
 	}
 	else
 	{
-		MUX_PLAY_WARN( "##########can't parse this ass file!#########\n");
+		PLAY_WARN(play, "##########can't parse this ass file!#########");
 	}
 
 	free(pszOutHand);
@@ -132,14 +132,14 @@ int _muxOutBitmapSubtitle(MUX_PLAY_T *play, const HI_UNF_SO_SUBTITLE_INFO_S *pst
 	HI_S32 s32DrawH, s32DrawW;
 	HI_BOOL bScale = 0;
 
-//	MUX_PLAY_DEBUG( "sub title bitmap! \n");
+//	PLAY_DEBUG(play, "sub title bitmap!");
 			
 	if (0 == pstInfo->unSubtitleParam.stGfx.u32CanvasWidth || 0 == pstInfo->unSubtitleParam.stGfx.u32CanvasHeight)
 	{
 		return HI_SUCCESS;
 	}
 
-	MUX_PLAY_DEBUG( "display w/h is [%d][%d]\n", pstInfo->unSubtitleParam.stGfx.u32CanvasWidth, pstInfo->unSubtitleParam.stGfx.u32CanvasHeight);
+	PLAY_DEBUG(play, "display w/h is [%d][%d]", pstInfo->unSubtitleParam.stGfx.u32CanvasWidth, pstInfo->unSubtitleParam.stGfx.u32CanvasHeight);
 	
 #if WITH_HIGO_SURFACE_HANDLER	
 	HI_GO_LockSurface( play->muxRx->higo.layerSurfaceHandle, pData, HI_TRUE);
@@ -357,7 +357,7 @@ HI_S32 muxSubtitleOnClearCallback(HI_VOID * u32UserData, HI_VOID *pArg)
 {
 	MUX_PLAY_T *play = (MUX_PLAY_T *)u32UserData;
 
-	MUX_PLAY_DEBUG( "%s.%s (0x%x) Subtitle OnClear Callback entry...", play->muxFsm.name, play->osd->name, play );
+	PLAY_DEBUG(play, ".%s (0x%x) Subtitle OnClear Callback entry...", play->osd->name, play );
 	HI_UNF_SO_CLEAR_PARAM_S *pstClearParam = NULL;
 	if(pArg)
 	{
@@ -370,14 +370,14 @@ HI_S32 muxSubtitleOnClearCallback(HI_VOID * u32UserData, HI_VOID *pArg)
 	{
 		if (pstClearParam->s64ClearTime < play->s_s64CurPgsClearTime)
 		{
-			MUX_PLAY_INFO("s64Cleartime=%lld s_s64CurPgsClearTime=%lld is not time!\n", pstClearParam->s64ClearTime, play->s_s64CurPgsClearTime);
+			PLAY_INFO(play, "s64Cleartime=%lld s_s64CurPgsClearTime=%lld is not time!", pstClearParam->s64ClearTime, play->s_s64CurPgsClearTime);
 			return HI_SUCCESS;
 		}
 	}
 
-//	MUX_PLAY_DEBUG( "[(%d, %d),(%d, %d)]", pstClearParam->x, pstClearParam->y, pstClearParam->w, pstClearParam->h);
+//	PLAY_DEBUG(play, "[(%d, %d),(%d, %d)]", pstClearParam->x, pstClearParam->y, pstClearParam->w, pstClearParam->h);
 
-	MUX_PLAY_DEBUG( "Subtitle OnClear on OSD...");
+	PLAY_DEBUG(play, "Subtitle OnClear on OSD...");
 	muxSubtitleClear(play, pstClearParam);
 
 	return HI_SUCCESS;

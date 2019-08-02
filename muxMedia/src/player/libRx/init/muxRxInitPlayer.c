@@ -33,11 +33,11 @@ HI_S32 _muxInitBufferConfig(MUX_PLAY_T *play)
 	if (HI_SUCCESS == res )
 	{
 		HI_SVR_PLAYER_Invoke(play->playerHandler, HI_FORMAT_INVOKE_GET_BUFFER_MAX_SIZE, &s64BufMaxSize);
-		MUX_PLAY_DEBUG("Set buffer max size to %lld", s64BufMaxSize);
+		PLAY_DEBUG(play, "Set buffer max size to %lld", s64BufMaxSize);
 	}
 	else
 	{
-		MUX_PLAY_ERROR("Set buffer max size failed");
+		PLAY_ERROR(play, "Set buffer max size failed");
 		assert(0);
 	}
 
@@ -51,16 +51,16 @@ HI_S32 _muxInitBufferConfig(MUX_PLAY_T *play)
 	res = HI_SVR_PLAYER_Invoke(play->playerHandler, HI_FORMAT_INVOKE_GET_BUFFER_CONFIG, &stBufConfig);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("HI_FORMAT_INVOKE_GET_BUFFER_CONFIG function fail, ret = 0x%x", res );
+		PLAY_ERROR(play, "HI_FORMAT_INVOKE_GET_BUFFER_CONFIG function fail, ret = 0x%x", res );
 		assert(0);
 	}
 	else
 	{
-		MUX_PLAY_DEBUG("BufferConfig:type(%d)", stBufConfig.eType);
-		MUX_PLAY_DEBUG("s64EventStart:%lld", stBufConfig.s64EventStart);
-		MUX_PLAY_DEBUG("s64EventEnough:%lld", stBufConfig.s64EventEnough);
-		MUX_PLAY_DEBUG("s64Total:%lld", stBufConfig.s64Total);
-		MUX_PLAY_DEBUG("s64TimeOut:%lld\n", stBufConfig.s64TimeOut);
+		PLAY_DEBUG(play, "BufferConfig:type(%d)", stBufConfig.eType);
+		PLAY_DEBUG(play, "s64EventStart:%lld", stBufConfig.s64EventStart);
+		PLAY_DEBUG(play, "s64EventEnough:%lld", stBufConfig.s64EventEnough);
+		PLAY_DEBUG(play, "s64Total:%lld", stBufConfig.s64Total);
+		PLAY_DEBUG(play, "s64TimeOut:%lld\n", stBufConfig.s64TimeOut);
 
 #if 0
 		/* reconfigure buffer */
@@ -73,7 +73,7 @@ HI_S32 _muxInitBufferConfig(MUX_PLAY_T *play)
 		res = HI_SVR_PLAYER_Invoke(muxRx->playerHandler, HI_FORMAT_INVOKE_SET_BUFFER_CONFIG, &stBufConfig);
 		if (HI_SUCCESS != res )
 		{
-			MUX_PLAY_ERROR("HI_FORMAT_INVOKE_SET_BUFFER_CONFIG function fail, ret = 0x%x", res);
+			PLAY_ERROR(play, "HI_FORMAT_INVOKE_SET_BUFFER_CONFIG function fail, ret = 0x%x", res);
 		}
 		else
 #endif			
@@ -85,11 +85,11 @@ HI_S32 _muxInitBufferConfig(MUX_PLAY_T *play)
 			}
 			else
 			{
-				MUX_PLAY_DEBUG( "BufferConfig:type(%d)", stBufConfig.eType);
-				MUX_PLAY_DEBUG( "s64EventStart:%lld", stBufConfig.s64EventStart);
-				MUX_PLAY_DEBUG( "s64EventEnough:%lld", stBufConfig.s64EventEnough);
-				MUX_PLAY_DEBUG( "s64Total:%lld", stBufConfig.s64Total);
-				MUX_PLAY_DEBUG( "s64TimeOut:%lld\n", stBufConfig.s64TimeOut);
+				PLAY_DEBUG(play,  "BufferConfig:type(%d)", stBufConfig.eType);
+				PLAY_DEBUG(play,  "s64EventStart:%lld", stBufConfig.s64EventStart);
+				PLAY_DEBUG(play,  "s64EventEnough:%lld", stBufConfig.s64EventEnough);
+				PLAY_DEBUG(play,  "s64Total:%lld", stBufConfig.s64Total);
+				PLAY_DEBUG(play,  "s64TimeOut:%lld\n", stBufConfig.s64TimeOut);
 			}
 		}
 	}
@@ -111,15 +111,15 @@ int _createHiPlayer(MUX_PLAY_T *play)
 	
 #ifdef DRM_SUPPORT
 	param.hDRMClient = (HI_HANDLE)drm_get_handle();
-	MUX_PLAY_DEBUG("drm handle created:%#x\n", param.hDRMClient);
+	PLAY_DEBUG(play, "drm handle created:%#x\n", param.hDRMClient);
 #endif
 
-	cmnThreadSetName("HiPlayer-%d", play->windowIndex );
+	cmnThreadSetName(MUX_THREAD_NAME_WINDOW_DECODE_PLAYER"-%d", play->windowIndex );
 
 	ret = HI_SVR_PLAYER_Create(&param, &handle);
 	if (HI_SUCCESS != ret)
 	{
-		MUX_PLAY_ERROR(" player open fail, ret = 0x%x", ret);
+		PLAY_ERROR(play, " player open fail, ret = 0x%x", ret);
 		assert(0);
 		return HI_FAILURE;
 	}
@@ -131,7 +131,7 @@ int _createHiPlayer(MUX_PLAY_T *play)
 	ret = HI_SVR_PLAYER_Invoke( handle, HI_FORMAT_INVOKE_SET_CHARSETMGR_FUNC, &g_stCharsetMgr_s);
 	if (HI_SUCCESS != ret)
 	{
-		MUX_PLAY_ERROR("HI_SVR_PLAYER_Invoke set charsetMgr failed");
+		PLAY_ERROR(play, "HI_SVR_PLAYER_Invoke set charsetMgr failed");
 		assert(0);
 	}
 
@@ -139,7 +139,7 @@ int _createHiPlayer(MUX_PLAY_T *play)
 	ret = HI_SVR_PLAYER_Invoke(handle, HI_FORMAT_INVOKE_SET_DEST_CODETYPE, &s32CodeType);
 	if (HI_SUCCESS != ret)
 	{
-		MUX_PLAY_ERROR("HI_SVR_PLAYER_Invoke Send Dest CodeType failed");
+		PLAY_ERROR(play, "HI_SVR_PLAYER_Invoke Send Dest CodeType failed");
 		assert(0);
 	}
 #endif
@@ -147,12 +147,12 @@ int _createHiPlayer(MUX_PLAY_T *play)
 	ret = HI_SVR_PLAYER_RegCallback(handle, muxEventCallBack);
 	if (HI_SUCCESS != ret)
 	{
-		MUX_PLAY_ERROR("register event callback function fail, ret = 0x%x", ret);
+		PLAY_ERROR(play, "register event callback function fail, ret = 0x%x", ret);
 		assert(0);
 	}
 
 	/* Fast start hls */
-	if (1 == play->hlsStartMode)
+	if (0 != play->hlsStartMode)
 	{
 		HI_U32 hlsStarMode = HI_FORMAT_HLS_MODE_FAST;
 		HI_SVR_PLAYER_Invoke( handle, HI_FORMAT_INVOKE_SET_HLS_START_MODE, &hlsStarMode);
@@ -179,7 +179,7 @@ int _createHiPlayer(MUX_PLAY_T *play)
 #endif
 	}
 
-#if 1//def   __CMN_RELEASE__
+#ifdef   __CMN_RELEASE__
 	u32LogLevel = HI_FORMAT_LOG_QUITE;
 	HI_SVR_PLAYER_Invoke( handle, HI_FORMAT_INVOKE_SET_LOG_LEVEL, &u32LogLevel);
 	HI_SVR_PLAYER_EnableDbg(HI_TRUE);
@@ -195,16 +195,14 @@ int _createHiPlayer(MUX_PLAY_T *play)
 		ret = HI_SVR_PLAYER_Invoke(handle, HI_FORMAT_INVOKE_SET_CACHE_TIME, &cacheTime);
 		if (HI_SUCCESS != ret)
 		{
-			MUX_ERROR("HI_FORMAT_INVOKE_SET_CACHE_TIME failed: 0x%x", ret );
+			PLAY_ERROR(play, "HI_FORMAT_INVOKE_SET_CACHE_TIME failed: 0x%x", ret );
 		}
 
 		ret = HI_SVR_PLAYER_Invoke(handle, HI_FORMAT_INVOKE_SET_REFERER, referer);
 		if (HI_SUCCESS != ret)
 		{
-		
-			MUX_ERROR("HI_FORMAT_INVOKE_SET_REFERER failed: 0x%x", ret);
+			PLAY_ERROR(play, "HI_FORMAT_INVOKE_SET_REFERER failed: 0x%x", ret);
 		}
-
 	}
 
 
@@ -217,6 +215,7 @@ int _createHiPlayer(MUX_PLAY_T *play)
 	}
 
 	play->muxFsm.currentCmd = CMD_TYPE_OPEN;	/* indicates this player is busy now */
+	play->mediaState = SET_MEDIA_STATE_INIT;
 
 	ret = muxPlayerPlaying(play, TRUE, play->cfg->url, -1);
 
@@ -231,7 +230,7 @@ int _destoryHiPlayer(MUX_PLAY_T *play)
 	res = HI_SVR_PLAYER_Destroy(play->playerHandler);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("### HI_SVR_PLAYER_Destroy err!");
+		PLAY_ERROR(play, "### HI_SVR_PLAYER_Destroy err!");
 		assert(0);
 	}
 
@@ -280,16 +279,16 @@ int _createWindowChannel(MUX_PLAY_T *play )
 	stWinAttr.stOutputRect.s32Height = play->cfg->height;
 
 
-	MUX_PLAY_DEBUG("create window#%d [(%d,%d), (%d, %d)]", play->windowIndex, play->cfg->left, play->cfg->top, play->cfg->width, play->cfg->height);
+	PLAY_DEBUG(play, "create window#%d [(%d,%d), (%d, %d)]", play->windowIndex, play->cfg->left, play->cfg->top, play->cfg->width, play->cfg->height);
 
-	cmnThreadSetName("Window-%d", play->windowIndex);
+//	cmnThreadSetName("Window-%d", play->windowIndex);
 
 	/* When multiple WINDOWs are created, only one WINDOW is allowed to overlap with other WINDOWs; otherwise 
 	an error of MPI will happen when createWindow or enableWindow: 0x80110044, operation denied */
 	res = HI_UNF_VO_CreateWindow(&stWinAttr, &hWindow);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("create window fail, return %#x", res);
+		PLAY_ERROR(play, "create window fail, return %#x", res);
 		assert(0);
 		return res;
 	}
@@ -298,7 +297,7 @@ int _createWindowChannel(MUX_PLAY_T *play )
 	res = HI_UNF_VO_AttachWindow(hWindow, play->avPlayHandler);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR( "attach window failed, return %#x", res);
+		PLAY_ERROR(play, "attach window failed, return %#x", res);
 		HI_UNF_VO_DestroyWindow(hWindow);
 		assert(0);
 		return res;
@@ -307,7 +306,7 @@ int _createWindowChannel(MUX_PLAY_T *play )
 	res = HI_UNF_VO_SetWindowEnable(hWindow, HI_TRUE);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("enable window failed, return %#x", res);
+		PLAY_ERROR(play, "enable window failed, return %#x", res);
 		HI_UNF_VO_DetachWindow(hWindow, play->avPlayHandler);
 		HI_UNF_VO_DestroyWindow(hWindow);
 		assert(0);
@@ -339,21 +338,21 @@ int _destoryWindowChannel(MUX_PLAY_T *play )
 		s32RetTmp = HI_UNF_VO_SetWindowEnable( play->windowHandle, HI_FALSE);
 		if (HI_SUCCESS !=  s32RetTmp)
 		{
-			MUX_PLAY_ERROR("disable window failed, return %#x", s32RetTmp);
+			PLAY_ERROR(play, "disable window failed, return %#x", s32RetTmp);
 			s32Ret = s32RetTmp;
 			assert(0);
 		}
 		s32RetTmp = HI_UNF_VO_DetachWindow(play->windowHandle, play->avPlayHandler);
 		if (HI_SUCCESS !=  s32RetTmp)
 		{
-			MUX_PLAY_ERROR( "detach window failed, return %#x", s32RetTmp);
+			PLAY_ERROR(play, "detach window failed, return %#x", s32RetTmp);
 			s32Ret = s32RetTmp;
 		}
 		
 		s32RetTmp = HI_UNF_VO_DestroyWindow(play->windowHandle);
 		if (HI_SUCCESS !=  s32RetTmp)
 		{
-			MUX_PLAY_ERROR( "destroy window fail, return %#x", s32RetTmp);
+			PLAY_ERROR(play, "destroy window fail, return %#x", s32RetTmp);
 			s32Ret = s32RetTmp;
 		}
 		
@@ -382,7 +381,7 @@ int _createTrackChannel(int index, MUX_PLAY_T *play)
 		type = HI_UNF_SND_TRACK_TYPE_SLAVE;
 	else
 	{
-		MUX_PLAY_ERROR("RECT type %d can be used to create window", play->cfg->type);
+		PLAY_ERROR(play, "RECT type %d can be used to create window", play->cfg->type);
 		return HI_FAILURE;
 	}
 	
@@ -390,7 +389,7 @@ int _createTrackChannel(int index, MUX_PLAY_T *play)
 	res = HI_UNF_SND_GetDefaultTrackAttr(stTrackAttr.enTrackType, &stTrackAttr);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR( "get default track attr fail ,return 0x%x", res);
+		PLAY_ERROR(play, "get default track attr fail ,return 0x%x", res);
 		assert(0);
 		return res;
 	}
@@ -400,7 +399,7 @@ int _createTrackChannel(int index, MUX_PLAY_T *play)
 	res = HI_UNF_SND_CreateTrack(HI_UNF_SND_0, &stTrackAttr, &hTrack);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("create track fail ,return 0x%x", res);
+		PLAY_ERROR(play, "create track fail ,return 0x%x", res);
 		assert(0);
 		return res;
 	}
@@ -410,14 +409,14 @@ int _createTrackChannel(int index, MUX_PLAY_T *play)
 	res = HI_UNF_SND_SetTrackWeight(hTrack, &stGain);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR( "set sound track mixer weight failed, return 0x%x", res);
+		PLAY_ERROR(play, "set sound track mixer weight failed, return 0x%x", res);
 	}
 	
 	res = HI_UNF_SND_Attach(hTrack, play->avPlayHandler );
 	if (HI_SUCCESS != res)
 	{
 		HI_UNF_SND_DestroyTrack(hTrack);
-		MUX_PLAY_ERROR("attach audio track fail, return %#x", res);
+		PLAY_ERROR(play, "attach audio track fail, return %#x", res);
 		assert(0);
 		return res;
 	}
@@ -447,7 +446,7 @@ int _createTrackChannel(int index, MUX_PLAY_T *play)
 		if (HI_SUCCESS != res)
 		{
 			HI_UNF_SND_DestroyTrack(hTrack);
-			MUX_PLAY_ERROR("HI_UNF_SND_SetTrackMute failed");
+			PLAY_ERROR(play, "HI_UNF_SND_SetTrackMute failed");
 			assert(0);
 			return res;
 		}
@@ -479,7 +478,7 @@ int _destoryTrackChannel(MUX_PLAY_T *play)
 		if (HI_SUCCESS != s32RetTmp)
 		{
 			s32Ret = s32RetTmp;
-			MUX_PLAY_ERROR("detach audio track fail, return %#x", s32RetTmp);
+			PLAY_ERROR(play, "detach audio track fail, return %#x", s32RetTmp);
 			assert(0);
 		}
 		
@@ -487,7 +486,7 @@ int _destoryTrackChannel(MUX_PLAY_T *play)
 		if (HI_SUCCESS != s32RetTmp)
 		{
 			s32Ret = s32RetTmp;
-			MUX_PLAY_ERROR("destroy audio track fail, return %#x", s32RetTmp);
+			PLAY_ERROR(play, "destroy audio track fail, return %#x", s32RetTmp);
 			assert(0);
 		}
 
@@ -509,6 +508,7 @@ int _createAvPlay(MUX_PLAY_T *play)
 
 	res = HI_UNF_AVPLAY_GetDefaultConfig(&avPlayAttr, HI_UNF_AVPLAY_STREAM_TYPE_TS);//HI_UNF_AVPLAY_STREAM_TYPE_ES); /* Jack Lee ??? */
 
+	cmnThreadSetName(MUX_THREAD_NAME_WINDOW_VIDEO_PLAYER"-%d", play->windowIndex);
 	avPlayAttr.u32DemuxId = 0;
 #if 0
 	/* when buffer size is too large, AVPlay can't be created */
@@ -521,7 +521,7 @@ int _createAvPlay(MUX_PLAY_T *play)
 	res |= HI_UNF_AVPLAY_Create(&avPlayAttr, &handle);
 	if( HI_SUCCESS != res )
 	{
-		MUX_PLAY_ERROR("Create AvPlay failed!");
+		PLAY_ERROR(play, "Create AvPlay failed!");
 		assert(0);
 		return HI_FAILURE;
 	}
@@ -549,11 +549,11 @@ int _createAvPlay(MUX_PLAY_T *play)
 		return res;
 	}
 
-	cmnThreadSetName("AvpAudio-%d", play->windowIndex);
+	cmnThreadSetName(MUX_THREAD_NAME_WINDOW_AUDIO_PLAYER"-%d", play->windowIndex);
 	res = HI_UNF_AVPLAY_ChnOpen( handle, HI_UNF_AVPLAY_MEDIA_CHAN_AUD, HI_NULL);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("open audio channel fail, return %#x ", res);
+		PLAY_ERROR(play, "open audio channel fail, return %#x ", res);
 		res = HI_UNF_AVPLAY_Destroy(handle );
 		assert(0);
 		return res;
@@ -575,21 +575,21 @@ int _destoryAvPlay(MUX_PLAY_T *play)
 	res = HI_UNF_AVPLAY_ChnClose( play->avPlayHandler, HI_UNF_AVPLAY_MEDIA_CHAN_AUD);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("close audio channel fail, return %#x", res);
+		PLAY_ERROR(play, "close audio channel fail, return %#x", res);
 		assert(0);
 	}
 	
 	res = HI_UNF_AVPLAY_ChnClose(  play->avPlayHandler, HI_UNF_AVPLAY_MEDIA_CHAN_VID);
 	if (HI_SUCCESS !=  res)
 	{
-		MUX_PLAY_ERROR("close video channel failed, return %#x", res);
+		PLAY_ERROR(play, "close video channel failed, return %#x", res);
 		assert(0);
 	}
 	
 	res = HI_UNF_AVPLAY_Destroy( play->avPlayHandler );
 	if (HI_SUCCESS !=  res)
 	{
-		MUX_PLAY_ERROR("close video channel failed, return %#x", res);
+		PLAY_ERROR(play, "close video channel failed, return %#x", res);
 		assert(0);
 	}
 	return res;
@@ -638,7 +638,7 @@ int muxRxCreatePlayer(int index, void *element, void *pMux )
 	play = cmn_malloc(sizeof(MUX_PLAY_T));
 	if(play == NULL)
 	{
-		MUX_PLAY_ERROR("No memory is available for PLAYER");
+		MUX_PLAY_ERROR("No memory is available for PLAYER %d", index);
 		exit(1);
 	}
 	_initDefaultPlayer(play);
@@ -646,6 +646,8 @@ int muxRxCreatePlayer(int index, void *element, void *pMux )
 	play->muxRx = muxRx;
 	play->cfg = cfg;
 	play->windowIndex = index;
+
+	play->muxMain = (MuxMain *)muxRx->muxPlayer->priv;
 
 	play->muxFsm.fsm = &playerFsm;
 	snprintf(play->muxFsm.name, CMN_NAME_LENGTH, "Player%d(%s)", index, cfg->name);
@@ -667,6 +669,7 @@ int muxRxCreatePlayer(int index, void *element, void *pMux )
 	}
 	
 	play->hlsStartMode = muxRx->muxPlayer->playerConfig.isHlsStartMode;
+	play->hlsStartMode = 1;
 //	MUX_PLAY_DEBUG("hls start mode is %d", play->hlsStartMode );
 	
 #ifdef DRM_SUPPORT
@@ -723,7 +726,7 @@ int muxRxCreatePlayer(int index, void *element, void *pMux )
 	{
 		if (HI_SUCCESS != _createTrackChannel( cmn_list_size(&muxRx->players), play) )
 		{
-			MUX_PLAY_ERROR("open audio channel failed, use internal avplay!");
+			PLAY_ERROR(play, "open audio channel failed, use internal avplay!");
 		assert(0);
 			goto ERR;
 		}
@@ -734,7 +737,7 @@ int muxRxCreatePlayer(int index, void *element, void *pMux )
 	res = _createHiPlayer(play);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("player init fail, ret = 0x%x", res);
+		PLAY_ERROR(play, "player init fail, ret = 0x%x", res);
 		assert(0);
 		goto ERR;
 	}

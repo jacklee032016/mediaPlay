@@ -80,33 +80,30 @@ int _muxOsdRefresh(MUX_OSD *osd)
 {
 	HI_S32 res = HI_SUCCESS;
 
-#if WITH_HIGO_DEBUG
-	MUX_PLAY_DEBUG("OSD '%s(%s)' Update Window", osd->name, osd->cfg->name );
-#endif
-
+	if(OSD_IS_DEBUG(osd))
+	{
+		OSD_INFO(osd, "Update Window");
+	}
 	res = HI_GO_UpdateWindow( osd->winHandle, NULL);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_WARN("Update OSD '%s' failed", osd->name);
+		OSD_WARN(osd, "Update failed");
 		return EXIT_FAILURE;
 	}
-
-#if WITH_HIGO_DEBUG
-	MUX_PLAY_DEBUG("OSD '%s(%s)' refresh layer.....", osd->name, osd->cfg->name );
-#endif
+	
+	OSD_DEBUG(osd, "refresh layer.....");
 	res = HI_GO_RefreshLayer(osd->desktop, NULL);
-#if WITH_HIGO_DEBUG
-	MUX_PLAY_DEBUG("OSD '%s(%s)' refresh layer ended!", osd->name, osd->cfg->name );
-#endif
+
+	OSD_DEBUG(osd, "refresh layer ended!");
+
 	if (HI_SUCCESS != res)
 	{
 //		MUX_ABORT("OSD: HIGO RefreshLayer OSD '%s' failed", osd->name);
-		MUX_PLAY_WARN("OSD: HIGO RefreshLayer OSD '%s' failed: 0x%x", osd->name, res);
+		OSD_WARN(osd, "HIGO RefreshLayer failed: 0x%x", res);
 		return EXIT_FAILURE;
 	}
-#if WITH_HIGO_DEBUG
-	MUX_PLAY_DEBUG("OSD '%s(%s)' return", osd->name, osd->cfg->name );
-#endif
+
+	OSD_DEBUG(osd, "return");
 
 	return EXIT_SUCCESS;
 }
@@ -117,6 +114,7 @@ int muxOsdOutputText(MUX_OSD *osd, int align, const HI_CHAR* pszText)
 //#define	__TEXT_BORDER_WIDTH		10
 #define	__TEXT_BORDER_WIDTH		0
 
+TRACE();
 	if(osd == NULL)
 	{
 		MUX_PLAY_WARN("Set OSD is not initialized" );
@@ -136,19 +134,38 @@ int muxOsdOutputText(MUX_OSD *osd, int align, const HI_CHAR* pszText)
 
 //		res = HI_GO_TextOutEx(osd->fontHandle, osd->winSurface, pszText, &osd->rect, HIGO_LAYOUT_WRAP | HIGO_LAYOUT_HCENTER | HIGO_LAYOUT_BOTTOM);
 		/* 06.05, 2019, changed as following */
-//		MUX_PLAY_DEBUG("OSD Aler box ['%d, %d],[%d, %d]'", osd->rect.x, osd->rect.y, osd->rect.w, osd->rect.h );
+		if(OSD_IS_DEBUG(osd))
+		{
+			OSD_INFO(osd, "output '%s' at box ['%d,%d],[%d, %d]'", pszText, rect.x, rect.y, rect.w, rect.h );
+		}
 		res = HI_GO_TextOutEx(osd->fontHandle, osd->winSurface, pszText, &rect, align);
 		if (HI_SUCCESS != res)
 		{
-			MUX_PLAY_ERROR("TextOutEx on OSD %s failed: 0x%x (0x%x)", osd->name, res, osd->winSurface);
+			OSD_ERROR(osd, "TextOutEx failed: 0x%x (0x%x)", res, osd->winSurface);
 		}
+
+#if 0
+		{
+			HIGO_TEXTOUTATTR_S		textOutAttr;
+			res = HI_GO_GetTextAttr(osd->fontHandle, &textOutAttr);
+			if (HI_SUCCESS != res)
+			{
+				OSD_ERROR(osd, "Get Text Attr failed: 0x%x (0x%x)", res, osd->fontHandle);
+			}
+			else
+			{
+				OSD_INFO(osd, "ForeColor:0x%x;BackColor:0x%x;MulFont:%d; Height:%d;Width:%d", 
+					textOutAttr.FgColor, textOutAttr.BgColor, textOutAttr.MbFontAttr.Charset, textOutAttr.MbFontAttr.Height, textOutAttr.MbFontAttr.MaxWidth);
+			}
+		}
+#endif
 
 		if(osd->type == MUX_OSD_TYPE_ALERT)
 		{
 			res = HI_GO_ChangeWindowZOrder( osd->winHandle, HIGO_ZORDER_MOVETOP);
 			if (HI_SUCCESS != res)
 			{
-				MUX_PLAY_ERROR("Set OSD %s ZOrder failed", osd->name);
+				OSD_ERROR(osd, "Set ZOrder failed");
 			}
 		}
 
@@ -156,6 +173,7 @@ int muxOsdOutputText(MUX_OSD *osd, int align, const HI_CHAR* pszText)
 	}
 	else
 	{
+		OSD_ERROR(osd, "output '%s' ", pszText);
 		return HI_FAILURE;
 	}
 
@@ -167,14 +185,15 @@ int muxOsdClear(MUX_OSD *osd)
 {
 	int res = 0;
 
-//	MUX_PLAY_DEBUG("OSD clear: set OSD backgroundColor =%#x", osd->cfg->backgroundColor );
-#if WITH_HIGO_DEBUG
-	MUX_PLAY_DEBUG("OSD '%s' clear", osd->name );
-#endif
+	if(OSD_IS_DEBUG(osd))
+	{
+		OSD_INFO(osd, "clear: set OSD backgroundColor =%#x", osd->cfg->backgroundColor );
+	}
+
 	res = HI_GO_FillRect(osd->winSurface, NULL, osd->cfg->backgroundColor, HIGO_COMPOPT_NONE);
 	if(res != HI_SUCCESS)
 	{
-		MUX_PLAY_ERROR("OSD clear: set OSD background failed, ret=%#x", res);
+		OSD_ERROR(osd, "OSD clear: set OSD background failed, ret=%#x", res);
 		return res;
 	}
 
@@ -203,7 +222,7 @@ static int _muxOsdPrint(MUX_OSD *osd, int color, int align, const char* buf)
 #define	ALERT_WITH_TIMER		0
 
 #if ALERT_WITH_TIMER
-static int _alertwinTimeoutCallback(int interval, void *param)
+static int _alertwinTimeoutCallback(void *timer, int interval, void *param)
 {
 	int res = 0;
 	MUX_OSD *osd = (MUX_OSD *)param;
@@ -225,6 +244,9 @@ static int _alertwinTimeoutCallback(int interval, void *param)
 int muxOutputAlert(MUX_RX_T *muxRx, int color, int align, const char* frmt,...)
 {
 	int res = 0;
+	char buf[1024] = {0};
+	va_list ap;
+	
 	
 //	MUX_OSD *osd = muxOsdFind( &muxRx->higo, MUX_OSD_TYPE_ALERT);
 	if(muxRx->higo.alert == NULL)
@@ -233,14 +255,11 @@ int muxOutputAlert(MUX_RX_T *muxRx, int color, int align, const char* frmt,...)
 		return HI_FAILURE;
 	}
 
-	char buf[1024] = {0};
-	va_list ap;
-	
 	va_start(ap, frmt);
 	vsnprintf(buf, 1024, frmt, ap);
 	va_end(ap);
 	
-
+//	printf("buf:'%s', FORMAT:'%s'\n", buf, frmt);
 	res = _muxOsdPrint(muxRx->higo.alert, color, align, buf);
 
 #if ALERT_WITH_TIMER
@@ -274,7 +293,7 @@ int muxOsdImageLoad(MUX_OSD *osd, char *imageFile)
 		ret = HI_GO_GetWindowSurface(osd->winHandle, &osd->winSurface );
 		if(ret != HI_SUCCESS)
 		{
-			MUX_PLAY_WARN("OSD '%s' failed in GetWindowSurface: 0x%x", osd->name, ret);
+			OSD_WARN(osd, "failed in GetWindowSurface: 0x%x", ret);
 			return EXIT_FAILURE;
 		}
 	}
@@ -282,7 +301,7 @@ int muxOsdImageLoad(MUX_OSD *osd, char *imageFile)
 	ret = HI_GO_GetWindowSurface(osd->winHandle, &osd->winSurface );
 	if(ret != HI_SUCCESS)
 	{
-		MUX_PLAY_WARN("OSD '%s' failed in GetWindowSurface: 0x%x", osd->name, ret);
+		OSD_WARN(osd,"failed in GetWindowSurface: 0x%x", ret);
 		CMN_ABORT("Get Window Surface failed");
 		return EXIT_FAILURE;
 	}
@@ -293,7 +312,7 @@ int muxOsdImageLoad(MUX_OSD *osd, char *imageFile)
 	ret = HI_GO_Blit(logoSurface, NULL, osd->winSurface, NULL, &stBltOpt);
 	if(HI_SUCCESS != ret)
 	{
-		MUX_PLAY_WARN("Blit Operation failed %s: 0x%x", imageFile, ret );
+		OSD_WARN(osd, "Blit Operation failed %s: 0x%x", imageFile, ret );
 		return EXIT_FAILURE;
 	}
 
@@ -304,15 +323,17 @@ int muxOsdImageLoad(MUX_OSD *osd, char *imageFile)
 		ret = HI_GO_FlipWindowSurface(osd->winHandle);
 		if(ret != HI_SUCCESS)
 		{
-			MUX_PLAY_WARN("OSD '%s' failed in FlipWindow: 0x%x", osd->name, ret);
+			OSD_WARN(osd, "failed in FlipWindow: 0x%x", ret);
 			return EXIT_FAILURE;
 		}
 	}
 #endif
-	
-#if WITH_HIGO_DEBUG
-	MUX_PLAY_DEBUG("OSD %s IMAGE decoding %s sucessed, free logoSurface :0x%x", osd->name, imageFile, logoSurface);
-#endif
+
+	if(OSD_IS_DEBUG(osd))
+	{
+		OSD_INFO(osd, "IMAGE decoding %s sucessed, free logoSurface :0x%x", imageFile, logoSurface);
+	}
+
 	HI_GO_FreeSurface(logoSurface);
 
 	return EXIT_SUCCESS;
@@ -344,18 +365,13 @@ int muxOsdImageDisplay(MUX_OSD *osd, int isShow)
 	
 	if (HI_SUCCESS != ret )
 	{
-		MUX_PLAY_WARN("Set opacity of OSD %s failed:0x%x", osd->name, ret );
+		OSD_WARN(osd, "Set opacity of OSD %s failed:0x%x", ret );
 //		return ret;
 	}
 
-#if WITH_HIGO_DEBUG
-	MUX_PLAY_DEBUG("OSD '%s(%s)' refresh for %s .....", osd->name, osd->cfg->name, (isShow==0)?"clear": "display");
-#endif
+	OSD_DEBUG(osd, "refresh for %s .....", (isShow==0)?"clear": "display");
 	ret = _muxOsdRefresh(osd);
-
-#if WITH_HIGO_DEBUG
-	MUX_PLAY_DEBUG("OSD '%s(%s)' refresh for %s ended!!!", osd->name, osd->cfg->name, (isShow==0)?"clear": "display");
-#endif
+	OSD_DEBUG(osd, "refresh for %s ended!!!", (isShow==0)?"clear": "display");
 
 	return ret;
 }
@@ -366,18 +382,17 @@ int muxOsdImageShow(MUX_OSD *osd, char *imageFile)
 {
 	int ret = 0;
 
-#if WITH_HIGO_DEBUG
-	MUX_PLAY_DEBUG("OSD '%s(%s)' load image file %s....", osd->name, osd->cfg->name, imageFile );
-#endif
+	if(OSD_IS_DEBUG(osd))
+	{
+		OSD_INFO(osd, "OSD '%s(%s)' load image file %s....", imageFile );
+	}
 	ret = muxOsdImageLoad(osd, imageFile);
 	if(ret != EXIT_SUCCESS)
 	{
 		return ret;
 	}
 	
-#if WITH_HIGO_DEBUG
-	MUX_PLAY_DEBUG("OSD '%s(%s)' display image file %s....", osd->name, osd->cfg->name, imageFile );
-#endif
+	OSD_DEBUG(osd, "display image file %s....", imageFile );
 	ret = muxOsdImageDisplay(osd, TRUE);
 
 	return ret;
@@ -393,7 +408,7 @@ int muxOsdPosition(MUX_OSD *osd, HI_RECT_S *rect, MUX_PLAY_T *play)
 		res = HI_GO_SetWindowPos(osd->winHandle, rect->s32X, rect->s32Y);
 		if (HI_SUCCESS != res )
 		{
-			MUX_PLAY_WARN("Set Pos of OSD Window %s failed", osd->name );
+			OSD_WARN(osd, "Set Pos of Window failed" );
 			exit(1);
 			return EXIT_FAILURE;
 		}
@@ -401,7 +416,7 @@ int muxOsdPosition(MUX_OSD *osd, HI_RECT_S *rect, MUX_PLAY_T *play)
 		res = HI_GO_ResizeWindow(osd->winHandle, rect->s32Width, rect->s32Height);
 		if (HI_SUCCESS != res )
 		{
-			MUX_PLAY_WARN("Resize OSD window %s failed", osd->name );
+			OSD_WARN(osd, "Resize OSD window %s failed");
 			exit(1);
 			return EXIT_FAILURE;
 		}
@@ -425,7 +440,7 @@ int muxOsdPosition(MUX_OSD *osd, HI_RECT_S *rect, MUX_PLAY_T *play)
 			}
 			else
 			{
-				MUX_PLAY_WARN("%s in PLAY_IMAGE state, but current URL is not local media file: %s", play->muxFsm.name, play->currentUrl);
+				PLAY_WARN(play, "%s in PLAY_IMAGE state, but current URL is not local media file: %s", play->currentUrl);
 			}
 		}
 
@@ -435,7 +450,7 @@ int muxOsdPosition(MUX_OSD *osd, HI_RECT_S *rect, MUX_PLAY_T *play)
 		res = HI_GO_GetWindowSurface( osd->winHandle, &osd->winSurface);
 		if (HI_SUCCESS != res )
 		{
-			MUX_PLAY_WARN("Get surface of OSD window %s failed", osd->name);
+			OSD_WARN(osd, "Get surface of OSD window failed");
 			exit(1);
 			return EXIT_FAILURE;
 		}
@@ -444,13 +459,13 @@ int muxOsdPosition(MUX_OSD *osd, HI_RECT_S *rect, MUX_PLAY_T *play)
 	}
 	else
 	{
-		MUX_PLAY_WARN("coordination of OSD %s is invalidate: [(%d,%d),(%d, %d)]", osd->name, rect->s32X, rect->s32Y, rect->s32Width, rect->s32Height);
+		OSD_WARN(osd, "coordination is invalidate: [(%d,%d),(%d, %d)]", rect->s32X, rect->s32Y, rect->s32Width, rect->s32Height);
 		return EXIT_FAILURE;
 	}
 	
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_WARN("Set position of OSD %s failed", osd->name);
+		OSD_WARN(osd, "Set position failed");
 		return EXIT_FAILURE;
 	}
 
@@ -474,9 +489,10 @@ int muxOsdPosition(MUX_OSD *osd, HI_RECT_S *rect, MUX_PLAY_T *play)
 	osd->rect.w = rect->s32Width;
 	osd->rect.h = rect->s32Height;
 
-#if 1//WITH_HIGO_DEBUG
-	MUX_PLAY_DEBUG("OSD %s position at [(%d, %d), (%d, %d)]", osd->name, rect->s32X, rect->s32Y, rect->s32Width, rect->s32Height);
-#endif
+	if(OSD_IS_DEBUG(osd))
+	{
+		OSD_INFO(osd, "position at [(%d, %d), (%d, %d)]", rect->s32X, rect->s32Y, rect->s32Width, rect->s32Height);
+	}
 
 	return res;
 }
@@ -493,7 +509,7 @@ int muxOsdToggleEnable(MUX_OSD *osd)
 	res =  HI_GO_SetWindowOpacity( osd->winHandle, (osd->enable == TRUE)? osd->cfg->alpha: 0); 
 	if (HI_SUCCESS != res )
 	{
-		MUX_PLAY_WARN("Toggle OSD Enabled failed, ret=%#x.\n", res);
+		OSD_WARN(osd, "Toggle OSD Enabled failed, ret=%#x.\n", res);
 		return res;
 	}
 
@@ -505,15 +521,23 @@ int muxOsdToggleEnable(MUX_OSD *osd)
 int muxOsdSetBackground(MUX_OSD *osd, int backgroundColor)
 {
 	HI_S32 res = 0;
+	HI_RECT					rect;
+	rect.x = 0;
+	rect.y = 0;
+	rect.w = osd->cfg->width;
+	rect.h = osd->cfg->height;
 
 	osd->cfg->backgroundColor = backgroundColor;
 	
-//	MUX_PLAY_DEBUG("set OSD backgroundColor =%#x", osd->cfg->backgroundColor );
+	if(OSD_IS_DEBUG(osd))
+	{
+		OSD_INFO(osd, "set backgroundColor =%#x", osd->cfg->backgroundColor );
+	}
 	/* after repostiton it, HIGO_ERR_INVHANDLE(0xb0008004) happens */
-	res = HI_GO_FillRect(osd->winSurface, NULL, osd->cfg->backgroundColor, HIGO_COMPOPT_NONE);
+	res = HI_GO_FillRect(osd->winSurface, &rect, osd->cfg->backgroundColor, HIGO_COMPOPT_NONE);
 	if(res != HI_SUCCESS)
 	{
-		MUX_PLAY_ERROR("set OSD background failed, ret=%#x", res);
+		OSD_ERROR(osd, "set background failed, ret=%#x", res);
 		return res;
 	}
 
@@ -528,11 +552,14 @@ int muxOsdSetTransparency(MUX_OSD *osd, char alpha)
 
 	osd->cfg->alpha = alpha;
 	
-//	MUX_PLAY_DEBUG("set OSD transparency =%d", osd->cfg->alpha);
+	if(OSD_IS_DEBUG(osd))
+	{
+		OSD_INFO(osd,"set transparency =%d", osd->cfg->alpha);
+	}
 	res = HI_GO_SetWindowOpacity(osd->winHandle, osd->cfg->alpha);
 	if(res != HI_SUCCESS)
 	{
-		MUX_PLAY_WARN("set OSD transparency failed, ret=%#x.\n", res);
+		OSD_WARN(osd, "set transparency failed, ret=%#x.\n", res);
 		return res;
 	}
 

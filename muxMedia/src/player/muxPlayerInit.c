@@ -121,7 +121,7 @@ static void _destoryCapture(struct _CmnThread *th)
 
 CmnThread  threadRxCapture =
 {
-	name		:	"VideoCap",
+	name		:	MUX_THREAD_NAME_CAPTURE_VIDEO,
 		
 	init			:	_initCapture,
 	mainLoop		:	_captureMain,
@@ -133,7 +133,7 @@ CmnThread  threadRxCapture =
 
 CmnThread  threadRxCapture2 =
 {
-	name		:	"AudioCap",
+	name		:	MUX_THREAD_NAME_CAPTURE_AUDIO,
 		
 	init			:	_initCapture2,
 	mainLoop		:	_captureMain2,
@@ -151,7 +151,14 @@ static int	_playerEventHandler(struct _CmnThread *th, void *_event)
 	CMD_EVENT_T *cgiEvent = (CMD_EVENT_T *)_event;
 	int res = EXIT_SUCCESS;
 
-//	MUX_PLAY_DEBUG( "Player '%s' receiving event", th->name);
+	struct _MuxMain	*muxMain = (struct _MuxMain	*)muxPlayer->priv;
+	
+#if 0//CMN_DEBUG_FSM
+	if(MUX_MAIN_IS_DEBUG_MSG(muxMain) )
+	{
+		MUX_PLAY_DEBUG( "'%s' receiving event", th->name);
+	}
+#endif
 
 	if(CHECK_FSM_EVENT( cgiEvent->type))
 	{/* FSM events come from HiPlayer */
@@ -164,20 +171,45 @@ static int	_playerEventHandler(struct _CmnThread *th, void *_event)
 #endif
 		CLAER_FSM_EVENT_FLAGS(event->event);
 
-		res = cmnFsmHandle( play, event);
-		if (res < 0)
+		if(MUX_MAIN_IS_DEBUG_FSM(muxMain) )
 		{
-			MUX_PLAY_ERROR( "'%s' on '%s' Thread FSM Failed\n", play->muxFsm.name, th->name );
+			PLAY_DEBUG(play, "FSM processing on '%s' in state of '%s'", muxPlayerEventName(event->event), muxPlayerStateName( play->muxFsm.currentState) );
 		}
 
-#if ARCH_ARM
-		MUX_PLAY_DEBUG( "FSM Event '%s' has been processed on '%s' in state of '%s', enter into '%s'", muxPlayerEventName(event->event), play->muxFsm.name, 
-			muxPlayerStateName( oldState), muxPlayerStateName( play->muxFsm.currentState) );
+#if 0
+		/* FSM events, such as FAIL, can/must be handled when setMedia is processed*/
+		if(IS_PLAYER_SET_MEDIA(play) )
+		{
+			PLAY_ERROR(play, "is still open media, event %s is ignored", muxPlayerEventName(event->event) );
+		}
+		else
 #endif
+
+		{
+			if(event->statusCode != play->countOfPlay )
+			{
+				MUX_ERROR("event %s is later, current play#%d, event for play#d", muxPlayerEventName(event->event), play->countOfPlay, event->statusCode);
+			}
+			else
+			{
+				res = cmnFsmHandle( play, event);
+				if (res < 0)
+				{
+					PLAY_ERROR(play, " on '%s' Thread FSM Failed\n", th->name );
+				}
+
+		//#if ARCH_ARM
+#if CMN_DEBUG_FSM
+				PLAY_DEBUG(play, "FSM Event '%s' has been processed in state of '%s', enter into '%s'", muxPlayerEventName(event->event), 
+					muxPlayerStateName( oldState), muxPlayerStateName( play->muxFsm.currentState) );
+#endif
+			}
+		}
+		
 		if(event->data)
 		{
 #if PLAYER_DEBUG_HIPLAY_EVENT
-			MUX_PLAY_DEBUG( "FSM Event '%s' free HiPlayer Event", muxPlayerEventName(event->event) );
+			PLAY_DEBUG(play, "FSM Event '%s' free HiPlayer Event", muxPlayerEventName(event->event) );
 #endif
 			HI_SVR_PLAYER_EVENT_S *playerEvent = (HI_SVR_PLAYER_EVENT_S *)event->data;
 
@@ -190,13 +222,13 @@ static int	_playerEventHandler(struct _CmnThread *th, void *_event)
 			}
 			
 #if PLAYER_DEBUG_HIPLAY_EVENT
-			MUX_PLAY_DEBUG( "'%s' free HiPlayer Event: %p", muxPlayerEventName(event->event),  playerEvent);
+			PLAY_DEBUG(play, "'%s' free HiPlayer Event: %p", muxPlayerEventName(event->event),  playerEvent);
 #endif
 			cmn_free(playerEvent);
 		}
 		
 #if PLAYER_DEBUG_HIPLAY_EVENT
-		MUX_PLAY_DEBUG( "Player '%s' free FSM event :%p", play->muxFsm.name, event);
+		PLAY_DEBUG(play, "free FSM event :%p", event);
 #endif
 		cmn_free(event);
 //		TRACE();
@@ -204,7 +236,11 @@ static int	_playerEventHandler(struct _CmnThread *th, void *_event)
 	else
 	{/* JSON command come from Controller */
 
-//		MUX_PLAY_DEBUG( "Player '%s' receiving JSON event", th->name);
+		if(MUX_MAIN_IS_DEBUG_MSG(muxMain) )
+		{
+			MUX_PLAY_DEBUG( "'%s' receiving JSON event", th->name);
+		}
+
 		muxPlayerJSONHandle(muxPlayer->muxRx, (CMN_PLAY_JSON_EVENT *)_event);
 	}
 #if 0
@@ -255,7 +291,7 @@ static int _playerInitThread(CmnThread *th, void *data)
 
 	th->data = data;
 
-	cmnThreadSetName("main");
+	cmnThreadSetName(MUX_THREAD_NAME_MAIN);
 
 //	res =res;
 	return res; /* PLAYER thread must run no matter what happened */
@@ -264,7 +300,7 @@ static int _playerInitThread(CmnThread *th, void *data)
 
 CmnThread  threadPlayer =
 {
-	name		:	"PLAYER",
+	name		:	MUX_THREAD_NAME_MEDIA_SCHEDULER,
 	flags		:	SET_BIT(1, CMN_THREAD_FLAG_WAIT),
 		
 	init			:	_playerInitThread,
@@ -379,22 +415,22 @@ int	_muxRxPlayGetCaptureStatus(struct MuxMediaCapture *mediaCapture)
 
 	if( play->muxFsm.currentState == HI_SVR_PLAYER_STATE_PLAY)
 	{
-		MUX_PLAY_DEBUG("RUNNING state");
+		PLAY_DEBUG(play, "RUNNING state");
 		return MUX_CAPTURE_STATE_RUNNING;
 	}
 	else if( play->muxFsm.currentState == HI_SVR_PLAYER_STATE_STOP)
 	{
-		MUX_PLAY_DEBUG("STOPPED state");
+		PLAY_DEBUG(play, "STOPPED state");
 		return MUX_CAPTURE_STATE_STOPPED;
 	}
 	else if(play->muxFsm.currentState == HI_SVR_PLAYER_STATE_PAUSE)
 	{
-		MUX_PLAY_DEBUG("PAUSE state");
+		PLAY_DEBUG(play, "PAUSE state");
 		return MUX_CAPTURE_STATE_PAUSED;
 	}
 	else// if(play->muxFsm.currentState == HI_SVR_PLAYER_STATE_PLAY)
 	{
-		MUX_PLAY_DEBUG("INITTED state");
+		PLAY_DEBUG(play, "INITTED state");
 		return MUX_CAPTURE_STATE_INITTED;
 	}
 	
@@ -482,21 +518,6 @@ int init(MuxPlugIn *plugin)
 	* it should be enhanced to start thread after device inited. 10.09.2017 
 	*/
 
-	
-#if 0
-
-#ifdef JASON_RM_BENCHMARK
-	ti = av_gettime();
-#endif
-
-#ifdef JASON_RM_BENCHMARK
-	ti = av_gettime() - ti;
-	if (do_benchmark)
-	{
-		printf("bench: utime=%0.3fs\n", ti / 1000000.0);
-	}
-#endif
-#endif
 
 	MUX_PLAY_INFO( CMN_MODULE_PLAYER_NAME" initializing OK!\n" );
 	

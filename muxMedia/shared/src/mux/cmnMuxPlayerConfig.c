@@ -316,6 +316,9 @@ static int _parseGlobalConfig(const char **p, MuxPlayerConfig *cfg)
 	else if (IS_STRING_EQUAL(cmd, "EnableScreenDebug"))
 	{
 		cfg->enableScreenDebug = cmnParseGetBoolValue( p);
+#if DEBUG_CONFIG_FILE
+		fprintf(stderr, "EnableScreenDebug: %s\n",  (cfg->enableScreenDebug==FALSE)?"NO":"YES");
+#endif
 	}
 	else if (IS_STRING_EQUAL(cmd, "WindowKeepLastFrame"))
 	{

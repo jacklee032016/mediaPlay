@@ -7,6 +7,12 @@
 #include "libMuxRx.h"
 
 
+#define	__STOP_MEDIA(play)	\
+	do{ int _res; MUX_INFO("Stop Media");	\
+			_res = HI_SVR_PLAYER_Stop((play)->playerHandler); MUX_INFO("Stop Media end!"); \
+			if (HI_SUCCESS != _res ){ MUX_ERROR("stop play failed"); }}while(0)
+
+
 
 static HI_S32 _getClosely3DDisplayFormat(HI_HANDLE hPlayer, HI_UNF_DISP_3D_E en3D,
 	HI_UNF_ENC_FMT_E *pen3DEncodingFormat, HI_UNF_VIDEO_FRAME_PACKING_TYPE_E  *penFrameType )
@@ -102,7 +108,7 @@ HI_S32 muxSetVideoMode(MUX_PLAY_T *play, HI_UNF_DISP_3D_E en3D)
 	s32Ret = HI_UNF_DISP_Get3DMode(play->muxRx->playerParam.u32Display, &enCur3D, &enCurEncFormat);
 	if (s32Ret == HI_SUCCESS && enCur3D == en3D)
 	{
-		MUX_PLAY_WARN("Already in Mode:%d!", en3D);
+		PLAY_WARN(play, "Already in Mode:%d!", en3D);
 		return HI_SUCCESS;
 	}
 
@@ -164,70 +170,81 @@ HI_S32 muxSetVideoMode(MUX_PLAY_T *play, HI_UNF_DISP_3D_E en3D)
 	return s32Ret;
 }
 
-/* it is called in the context of timer, eg. context of CmnTimer thread;
-* return value: next schedule interval for this timer
-*/
-static int _mediaTimeoutCallback(int interval, void *param)
+/* this function is not needed now. 07.26, 2019 */
+int	mediaPlayerStopMediaThread(MUX_PLAY_T *play)
 {
-	MUX_PLAY_T *play = (MUX_PLAY_T *)param;
-
 	PLAY_LOCK(play);
-	MUX_PLAY_DEBUG("timer callback : canceling Media Thread %s...", (play->mediaThread)?play->mediaThread->name:"Unknown");
+	PLAY_DEBUG(play, "stop Media Thread %s...", (play->mediaThread)?play->mediaThread->name:"NULL");
 
 //	HI_SVR_PLAYER_Invoke(play->playerHandler, HI_FORMAT_INVOKE_PRE_CLOSE_FILE, NULL);
 #if MUX_THREAD_SUPPORT_DYNAMIC	
 	if(!play->mediaThread)
-	{
+	{/* thread has exit */
 		PLAY_UNLOCK(play);
 
-		MUX_PLAY_ERROR("timer callback error, the Media Thread has been removed");
+//		MUX_PLAY_ERROR("timer callback error, the Media Thread has been removed");
 //		CMN_ABORT("timer callback error, the Media Thread has removed");
-		return 0;
+		return HI_FAILURE;
 	}
 
-#if 0	
-	MUX_PLAY_WARN(" MediaTimer for '%s' callback handler is running, send signal to thread %s....", play->muxFsm.name, play->mediaThread->name );
-	if(pthread_kill(play->mediaThread->id, SIGUSR1) != 0 )
-	{
-		MUX_PLAY_ERROR("Send signal SIGUSR1 to thread '%s(%d)' failed: %s", play->mediaThread->name, play->mediaThread->pId, strerror(errno));
-	}
-#else
+	PLAY_WARN(play, "MediaTimer callback handler is running, send signal to thread %d....", play->mediaThread->id );
 	/* maybe delay sometime to cancel this thread again. 06.06, 2019 */
 	if(play->mediaThread->id == 0)
 	{
-		MUX_PLAY_ERROR("Cancel to thread '%s' failed: it is still in startup", play->mediaThread->name);
+		PLAY_ERROR(play, "Cancel to thread '%s' failed: it is still in startup", play->mediaThread->name);
 	}
 	else
 	{
 		/* send signal=0, check this is a validate thread in system */
 		if(pthread_kill(play->mediaThread->id, 0) != 0 )
 		{
-			MUX_PLAY_ERROR("thread '%s(%d)' is not validate: %s", play->mediaThread->name, strerror(errno));
+			PLAY_ERROR(play, "thread '%s(%d)' is not validate: %s", play->mediaThread->name, strerror(errno));
 		}
 		else 
 		{
 			if(pthread_cancel(play->mediaThread->id) )
 			{
-				MUX_PLAY_ERROR("Cancel to thread '%s(%d)' failed: %s", play->mediaThread->name, play->mediaThread->pId, strerror(errno));
+				PLAY_ERROR(play, "Cancel to thread '%s(%d)' failed: %s", play->mediaThread->name, play->mediaThread->pId, strerror(errno));
 			}
 		}	
 	}
-#endif
 
-//	play->mediaThread = NULL;
-//	play->mediaTimer = NULL;
+	play->mediaThread = NULL;
 #else
-	MUX_PLAY_WARN("MediaTimer for '%s' callback handler is running, send signal to thread %d....", play->muxFsm.name, play->mediaThread );
+	PLAY_WARN(play, "MediaTimer callback handler is running, send signal to thread %d....", play->mediaThread );
 	if(pthread_kill(play->mediaThread, SIGUSR1) != 0 )
 	{
-		MUX_PLAY_ERROR("Send signal SIGUSR1 to thread '%s(%d)' failed: %s", play->muxFsm.name, play->mediaThread, strerror(errno));
+		PLAY_ERROR(play, "Send signal SIGUSR1 to thread '(%d)' failed: %s", play->mediaThread, strerror(errno));
 	}
 	play->mediaThread = -1;
 #endif
-	play->mediaState = SET_MEDIA_STATE_TIMEOUT;
 
+	PLAY_UNLOCK(play);
+
+	return HI_SUCCESS;
+}
+
+/* it is called in the context of timer, eg. context of CmnTimer thread;
+* return value: next schedule interval for this timer
+* set failed event to schedule, and reply to client
+
+* called only when setMedia delay longer than timeout
+*/
+static int _mediaTimeoutCallback(void *timer, int interval, void *param)
+{
+	MUX_PLAY_T *play = (MUX_PLAY_T *)param;
+
+	PLAY_WARN(play, "media timer callback, timeout ..." );
+	if(timer != play->mediaTimer )
+	{
+		MUX_ERROR("This is delayed media timer, so ignore it");
+		return 0;
+	}
+
+	PLAY_LOCK(play);
+	play->mediaTimer = NULL;
 	/* schedule timeout event and then send back reply if there is JSON command before this FAIL event */
-	muxPlayerReportFsmEvent(&play->muxFsm, (HI_SVR_PLAYER_EVENT_E)PLAYER_EVENT_FAIL, 0, NULL);
+	SEND_EVEVT_TO_PLAYER(play, PLAYER_EVENT_FAIL, NULL);
 
 	PLAY_UNLOCK(play);
 	return 0; /* return current timer */
@@ -257,11 +274,11 @@ static int _opsAfterSetMedia(MUX_PLAY_T *play)
 	res = HI_SVR_PLAYER_Invoke( play->playerHandler, HI_FORMAT_INVOKE_GET_HLS_STREAM_NUM, &s32HlsStreamNum);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("get hls stream num fail, ret = 0x%x!", res);
+		PLAY_ERROR(play, "get hls stream num fail, ret = 0x%x!", res);
 	}
 	else
 	{
-		MUX_PLAY_DEBUG("get hls stream num = %d", s32HlsStreamNum);
+		PLAY_DEBUG(play, "get hls stream num = %d", s32HlsStreamNum);
 
 		/* Display the hls bandwidth stream info */
 		for (i = 0; i < s32HlsStreamNum; i++)
@@ -274,10 +291,10 @@ static int _opsAfterSetMedia(MUX_PLAY_T *play)
 				MUX_PLAY_ERROR("get %d hls stream info fail, ret = 0x%x!", i, res);
 			}
 
-			MUX_PLAY_INFO("\nHls stream number is: %d", stStreamInfo.stream_nb);
-			MUX_PLAY_INFO("URL: %s", stStreamInfo.url);
-			MUX_PLAY_INFO("BandWidth: %lld", stStreamInfo.bandwidth);
-			MUX_PLAY_INFO("SegMentNum: %d", stStreamInfo.hls_segment_nb);
+			PLAY_INFO(play, "\nHls stream number is: %d", stStreamInfo.stream_nb);
+			PLAY_INFO(play, "URL: %s", stStreamInfo.url);
+			PLAY_INFO(play, "BandWidth: %lld", stStreamInfo.bandwidth);
+			PLAY_INFO(play, "SegMentNum: %d", stStreamInfo.hls_segment_nb);
 		}
 	}
 
@@ -287,11 +304,11 @@ static int _opsAfterSetMedia(MUX_PLAY_T *play)
 	res = HI_SVR_PLAYER_Invoke( play->playerHandler, HI_FORMAT_INVOKE_GET_METADATA, &stMetaData);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("get metadata fail!");
+		PLAY_ERROR(play, "get metadata fail!");
 	}
 	else
 	{
-		MUX_PLAY_DEBUG("get metadata success!");
+		PLAY_DEBUG(play, "get metadata success!");
 		HI_SVR_META_PRINT(&stMetaData);
 	}
 
@@ -317,16 +334,16 @@ static int _opsAfterSetMedia(MUX_PLAY_T *play)
 			res = drm_acquire_right_progress(pszDrmMimeType);
 			if ( res == 100)
 			{
-				MUX_PLAY_INFO( "acquiring right done\n");
+				PLAY_INFO(play, "acquiring right done\n");
 				break;
 			}
-			MUX_PLAY_INFO( "acquiring right progress:%d%%\n", res);
+			PLAY_INFO(play, "acquiring right progress:%d%%\n", res);
 			sleep(1);
 		}
 		
 		if( res < 0)
 		{
-			MUX_PLAY_ERROR("DRM right invalid, can't play this file, exit now!\n");
+			PLAY_ERROR(play, "DRM right invalid, can't play this file, exit now!\n");
 			exit(0);
 		}
 	}
@@ -339,15 +356,15 @@ static int _opsAfterSetMedia(MUX_PLAY_T *play)
 	res = HI_SVR_PLAYER_Invoke( play->playerHandler, HI_FORMAT_INVOKE_GET_BUFFER_CONFIG, &play->bufferConfig);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("HI_SVR_PLAYER_Invoke function HI_FORMAT_INVOKE_GET_BUFFER_CONFIG fail, ret = 0x%x", res);
+		PLAY_ERROR(play, "HI_SVR_PLAYER_Invoke function HI_FORMAT_INVOKE_GET_BUFFER_CONFIG fail, ret = 0x%x", res);
 	}
 	else
 	{
-		MUX_PLAY_DEBUG( "BufferConfig:type(%d)", play->bufferConfig.eType);
-		MUX_PLAY_DEBUG( "s64EventStart:%lld", play->bufferConfig.s64EventStart);
-		MUX_PLAY_DEBUG( "s64EventEnough:%lld", play->bufferConfig.s64EventEnough);
-		MUX_PLAY_DEBUG( "s64Total:%lld",  play->bufferConfig.s64Total);
-		MUX_PLAY_DEBUG( "s64TimeOut:%lld", play->bufferConfig.s64TimeOut);
+		PLAY_DEBUG(play,  "BufferConfig:type(%d)", play->bufferConfig.eType);
+		PLAY_DEBUG(play,  "s64EventStart:%lld", play->bufferConfig.s64EventStart);
+		PLAY_DEBUG(play,  "s64EventEnough:%lld", play->bufferConfig.s64EventEnough);
+		PLAY_DEBUG(play,  "s64Total:%lld",  play->bufferConfig.s64Total);
+		PLAY_DEBUG(play,  "s64TimeOut:%lld", play->bufferConfig.s64TimeOut);
 	}
 	
 	res = HI_SVR_PLAYER_GetFileInfo(play->playerHandler, &play->fileInfo);
@@ -380,7 +397,7 @@ static int _opsAfterSetMedia(MUX_PLAY_T *play)
 	}
 	else
 	{
-		MUX_PLAY_ERROR("get file info fail!");
+		PLAY_ERROR(play, "get file info fail!");
 	}
 
 	return res;
@@ -406,7 +423,7 @@ int muxPlayerCheckStatus(MUX_PLAY_T *play, int state )
 	}
 	else
 	{/* when player is in state of 'STOP', this operation fail */
-		MUX_PLAY_ERROR("GetPlayerInfo failed: %s current status is %d", play->muxFsm.name, (stPlayerInfo.eStatus));
+		// PLAY_ERROR(play, "GetPlayerInfo failed: current status is %d, ret value:0x%x", (stPlayerInfo.eStatus), s32Ret );
 		if( PLAYER_CHECK_STATE(play, HI_SVR_PLAYER_STATE_INIT) || PLAYER_CHECK_STATE(play, HI_SVR_PLAYER_STATE_STOP) )
 		{/* make SetMedia goes on */
 			return 1;
@@ -450,10 +467,10 @@ int _setMediaThread(void *data)
 
 	int _timeout = (_checkNetworkMedia(play->currentUrl)==HI_TRUE)?muxPlayer->playerConfig.playTimeoutNetwork:muxPlayer->playerConfig.playTimeoutLocal;
 
-#if CMN_TIMER_DEBUG
-	MUX_PLAY_DEBUG("Timeout is %d seconds", _timeout);
-#endif
 	snprintf(timeName, sizeof(timeName), "MediaTimer%d-%d", play->windowIndex, play->countOfPlay );
+#if CMN_TIMER_DEBUG
+	PLAY_DEBUG(play, "Timer %s is %d seconds", timeName, _timeout);
+#endif
 
 	PLAY_LOCK(play);
 	play->mediaTimer = cmn_add_timer(_timeout*1000, _mediaTimeoutCallback, play, timeName );
@@ -472,7 +489,7 @@ int _setMediaThread(void *data)
 
 
 	play->mediaState = SET_MEDIA_STATE_WAITING;
-	MUX_PLAY_INFO("%s-%d: ### open media file '%s'...", play->muxFsm.name, play->countOfPlay, playerMedia.aszUrl);
+//	PLAY_INFO(play, "#%d: ### open media file '%s'...", play->countOfPlay, playerMedia.aszUrl);
 
 	PLAY_UNLOCK(play);
 
@@ -484,10 +501,11 @@ int _setMediaThread(void *data)
 #if 1	
 	if(pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL) != 0)
 	{
-		MUX_WARN("Set thread '%s' as CANCEL_ASYNC failed : %s", strerror(errno));
+		PLAY_WARN(play, "Set thread '%s' as CANCEL_ASYNC failed : %s", strerror(errno));
 	}
 #endif
 
+	int count = 0;
 	while (1)
 	{
 
@@ -501,16 +519,41 @@ int _setMediaThread(void *data)
 			PLAYER_CHECK_STATE(play, HI_SVR_PLAYER_STATE_DEINIT)  )
 #endif
 		{
+
+			if(PLAY_IS_DEBUG_MSG(play))
+			{
+				PLAY_WARN(play, "#%d: ### begin set media file '%s'...", play->countOfPlay, playerMedia.aszUrl);
+			}
 			res = HI_SVR_PLAYER_SetMedia( play->playerHandler, HI_SVR_PLAYER_MEDIA_STREAMFILE, &playerMedia);
+			
+			if(PLAY_IS_DEBUG_MSG(play))
+			{
+				PLAY_WARN(play, "Set Media ended, return: %s(0x%x)!!!", (res==HI_SUCCESS)?"OK":"FAIL", res);
+			}
 			break;
 		}
-		usleep(SLEEP_TIME);
+		else
+		{
+			//usleep(SLEEP_TIME);
+			if(count == 0)
+			{
+				PLAY_ERROR(play, "#%d: is in state of %s now", play->countOfPlay, muxPlayerStateName( play->muxFsm.currentState) );
+			}
+			cmn_delay(10);
+			count++;
+
+			if(count > 1000) /* 10 seconds */
+			{
+				count = 0;
+			}
+			
+		}
 	}
 
 #if 1
 	if(pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL) != 0)
 	{
-		MUX_WARN("Set thread '%s' as CANCEL_ASYNC failed : %s", strerror(errno));
+		PLAY_WARN(play, "Set thread '%s' as CANCEL_ASYNC failed : %s", strerror(errno));
 	}
 #endif	
 
@@ -520,31 +563,35 @@ int _setMediaThread(void *data)
 	}
 #endif	
 
+	PLAY_DEBUG(play, ": ### open media file '%s' continuing, setMedia %s.....", playerMedia.aszUrl, (res==HI_SUCCESS)?"OK":"Failed" );
 	PLAY_LOCK(play);
-	MUX_PLAY_DEBUG("%s: ### open media file '%s' continuing.....", play->muxFsm.name, playerMedia.aszUrl);
 
 	/* return, then cancel timer at once. */
 	/* add mutex lock for these data?? .Jack Lee */
 	play->mediaState = SET_MEDIA_STATE_OK;
-	ret = cmn_remove_timer( play->mediaTimer);
-	if(ret <= 0)
-	{
-		if(ret == FALSE)
-		{
-			MUX_PLAY_ERROR("Can't find the timer : %p for %s", play->mediaTimer, play->muxFsm.name );
-		}
-		else
-		{
-			MUX_PLAY_ERROR("timer is NULL : %p for %s", play->mediaTimer, play->muxFsm.name );
-		}
-		CMN_ABORT("Timer can't be removed");
-	}
-	play->mediaTimer = NULL;
 
-//	MUX_PLAY_DEBUG("### set media file '%s' on %s return now", playerMedia.aszUrl, play->muxFsm.name );
+	if(play->mediaTimer )
+	{
+		ret = cmn_remove_timer( play->mediaTimer);
+		if(ret <= 0)
+		{
+			if(ret == FALSE)
+			{
+				PLAY_ERROR(play, "Can't find the timer: %p", play->mediaTimer );
+			}
+			else
+			{
+				PLAY_INFO(play, "media timer has timeout" );
+			}
+			
+		}
+		play->mediaTimer = NULL;
+	}
+
+//	MUX_PLAY_DEBUG("### set media file '%s' return now", playerMedia.aszUrl );
 	if (HI_SUCCESS != res )
 	{
-		MUX_PLAY_ERROR("%s-%d SetMedia '%s' err, ret = 0x%x!", play->muxFsm.name, play->countOfPlay, playerMedia.aszUrl, res);
+		PLAY_ERROR(play, "#%d SetMedia '%s' err, ret = 0x%x!", play->countOfPlay, playerMedia.aszUrl, res);
 #if 0
 		/* no need for stop command */
 		res = HI_SVR_PLAYER_Stop(play->playerHandler); /* added, 13, 07, 2017*/
@@ -552,7 +599,7 @@ int _setMediaThread(void *data)
 		muxPlayerStopPlaying(play);
 #endif
 
-		muxPlayerReportFsmEvent(&play->muxFsm, (HI_SVR_PLAYER_EVENT_E)PLAYER_EVENT_FAIL, 0, NULL);
+		SEND_EVEVT_TO_PLAYER(play, PLAYER_EVENT_FAIL, NULL);
 #if MUX_THREAD_SUPPORT_DYNAMIC	
 		play->mediaThread = NULL;
 #else
@@ -565,13 +612,13 @@ int _setMediaThread(void *data)
 	}
 	else
 	{
-		MUX_PLAY_INFO("Success: SetMedia '%s' on %s-%d SUCCESS",play->currentUrl, play->muxFsm.name, play->countOfPlay);
+//		PLAY_INFO(play, "Success: SetMedia '%s' on #%d SUCCESS",play->currentUrl, play->countOfPlay);
 	}
 
 	res |= HI_SVR_PLAYER_GetParam( play->playerHandler, HI_SVR_PLAYER_ATTR_SO_HDL, &hSo);
 	if (HI_SUCCESS != res )
 	{
-		MUX_PLAY_ERROR("%s: failed ATTR_SO_HDL, ret = 0x%x!", play->muxFsm.name, res);
+		PLAY_ERROR(play, "failed ATTR_SO_HDL, ret = 0x%x!", res);
 //		return NULL;
 	}
 	else
@@ -591,14 +638,14 @@ int _setMediaThread(void *data)
 	res |= HI_SVR_PLAYER_GetParam(play->playerHandler, HI_SVR_PLAYER_ATTR_AVPLAYER_HDL, &hAVPlay);
 	if (HI_SUCCESS != res )
 	{
-		MUX_PLAY_ERROR("%s: failed AVPLAYER_HDL, ret = 0x%x!", play->muxFsm.name, res);
+		PLAY_ERROR(play, "failed AVPLAYER_HDL, ret = 0x%x!", res);
 //		return NULL;
 	}
 	else
 	{
 		if( hAVPlay != play->avPlayHandler)
 		{
-			MUX_PLAY_DEBUG("Old AvPlay Handle is %d, new is %d on %s", play->avPlayHandler, hAVPlay, play->muxFsm.name);
+			PLAY_DEBUG(play, "Old AvPlay Handle is %d, new is %d", play->avPlayHandler, hAVPlay);
 			if(play->avPlayHandler != 0xffffffff )
 			{
 				HI_UNF_AVPLAY_Destroy(play->avPlayHandler);
@@ -619,7 +666,7 @@ int _setMediaThread(void *data)
 		res = HI_UNF_AVPLAY_SetAttr(play->avPlayHandler, HI_UNF_AVPLAY_ATTR_ID_SYNC, &syncAttr);
 		if (HI_SUCCESS != res )
 		{
-			MUX_PLAY_ERROR("HI_UNF_AVPLAY_SetAttr failed");
+			PLAY_ERROR(play, "HI_UNF_AVPLAY_SetAttr failed");
 		}
 	}
 #endif
@@ -627,11 +674,11 @@ int _setMediaThread(void *data)
 #if PLAYER_ENABLE_SUBTITLE
 	if(play->cfg->type == RECT_TYPE_MAIN)
 	{/* only main window output subtitle */
-		MUX_PLAY_DEBUG("register subtitle call function on %s (0x%x).....", play->muxFsm.name , play);
+		PLAY_DEBUG(play, "register subtitle call function on (0x%x).....", play);
 		res |= HI_UNF_SO_RegOnDrawCb(hSo, muxSubtitleOnDrawCallback, muxSubtitleOnClearCallback, play);
 		if (HI_SUCCESS != res)
 		{
-			MUX_PLAY_ERROR("set subtitle draw function on %s fail!", play->muxFsm.name );
+			PLAY_ERROR(play, "set subtitle draw function fail!");
 //			return NULL;
 		}
 	}
@@ -656,7 +703,7 @@ int _setMediaThread(void *data)
 	}
 	else
 	{
-		MUX_PLAY_ERROR("get file info fail!");
+		PLAY_ERROR(play, "get file info fail!");
 	}
 #endif
 
@@ -665,23 +712,22 @@ int _setMediaThread(void *data)
 	res = HI_SVR_PLAYER_Play(play->playerHandler);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("play on %s fail, ret = 0x%x ", play->muxFsm.name, res);
+		PLAY_ERROR(play, "play fail, ret = 0x%x ", res);
 	}
 	else
 	{
 	}
 
-	muxPlayerReportFsmEvent(&play->muxFsm, (HI_SVR_PLAYER_EVENT_E)PLAYER_EVENT_OK, 0, NULL);
+	SEND_EVEVT_TO_PLAYER(play, PLAYER_EVENT_OK, NULL);
 
-#if CMN_TIMER_DEBUG
-	MUX_PLAY_DEBUG("setMedia thread for %s exit sucessfully now", play->muxFsm.name );
-#endif
 
 #if MUX_THREAD_SUPPORT_DYNAMIC	
 	play->mediaThread = NULL;
 #else
 	play->mediaThread = -1;
 #endif
+
+//	PLAY_WARN(play, "setMedia thread exit sucessfully now");
 
 	PLAY_UNLOCK(play);
 	//return play;
@@ -693,16 +739,32 @@ HI_S32 muxRxPlayerSetMedia(MUX_PLAY_T *play)
 {
 	play->mediaState = SET_MEDIA_STATE_INIT;
 	char threadName[16];
+	int count = 0;
+	int total = 0;
 
-	snprintf(threadName, sizeof(threadName), "SetMedia%d-%d", play->windowIndex, play->countOfPlay );
+	snprintf(threadName, sizeof(threadName), MUX_THREAD_NAME_MEDIA_CONTROL"%d-%d", play->windowIndex, play->countOfPlay );
 #if MUX_THREAD_SUPPORT_DYNAMIC	
 	PLAY_LOCK(play);
 
+	/* wait last thread for this play quit before this set media begin
+	* this will block the schedule for longer time
+	*/
 	while( play->mediaThread )
 	{
+		if(count == 0)
+		{
+			PLAY_INFO(play, "Waiting last mediaThread exit for %d seconds", total*10 );
+		}
+		
 		PLAY_UNLOCK(play);
-		cmn_delay(1);
+		cmn_delay(10);
+		count++;
 		PLAY_LOCK(play);
+		if(count >= 1000) /* 10 seconds */
+		{
+			count = 0;
+			total++;
+		}
 	}
 
 	play->mediaThread = cmnThreadCreateThread(_setMediaThread, play, threadName);
@@ -714,19 +776,19 @@ HI_S32 muxRxPlayerSetMedia(MUX_PLAY_T *play)
 #else
 	if(pthread_create(&play->mediaThread, HI_NULL, (HI_VOID *)_setMediaThread, play) != 0)
 	{
-		MUX_PLAY_ERROR("Error in creating a new thread '%s': %s", threadName, strerror(errno) );
+		PLAY_ERROR(play, "Error in creating a new thread '%s': %s", threadName, strerror(errno) );
 		return EXIT_SUCCESS;
 	}
 
 	if( pthread_setname_np(play->mediaThread, threadName) != 0)
 	{
-		MUX_PLAY_WARN("Error in set thread name '%s': %s", threadName, strerror(errno) );
+		PLAY_WARN(play, "Error in set thread name '%s': %s", threadName, strerror(errno) );
 		return EXIT_SUCCESS;
 	}
 #endif
 
 #if CMN_TIMER_DEBUG
-	MUX_PLAY_DEBUG("SetMedia Thread for %s (%s)", play->muxFsm.name, threadName);
+	PLAY_DEBUG(play, "SetMedia Thread for (%s)", threadName);
 #endif
 
 	return HI_SUCCESS;
@@ -771,18 +833,18 @@ int	muxPlayerPlaying(MUX_PLAY_T *play, int isInit, char *media, int repeatNumber
 		int ret2;
 		play->countOfPlay++;
 		
-		MUX_PLAY_INFO("'%s-%d' No.%d playing : local image file '%s' in OSD", play->muxFsm.name, play->countOfPlay, play->countOfPlay, play->currentUrl);
+		PLAY_INFO(play, "'-%d' No.%d playing : local image file '%s' in OSD", play->countOfPlay, play->countOfPlay, play->currentUrl);
 
 		ret2= OSD_DESKTOP_LOCK(&play->muxRx->higo);
 		if(ret2 != 0)
 		{
-			MUX_PLAY_WARN( "Lock for playing image: %s", strerror(errno) );
+			PLAY_WARN(play, "Lock for playing image: %s", strerror(errno) );
 			return HI_SUCCESS;
 		}
 
 		if(isInit ||play->muxRx->muxPlayer->playerConfig.enableLowDelay==0 )
 		{
-			MUX_PLAY_DEBUG("OSD Decoding image file '%s'", play->currentUrl );
+			PLAY_DEBUG(play, "OSD Decoding image file '%s'", play->currentUrl );
 			PLAY_ALERT_MSG(play, COLOR_GREEN,  "OSD Decoding and showing image file '%s'", play->currentUrl );
 			ret = muxOsdImageShow(play->osd, play->currentUrl);
 			snprintf(play->osd->cfg->url, 1024, "%s", play->currentUrl);
@@ -791,7 +853,7 @@ int	muxPlayerPlaying(MUX_PLAY_T *play, int isInit, char *media, int repeatNumber
 		else
 		{
 			{
-				MUX_PLAY_DEBUG("OSD showing preloaded image file '%s'", play->currentUrl );
+				PLAY_DEBUG(play, "OSD showing preloaded image file '%s'", play->currentUrl );
 				PLAY_ALERT_MSG(play, COLOR_GREEN,  "OSD showing preloaded image file '%s'", play->currentUrl );
 				muxOsdImageDisplay(play->osd, TRUE);
 			}
@@ -800,18 +862,18 @@ int	muxPlayerPlaying(MUX_PLAY_T *play, int isInit, char *media, int repeatNumber
 		ret2 = OSD_DESKTOP_UNLOCK(&play->muxRx->higo);
 		if(ret2 != 0)
 		{
-			MUX_PLAY_WARN( "Unlocked for playing image: %s", strerror(errno) );
+			PLAY_WARN(play, "Unlocked for playing image: %s", strerror(errno) );
 			return HI_SUCCESS;
 		}
 
 
 		if(ret == EXIT_SUCCESS)
 		{/* event make state into PLAY_IMAGE */
-			muxPlayerReportFsmEvent(&play->muxFsm, (HI_SVR_PLAYER_EVENT_E)PLAYER_EVENT_IMAGE_OK, 0, NULL);
+			SEND_EVEVT_TO_PLAYER(play, PLAYER_EVENT_IMAGE_OK, NULL);
 		}
 		else
 		{
-			muxPlayerReportFsmEvent(&play->muxFsm, (HI_SVR_PLAYER_EVENT_E)PLAYER_EVENT_FAIL, 0, NULL);
+			SEND_EVEVT_TO_PLAYER(play, PLAYER_EVENT_FAIL, NULL);
 		}
 	}
 	else
@@ -819,13 +881,13 @@ int	muxPlayerPlaying(MUX_PLAY_T *play, int isInit, char *media, int repeatNumber
 		if(cmnMediaCheckCheckImageFile(play->currentUrl))
 		{
 			/* stop playing image when enter into STOP state */
-			MUX_PLAY_WARN("media file '%s' is a local image file, but not in mobile device", play->currentUrl);
+			PLAY_WARN(play, "media file '%s' is a local image file, but not in mobile device", play->currentUrl);
 			return EXIT_SUCCESS;
 		}
 		else
 		{
 			play->countOfPlay++;
-			MUX_PLAY_DEBUG("'%s-%d' playing : stream '%s' in play", play->muxFsm.name, play->countOfPlay, play->currentUrl);
+			PLAY_DEBUG(play, "'#%d' playing : stream '%s' in play", play->countOfPlay, play->currentUrl);
 			ret = muxRxPlayerSetMedia(play);
 			ret = ret;
 		}
@@ -836,7 +898,7 @@ int	muxPlayerPlaying(MUX_PLAY_T *play, int isInit, char *media, int repeatNumber
 
 
 /* timeout callback both for playing image or playing stream */
-static int _mediaPlayingTimeoutCallback(int interval, void *param)
+static int _mediaPlayingTimeoutCallback(void *timer, int interval, void *param)
 {
 	MUX_PLAY_T *play = (MUX_PLAY_T *)param;
 
@@ -858,7 +920,7 @@ static int _mediaPlayingTimeoutCallback(int interval, void *param)
 
 	play->mediaState = SET_MEDIA_STATE_TIMEOUT;
 	
-	muxPlayerReportFsmEvent(&play->muxFsm, (HI_SVR_PLAYER_EVENT_E)PLAYER_EVENT_TIMEOUT, 0, NULL);
+	SEND_EVEVT_TO_PLAYER(play, PLAYER_EVENT_TIMEOUT, NULL);
 
 	play->playTimer = NULL;
 	PLAY_UNLOCK(play);
@@ -881,7 +943,7 @@ int	muxPlayerStartPlayingTimer(MUX_PLAY_T *play)
 			PLAY_LOCK(play);
 		}
 
-		MUX_PLAY_INFO("start the timer %s of %d seconds", _name, play->currentDuration );
+		PLAY_INFO(play, "start the timer %s of %d seconds", _name, play->currentDuration );
 		
 		play->playTimer = cmn_add_timer(play->currentDuration*1000, _mediaPlayingTimeoutCallback, play, _name );
 		PLAY_UNLOCK(play);
@@ -894,6 +956,9 @@ int	muxPlayerRemovePlayingTimer(MUX_PLAY_T *play)
 {
 	int ret;
 
+	/* it is also called by SetMedia thread, so it will cancel itself */
+//	mediaPlayerStopMediaThread(play);
+	
 	PLAY_LOCK(play);
 	if(play->playTimer== NULL)
 	{
@@ -907,11 +972,11 @@ int	muxPlayerRemovePlayingTimer(MUX_PLAY_T *play)
 	{
 		if(ret == FALSE)
 		{
-			MUX_PLAY_ERROR("Can't find the timer : %p for %s", play->playTimer, play->muxFsm.name );
+			PLAY_ERROR(play, "Can't find the timer: %p", play->playTimer );
 		}
 		else
 		{
-			MUX_PLAY_ERROR("timer is NULL : %p for %s", play->mediaTimer, play->muxFsm.name );
+			PLAY_ERROR(play, "timer is NULL : %p for", play->mediaTimer);
 		}
 		CMN_ABORT("PlayTimer can't be removed");
 	}
@@ -937,12 +1002,12 @@ int	muxPlayerStopPlaying(MUX_PLAY_T *play)
 		ret = HI_SVR_PLAYER_Stop(play->playerHandler);
 		if (HI_SUCCESS != ret)
 		{/* sometimes, it is not playing when calling this function because timeout event */
-			MUX_PLAY_ERROR("Play '%s' stop fail, ret = 0x%x", play->muxFsm.name, ret);
+//			PLAY_ERROR(play, "stop fail, ret = 0x%x", ret);
 		}
 	}
 	else
 	{
-//		MUX_PLAY_WARN("Play '%s' in state %s, stop is not permitted", muxPlayerStateName(play->muxFsm.currentState), play->muxFsm.name);
+//		MUX_PLAY_WARN("in state %s, stop is not permitted", muxPlayerStateName(play->muxFsm.currentState));
 	}
 
 	return EXIT_SUCCESS;
@@ -954,7 +1019,7 @@ int muxPlayerReset(MUX_PLAY_T *play)
 	int res = HI_SVR_PLAYER_Invoke(play->playerHandler, HI_FORMAT_INVOKE_PRE_CLOSE_FILE, NULL);
 	if(res != HI_SUCCESS)
 	{
-		MUX_PLAY_WARN("'%s' invoke PRE CLOSE FILE :0x%x", play->muxFsm.name, res);
+		PLAY_WARN(play, "invoke PRE CLOSE FILE :0x%x", res);
 	}
 //	res = HI_UNF_VO_ResetWindow(play->windowHandle,  (play->muxRx->muxPlayer->playerConfig.keepLastFrame)?HI_UNF_WINDOW_FREEZE_MODE_LAST: HI_UNF_WINDOW_FREEZE_MODE_BLACK);
 	res = HI_UNF_VO_ResetWindow(play->windowHandle, HI_UNF_WINDOW_FREEZE_MODE_LAST);

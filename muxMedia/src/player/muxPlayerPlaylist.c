@@ -200,7 +200,7 @@ int	muxPlayPreloadImage(MUX_PLAY_T *play)
 	mediaName = playItem->filename;
 	if(IS_LOCAL_IMAGE_FILE(mediaName) )
 	{
-		MUX_PLAY_DEBUG("precoding image file : %s", mediaName);
+		PLAY_DEBUG(play, "precoding image file : %s", mediaName);
 		PLAY_ALERT_MSG(play, COLOR_GREEN, "Preload image file %s", mediaName);
 		muxOsdImageLoad(play->osd, mediaName);
 	}

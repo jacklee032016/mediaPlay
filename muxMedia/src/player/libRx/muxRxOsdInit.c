@@ -41,11 +41,12 @@ static int _muxCreateOSD(int index, void *element, void *pHigo)
 	osd->type = MUX_OSD_TYPE_SUBTITLE;
 
 	osd->desktop = higo->layerHandler;
+	osd->muxMain = (MuxMain *)higo->muxPlayer->priv;
 
 	
 	cfg->private = osd;
 
-	MUX_PLAY_DEBUG("OSD '%s' is being created", osd->name);
+	OSD_DEBUG(osd, "is being created");
 
 	/** create the object of text display */    
 #if 0
@@ -61,7 +62,7 @@ static int _muxCreateOSD(int index, void *element, void *pHigo)
 	res = HI_GO_CreateTextEx(&fontInfo, &osd->fontHandle);
 	if (HI_SUCCESS != res )
 	{
-		MUX_PLAY_ERROR("failed to create the font: '%s, size:%d': 0x%x", fontInfo.pMbcFontFile, fontInfo.u32Size, res);
+		OSD_ERROR(osd, "failed to create the font: '%s, size:%d': 0x%x", fontInfo.pMbcFontFile, fontInfo.u32Size, res);
 		return res;
 	}
 	
@@ -118,7 +119,7 @@ static int _muxCreateOSD(int index, void *element, void *pHigo)
 	res = HI_GO_CreateWindowEx(&winInfo, &osd->winHandle );
 	if (HI_SUCCESS != res )
 	{
-		MUX_PLAY_WARN("Create %s windows failed : 0x%x", osd->cfg->name, res);
+		OSD_WARN(osd, "Create windows failed : 0x%x", res);
 		return res;
 	}
 
@@ -209,6 +210,7 @@ int	muxOsdCreateFont(MUX_OSD	*osd)
 	HIGO_TEXT_INFO_S fontInfo;
 
 	fontInfo.pMbcFontFile = FONT_GB2312_TTFFILE;
+//	fontInfo.pMbcFontFile = FONT_GB2312_DOTFILE; /*dot font file can't change size of font */
 	fontInfo.pSbcFontFile = NULL;
 	fontInfo.u32Size = osd->cfg->fontSize;
 
@@ -216,7 +218,7 @@ int	muxOsdCreateFont(MUX_OSD	*osd)
 	res = HI_GO_CreateTextEx(&fontInfo, &osd->fontHandle);
 	if (HI_SUCCESS != res )
 	{
-		MUX_PLAY_ERROR("failed to create the font: '%s'", fontInfo.pMbcFontFile);
+		OSD_ERROR(osd, "failed to create the font: '%s'", fontInfo.pMbcFontFile);
 		return res;
 	}
 	

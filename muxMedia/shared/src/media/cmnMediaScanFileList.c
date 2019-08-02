@@ -1,4 +1,7 @@
 
+#define _GNU_SOURCE         /* See feature_test_macros(7) */
+#include <string.h>
+
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavformat/avio.h>
@@ -469,7 +472,16 @@ int	cmnMediaCheckCheckImageFile(char *imageFile)
 	int isImage = 0;
 
 
-//	MUX_DEBUG("check image file '%s'...", imageFile);
+	MUX_DEBUG("check image file '%s'...", imageFile);
+	/* when UDP multicast stream is not existed, avformat_open_input() will never return
+	* 08.02, 2019. JL
+	*/
+	if(strcasestr(imageFile, "udp://") )
+	{
+//		MUX_WARN("'%s' udp multicast will block program", imageFile);
+		goto fail1;
+	}
+	
 	if ((ret = avformat_open_input(&inCtx, imageFile, 0, 0)) < 0)
 	{
 		MUX_WARN("'%s' is not a supportted media file", imageFile);
@@ -514,7 +526,7 @@ int	cmnMediaCheckCheckImageFile(char *imageFile)
 		MUX_WARN("Media format of '%s' is %s", imageFile, av_get_media_type_string(st->codecpar->codec_type));
 	}
 
-//	MUX_DEBUG("Added file '%s'!!!", imageFile);
+	MUX_DEBUG("Added file '%s'!!!", imageFile);
 
 fail2:
 	avformat_close_input(&inCtx);

@@ -139,12 +139,12 @@ static HI_S32 _createVirtualTrackAEncoder(MUX_RX_T *muxRx)
 	/*create virtual track */
 	ret = HI_UNF_SND_GetDefaultTrackAttr(HI_UNF_SND_TRACK_TYPE_VIRTUAL, &stTrackAttr);
 	
-	cmnThreadSetName("CapAudioTrack");
+//	cmnThreadSetName("CapAudioTrack");
 	stTrackAttr.u32OutputBufSize = 256 * 1024;
 	ret = HI_UNF_SND_CreateTrack(HI_UNF_SND_0, &stTrackAttr, &muxRx->virtualTrack);
 
 	/*create aenc*/
-	cmnThreadSetName("AudioEncoder");
+//	cmnThreadSetName("AudioEncoder");
 	ret = HI_UNF_AENC_Init();
 	ret |= HI_UNF_AENC_RegisterEncoder("libHA.AUDIO.AAC.encode.so");
 
@@ -157,7 +157,7 @@ static HI_S32 _createVirtualTrackAEncoder(MUX_RX_T *muxRx)
 
 	HA_AAC_GetEncDefaultOpenParam(&(stAencAttr.sOpenParam),(HI_VOID *)&stPrivateConfig);
 	
-	cmnThreadSetName("CapAudioEncoder");
+	cmnThreadSetName(MUX_THREAD_NAME_CAPTURE_AUDIO_ENCODER);
 	ret = HI_UNF_AENC_Create(&stAencAttr,&muxRx->audioEncoder);
 	
 	/*attach audio decoder and virtual track*/

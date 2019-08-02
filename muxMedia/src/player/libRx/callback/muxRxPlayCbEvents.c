@@ -59,7 +59,7 @@ HI_VOID* muxNetworkReconnect(HI_VOID *pArg)
 	play->s_s32ThreadEnd = HI_FAILURE;
 	sprintf(media.aszUrl, "%s", play->currentUrl);
 	media.u32ExtSubNum = 0;
-	MUX_PLAY_ERROR("### open media file is %s \n", media.aszUrl);
+	PLAY_ERROR(play, "### open media file is %s \n", media.aszUrl);
 
 	/* ??? */
 #if WITH_HIGO_SURFACE_HANDLER	
@@ -97,7 +97,7 @@ HI_VOID* muxNetworkReconnect(HI_VOID *pArg)
 	}
 	else
 	{
-		MUX_PLAY_ERROR("get file info fail!");
+		PLAY_ERROR(play, "get file info fail!");
 	}
 
 	(HI_VOID)HI_SVR_PLAYER_Seek(play->playerHandler, s64LastPts);
@@ -141,30 +141,30 @@ HI_S32 muxEventCallBack(HI_HANDLE hPlayer, HI_SVR_PLAYER_EVENT_S *event)
 	HI_SVR_PLAYER_EVENT_S *newEvent = (HI_SVR_PLAYER_EVENT_S *)cmn_malloc(sizeof(HI_SVR_PLAYER_EVENT_S));
 	if(newEvent==NULL)
 	{
-		MUX_PLAY_ERROR("No memory is available");
+		PLAY_ERROR(play, "No memory is available");
 		exit(1);
 	}
 
 	newEvent->eEvent = event->eEvent;
 	newEvent->u32Len = event->u32Len;
 	
-	//MUX_PLAY_DEBUG( "Event :'%s'", muxPlayerEventName(event->eEvent) );
-	//MUX_PLAY_DEBUG( "playing URL :'%s'; Config URL :'%s'", muxPlay.currentUrl, muxPlayer->muxConfig.url);
-	//MUX_PLAY_DEBUG( "address :'%x'", muxPlayer->muxFsm.fsm );
-	//MUX_PLAY_DEBUG( "Event : %s, FSM :'%s'\n", muxPlayerEventName(event->eEvent), muxPlay.muxPlayer->muxFsm.fsm->name );
+	//PLAY_DEBUG(play,  "Event :'%s'", muxPlayerEventName(event->eEvent) );
+	//PLAY_DEBUG(play,  "playing URL :'%s'; Config URL :'%s'", muxPlay.currentUrl, muxPlayer->muxConfig.url);
+	//PLAY_DEBUG(play,  "address :'%x'", muxPlayer->muxFsm.fsm );
+	//PLAY_DEBUG(play,  "Event : %s, FSM :'%s'\n", muxPlayerEventName(event->eEvent), muxPlay.muxPlayer->muxFsm.fsm->name );
 #if PLAYER_DEBUG_HIPLAY_EVENT
-	MUX_PLAY_DEBUG( "Event : '%s', Current State :'%s' of FSM '%s'", muxPlayerEventName(newEvent->eEvent), muxPlayerStateName( play->muxFsm.currentState), play->muxFsm.name );
+	PLAY_DEBUG(play,  "Event : '%s', Current State :'%s'", muxPlayerEventName(newEvent->eEvent), muxPlayerStateName( play->muxFsm.currentState));
 #endif
 
 	if(newEvent->u32Len > 0)
 	{
 #if PLAYER_DEBUG_HIPLAY_EVENT
-//		MUX_PLAY_DEBUG( "Event : '%s', data length %d", muxPlayerEventName(newEvent->eEvent), newEvent->u32Len );
+//		PLAY_DEBUG(play, "Event : '%s', data length %d", muxPlayerEventName(newEvent->eEvent), newEvent->u32Len );
 #endif
 		newEvent->pu8Data = (HI_U8 *)cmn_malloc(event->u32Len);
 		if(newEvent->pu8Data == NULL)
 		{
-			MUX_PLAY_ERROR("No memory for data is available");
+			PLAY_ERROR(play, "No memory for data is available");
 			exit(1);
 		}
 		memcpy(newEvent->pu8Data, event->pu8Data, newEvent->u32Len);
@@ -173,10 +173,10 @@ HI_S32 muxEventCallBack(HI_HANDLE hPlayer, HI_SVR_PLAYER_EVENT_S *event)
 
 #if 0
 	HI_SVR_PLAYER_Invoke(muxPlay.playerHandler, HI_FORMAT_INVOKE_GET_BANDWIDTH, &muxPlay.downloadBandWidth);
-	MUX_PLAY_DEBUG( "DownloadProgress bandwidth:'%lld'", muxPlay.downloadBandWidth);
+	PLAY_DEBUG(play, "DownloadProgress bandwidth:'%lld'", muxPlay.downloadBandWidth);
 #endif
 
-	muxPlayerReportFsmEvent(&play->muxFsm, (HI_SVR_PLAYER_EVENT_E)newEvent->eEvent, 0, newEvent);
+	SEND_EVEVT_TO_PLAYER(play, newEvent->eEvent, newEvent);
 #endif
 
 	return HI_SUCCESS;

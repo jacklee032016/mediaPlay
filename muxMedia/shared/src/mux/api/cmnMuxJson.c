@@ -502,9 +502,10 @@ int	cmnMuxJsonPluginReplay(struct DATA_CONN *dataConn, CMN_PLAY_JSON_EVENT *json
 
 	if(dataConn->errCode != IPCMD_ERR_IN_PROCESSING)
 	{/* otherwise, wait the end of processing in FSM */
-#if MUX_OPTIONS_DEBUG_IP_COMMAND			
-		MUX_DEBUG("API engine is replying '%s' action", jsonEvent->action );
-#endif		
+		if(CONTROLLER_IS_DEBUG(dataConn) )
+		{
+			MUX_DEBUG("API engine is replying '%s' action", jsonEvent->action );
+		}
 		_cmnMuxJsonReply4All(dataConn);
 		
 		cmn_mutex_unlock(dataConn->mutexLock);
@@ -560,9 +561,11 @@ int cmnMuxJSonPluginHandle(void *priv, PluginJSonHandler *firstHandler, CMN_PLAY
 	}
 	cmn_mutex_unlock(dataConn->mutexLock);
 
-#if MUX_OPTIONS_DEBUG_IP_COMMAND			
-	MUX_DEBUG("API engine is replying '%s' action", handler->name );
-#endif
+	if(CONTROLLER_IS_DEBUG(dataConn) )
+	{
+		MUX_DEBUG("API engine is replying '%s' action", handler->name );
+	}
+
 	cmnMuxJsonPluginReplay(dataConn, jsonEvent);
 
 	return res;
@@ -600,9 +603,10 @@ int cmnMuxCtrlDataHandle( struct DATA_CONN *dataConn )
 				}
 			}
 			
-#if MUX_OPTIONS_DEBUG_IP_COMMAND			
-			MUX_DEBUG("IP Command '%s' is processing.....", cmdObj->valuestring);
-#endif
+			if(CONTROLLER_IS_DEBUG(dataConn))
+			{
+				MUX_DEBUG("IP Command '%s' is processing.....", cmdObj->valuestring);
+			}
 			cJSON *dataArray = cJSON_GetObjectItem(dataConn->cmdObjs, _defaultStates[msg_data].key);
 
 			if(!dataArray || !cJSON_IsArray(dataArray))

@@ -71,7 +71,7 @@ static int	_resumeMedia(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSON_EV
 		res = HI_SVR_PLAYER_Resume(play->playerHandler);
 		if (HI_SUCCESS != res)
 		{
-			MUX_PLAY_ERROR( "resume fail, ret = 0x%x\n", res);
+			PLAY_ERROR(play, "resume fail, ret = 0x%x\n", res);
 			cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_NOERROR, "resume failed, retry late");
 			return EXIT_SUCCESS;
 		}
@@ -105,7 +105,7 @@ int muxPlayerPlayspeedSet(MUX_PLAY_T *play, CMN_PLAY_JSON_EVENT *jsonEvent)
 		}
 	}
 	
-//	MUX_PLAY_DEBUG( "speed = %d \n", speed);
+//	PLAY_DEBUG(play, "speed = %d \n", speed);
 	if(speed == HI_SVR_PLAYER_PLAY_SPEED_NORMAL )
 	{
 		if(jsonEvent)
@@ -122,7 +122,7 @@ int muxPlayerPlayspeedSet(MUX_PLAY_T *play, CMN_PLAY_JSON_EVENT *jsonEvent)
 		
 	if (HI_SUCCESS !=  res )
 	{
-		MUX_PLAY_WARN("forward/backward fail, ret = 0x%x", res);
+		PLAY_WARN(play, "forward/backward fail, ret = 0x%x", res);
 		if(jsonEvent)
 		{
 			
@@ -220,10 +220,11 @@ static int	_playMedia(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSON_EVEN
 	repeatNumber = cmnGetIntegerFromJsonObject(jsonEvent->object, _MUX_JSON_NAME_REPEAT);
 	if(repeatNumber == -1)
 	{
-		MUX_PLAY_ERROR(" No repeat number for this play command");
+		PLAY_ERROR(play, " No repeat number for this play command");
 	}
 
-	muxPlayerRemovePlayingTimer(play);
+//	muxPlayerRemovePlayingTimer(play);
+	MUX_PLAY_CLEAR_SET_MEDIA(play);
 	
 	if(! PLAYER_CHECK_STATE(play, HI_SVR_PLAYER_STATE_STOP) && 
 		! PLAYER_CHECK_STATE(play, HI_SVR_PLAYER_STATE_INIT) &&
@@ -239,7 +240,7 @@ static int	_playMedia(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSON_EVEN
 	}
 	else if( PLAYER_CHECK_STATE(play, HISVR_PLAYER_STATE_IMAGE)  )
 	{/* when playing image */
-		muxPlayerReportFsmEvent(&play->muxFsm, (HI_SVR_PLAYER_EVENT_E)PLAYER_EVENT_END, 0, NULL);
+		SEND_EVEVT_TO_PLAYER(play, PLAYER_EVENT_END, NULL);
 	}
 	else
 	{
@@ -273,7 +274,8 @@ static int	_stopMedia(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSON_EVEN
 	}
 #endif		
 	
-	muxPlayerRemovePlayingTimer(play);
+//	muxPlayerRemovePlayingTimer(play);
+	MUX_PLAY_CLEAR_SET_MEDIA(play);
 	
 	if(! PLAYER_CHECK_STATE(play, HI_SVR_PLAYER_STATE_STOP) && 
 		! PLAYER_CHECK_STATE(play, HI_SVR_PLAYER_STATE_INIT) && 
@@ -282,7 +284,7 @@ static int	_stopMedia(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSON_EVEN
 		res = muxPlayerStopPlaying(play);
 		if (EXIT_SUCCESS != res)
 		{
-			MUX_PLAY_ERROR(" stop fail, ret = 0x%x", res);
+			PLAY_ERROR(play, " stop fail, ret = 0x%x", res);
 			cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_NOERROR, "stop failed, retry late");
 			return EXIT_SUCCESS;
 		}
@@ -295,7 +297,7 @@ static int	_stopMedia(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSON_EVEN
 	}
 	else if( PLAYER_CHECK_STATE(play, HISVR_PLAYER_STATE_IMAGE)  )
 	{
-		muxPlayerReportFsmEvent(&play->muxFsm, (HI_SVR_PLAYER_EVENT_E)PLAYER_EVENT_TIMEOUT, 0, NULL);
+		SEND_EVEVT_TO_PLAYER(play, PLAYER_EVENT_TIMEOUT, NULL);
 		PLAYER_SET_CURRENT_CMD(play, jsonEvent->event, jsonEvent ); /* when enter into STOP state, this CMD is emitted, so re-enter into this function to start play */
 	}
 	else
@@ -326,7 +328,7 @@ static int	_pauseMedia(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSON_EVE
 		res = HI_SVR_PLAYER_Pause( play->playerHandler);
 		if (HI_SUCCESS != res)
 		{
-			MUX_PLAY_ERROR( "pause fail, ret = 0x%x", res);
+			PLAY_ERROR(play, "pause fail, ret = 0x%x", res);
 			cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_NOERROR, "pause failed, retry late");
 			return EXIT_SUCCESS;
 		}
@@ -374,18 +376,18 @@ static int _getPlayerInfo(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSON_
 #if 0	
 	timeInSecond = (int)(play->fileInfo->s64Duration/1000);
 	cmnTlvWriteInteger(tlvBuf, timeInSecond);	/* total time */
-	MUX_PLAY_DEBUG( "  Time played:  %lld:%lld:%lld, Total time: %lld:%lld:%lld ",
+	PLAY_DEBUG(play, "  Time played:  %lld:%lld:%lld, Total time: %lld:%lld:%lld ",
 		stPlayerInfo.u64TimePlayed / (1000 * 3600),
 		(stPlayerInfo.u64TimePlayed % (1000 * 3600)) / (1000 * 60),
 		((stPlayerInfo.u64TimePlayed % (1000 * 3600)) % (1000 * 60)) / 1000,
 		play->fileInfo->s64Duration / (1000 * 3600),
 		(play->fileInfo->s64Duration % (1000 * 3600)) / (1000 * 60),
 		(( play->fileInfo->s64Duration % (1000 * 3600)) % (1000 * 60)) / 1000);
-	MUX_PLAY_DEBUG("  Speed:          %d ", stPlayerInfo.s32Speed);
-	MUX_PLAY_DEBUG("  Status:         %d ", stPlayerInfo.eStatus);
+	PLAY_DEBUG(play, "  Speed:          %d ", stPlayerInfo.s32Speed);
+	PLAY_DEBUG("  Status:         %d ", stPlayerInfo.eStatus);
 
 	ret = HI_SVR_PLAYER_GetParam(play->playerHandler, HI_SVR_PLAYER_ATTR_STREAMID, (HI_VOID*)& play->playerStreamIDs);
-	MUX_PLAY_DEBUG("  StreamId: program id(%d), video id(%d), audio id(%d), subtitle id(%d) \n",
+	PLAY_DEBUG(play, "  StreamId: program id(%d), video id(%d), audio id(%d), subtitle id(%d) \n",
 		play->playerStreamIDs.u16ProgramId, play->playerStreamIDs.u16VidStreamId, 
 		play->playerStreamIDs.u16AudStreamId, play->playerStreamIDs.u16SubStreamId);
 #endif
@@ -514,7 +516,7 @@ static int _swapWindow(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSON_EVE
 
 	if ( play->windowIndex <= 0 || play->windowIndex >= cmn_list_size(&play->muxRx->muxPlayer->playerConfig.windows) )
 	{
-		MUX_PLAY_WARN("Window index '%d' is out of range", play->windowIndex );
+		PLAY_WARN(play, "Window index '%d' is out of range", play->windowIndex );
 		cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_DATA_ERROR, "Window index '%d' is out of range", play->windowIndex );
 		return res;
 	}
@@ -626,7 +628,7 @@ static int	__muxSetVolume(MUX_PLAY_T *play, struct DATA_CONN *dataConn, CMN_PLAY
 	res = HI_UNF_SND_SetTrackWeight(play->trackHandle, &gain);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_ERROR("set volume failed! \n");
+		PLAY_ERROR(play, "set volume failed!");
 		cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_SERVER_INTERNEL_ERROR, "Please re-try later");
 	}
 	else
@@ -670,7 +672,7 @@ static int	_muxMute(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSON_EVENT 
 	res = HI_UNF_SND_SetTrackMute(play->trackHandle, !play->cfg->audioEnable);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_WARN("Set window No.%d mute failed : %#x", play->windowIndex, res);
+		PLAY_WARN(play, "Set window No.%d mute failed : %#x", play->windowIndex, res);
 		cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_SERVER_INTERNEL_ERROR, "Please re-try later");
 	}
 	else
@@ -691,7 +693,7 @@ static int	_muxAudio(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSON_EVENT
 	strState = cmnGetStrFromJsonObject(jsonEvent->object, _MUX_JSON_NAME_MEDIA);
 	if(IS_STRING_NULL(strState))
 	{
-		MUX_PLAY_WARN("No 'Enable' parameter for audio channel in 'audio' command");
+		PLAY_WARN(play, "No 'Enable' parameter for audio channel in 'audio' command");
 		return cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_DATA_ERROR, "No 'Enable' parameter for audio channel in 'audio' command");
 	}
 
@@ -709,7 +711,7 @@ static int	_muxAudio(void *priv, struct DATA_CONN *dataConn, CMN_PLAY_JSON_EVENT
 	res = HI_UNF_SND_SetTrackMute(play->trackHandle, !play->cfg->audioEnable);
 	if (HI_SUCCESS != res)
 	{
-		MUX_PLAY_WARN("Set window No.%d mute failed : %#x", play->windowIndex, res);
+		PLAY_WARN(play, "Set window No.%d mute failed : %#x", play->windowIndex, res);
 		cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_SERVER_INTERNEL_ERROR, "Please re-try later");
 	}
 	else
@@ -869,10 +871,14 @@ int muxPlayerJSONHandle(MUX_RX_T *muxRx, CMN_PLAY_JSON_EVENT *jsonEvent)
 		{
 			PluginJSonHandler *handler = _jsonPlayerActionHandlers;
 
-			if(IS_PLAYER_BUSY(play))
+			if(IS_PLAYER_SET_MEDIA(play) )
 			{
-				MUX_PLAY_ERROR( "Player %s failed on '%s': is busy for last command '%s'", play->muxFsm.name,  jsonEvent->action, muxPlayerJsonCmdName(play->muxFsm.currentCmd) );
-//				MUX_PLAY_ERROR( "Player %s failed : is busy for last command '%s'", play->muxFsm.name,  muxPlayerJsonCmdName(play->muxFsm.currentCmd) );
+				cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_IS_BUSY_NOW, "%s is still open media, command %s is ignored, please try later", play->muxFsm.name,  jsonEvent->action, muxPlayerJsonCmdName(play->muxFsm.currentCmd) );
+			}
+			else if(IS_PLAYER_BUSY(play))
+			{
+				PLAY_ERROR(play, "failed: is busy for last command '%s'", jsonEvent->action, muxPlayerJsonCmdName(play->muxFsm.currentCmd) );
+//				PLAY_ERROR(play, "failed : is busy for last command '%s'", muxPlayerJsonCmdName(play->muxFsm.currentCmd) );
 				cmnMuxJsonControllerReply(dataConn, IPCMD_ERR_IS_BUSY_NOW, "Player %s failed on %s: is still processing last command '%s'", play->muxFsm.name,  jsonEvent->action, muxPlayerJsonCmdName(play->muxFsm.currentCmd) );
 			}
 			else
@@ -883,7 +889,7 @@ int muxPlayerJSONHandle(MUX_RX_T *muxRx, CMN_PLAY_JSON_EVENT *jsonEvent)
 				{
 					if(!strcasecmp( handler->name, jsonEvent->action))
 					{
-						MUX_PLAY_DEBUG("'%s' is processing '%s' action", play->muxFsm.name, handler->name );
+						PLAY_DEBUG(play, "is processing '%s' action", handler->name );
 						dataConn->errCode = IPCMD_ERR_IN_PROCESSING; 
 						jsonEvent->status = IPCMD_ERR_IN_PROCESSING; 
 						jsonEvent->event = handler->type;

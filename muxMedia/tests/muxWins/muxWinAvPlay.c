@@ -11,13 +11,13 @@ int muxWinInitMultipleAvPlay(MWIN_PLAY_T *player)
 	HI_UNF_SYNC_ATTR_S	syncAttr;
 #endif
 
-	cmnThreadSetName("HiSys");
+	cmnThreadSetName(MUX_THREAD_NAME_SOUND);
 	HI_SYS_Init();
 
-	cmnThreadSetName("MCE");
+//	cmnThreadSetName("MCE");
 	HIADP_MCE_Exit();
 
-	cmnThreadSetName("Sound");
+//	cmnThreadSetName("Sound");
 	res = HIADP_Snd_Init();
 	if (HI_SUCCESS != res)
 	{
@@ -25,7 +25,7 @@ int muxWinInitMultipleAvPlay(MWIN_PLAY_T *player)
 		return HI_FAILURE;
 	}
 
-	cmnThreadSetName("Display");
+	cmnThreadSetName(MUX_THREAD_NAME_DISPLAY);
 	res = HIADP_Disp_Init(vidFormat);
 	if (HI_SUCCESS != res )
 	{
@@ -33,7 +33,7 @@ int muxWinInitMultipleAvPlay(MWIN_PLAY_T *player)
 		return HI_FAILURE;
 	}
 
-	cmnThreadSetName("VO");
+//	cmnThreadSetName("VO");
 	res = HIADP_VO_Init(HI_UNF_VO_DEV_MODE_MOSAIC);
 	if (HI_SUCCESS != res)
 	{
@@ -48,7 +48,7 @@ int muxWinInitMultipleAvPlay(MWIN_PLAY_T *player)
 		return HI_FAILURE;
 	}
 
-	cmnThreadSetName("DMX");
+//	cmnThreadSetName("DMX");
 	res = HI_UNF_DMX_Init();
 	if (HI_SUCCESS != res)
 	{
@@ -56,7 +56,7 @@ int muxWinInitMultipleAvPlay(MWIN_PLAY_T *player)
 		goto ERR;
 	}
 
-	cmnThreadSetName("AVPlayInit");
+//	cmnThreadSetName("AVPlayInit");
 	res = HI_UNF_AVPLAY_Init();
 	if (HI_SUCCESS != res)
 	{
@@ -64,7 +64,7 @@ int muxWinInitMultipleAvPlay(MWIN_PLAY_T *player)
 		return HI_FAILURE;
 	}
 
-	cmnThreadSetName("SO");
+//	cmnThreadSetName("SO");
 	res = HI_UNF_SO_Init();
 	if (HI_SUCCESS != res)
 	{
@@ -73,7 +73,7 @@ int muxWinInitMultipleAvPlay(MWIN_PLAY_T *player)
 	}
 
 
-	cmnThreadSetName("HiPlayInit");
+//	cmnThreadSetName("HiPlayInit");
 	res = HI_SVR_PLAYER_Init();
 	if (HI_SUCCESS != res)
 	{
@@ -131,7 +131,7 @@ int muxWinInitMultipleAvPlay(MWIN_PLAY_T *player)
 		AvplayAttr.u32DemuxId = 0;
 		AvplayAttr.stStreamAttr.u32VidBufSize = 8 * 1024 * 1024;
 
-		cmnThreadSetName("AvPlay%d", i);
+//		cmnThreadSetName("AvPlay%d", i);
 		res = HI_UNF_AVPLAY_Create(&AvplayAttr, &avPlay->handleAvPlay );
 		if (HI_SUCCESS != res)
 		{
@@ -158,7 +158,7 @@ int muxWinInitMultipleAvPlay(MWIN_PLAY_T *player)
 
 		MUX_DEBUG( "x=%d, y=%d, w=%d, h=%d", WinRect.s32X, WinRect.s32Y, WinRect.s32Width, WinRect.s32Height);
 
-		cmnThreadSetName("VOWindow");
+//		cmnThreadSetName("VOWindow");
 		res = HIADP_VO_CreatWin(&WinRect, &avPlay->handleWin);
 		if (HI_SUCCESS != res)
 		{
@@ -191,7 +191,7 @@ int muxWinInitMultipleAvPlay(MWIN_PLAY_T *player)
 			}
 		}
 
-		cmnThreadSetName("SNDTrack");
+//		cmnThreadSetName("SNDTrack");
 		res = HI_UNF_SND_CreateTrack(HI_UNF_SND_0, &trackAttr, &avPlay->handleTrack);
 		if (HI_SUCCESS != res)
 		{

@@ -203,9 +203,13 @@ static struct DATA_CONN *_readCommand(struct CTRL_CONN *ctrlConn)
 //		errCode = IPCMD_ERR_COMMUNICATION;
 		return NULL;
 	}
-	
+
+	if(MUX_MAIN_IS_DEBUG_MSG(ctrlConn->controller->muxMain) )
+	{
+		MUX_DEBUG("Received %d bytes(%d length) packet from %s:%d:\n'%.*s'", 
+			len, ntohs(ctrlConn->cmdBuffer.length), inet_ntoa(peerAddr.sin_addr), ntohs(peerAddr.sin_port), len-8, ctrlConn->cmdBuffer.data );
+	}
 #if MUX_OPTIONS_DEBUG_IP_COMMAND			
-	MUX_DEBUG("Received %d bytes(%d length) packet from %s:%d", len, ntohs(ctrlConn->cmdBuffer.length), inet_ntoa(peerAddr.sin_addr), ntohs(peerAddr.sin_port));
 	cmnHexDump( (uint8_t *)&ctrlConn->cmdBuffer, len);
 #endif
 	ctrlConn->cmdBuffer.length = ntohs(ctrlConn->cmdBuffer.length);
@@ -311,10 +315,14 @@ int cmnMuxCtrlResponse(struct DATA_CONN *dataConn, void *buf, int size)
 	*(unsigned int *)(cmd.data+size) = crc32;
 
 
+	if(CONTROLLER_IS_DEBUG(dataConn) )
+	{
+		MUX_DEBUG("Reply %d bytes packet to %s:%d:\n'%.*s'", size+8, inet_ntoa(dataConn->peerAddr.sin_addr), ntohs(dataConn->peerAddr.sin_port), size, cmd.data );
+	}
 #if MUX_OPTIONS_DEBUG_IP_COMMAND			
-	MUX_DEBUG("Reply %d bytes packet to %s:%d", size+8, inet_ntoa(dataConn->peerAddr.sin_addr), ntohs(dataConn->peerAddr.sin_port));
 	cmnHexDump((const uint8_t *)&cmd, size+8);
 #endif
+
 	if(dataConn->ctrlConn->type == CTRL_LINK_TCP || dataConn->ctrlConn->type == CTRL_LINK_UNIX)
 	{
 		len = write(dataConn->sock, &cmd, size+8 );
@@ -371,6 +379,7 @@ static CMN_MUX_CONTROLLER *_cmnMuxControllerInit(MuxMain *muxMain)
 	controller->muxMain = muxMain;
 //	controller->cfg = muxMain-> cfg;
 	controller->cfgHandlers = cfgHandlers;
+
 #if MUX_OPTIONS_DEBUG_IP_COMMAND			
 	{
 		char *printed_json = cJSON_Print(controller->cfgHandlers);
@@ -459,10 +468,12 @@ static int _cmnMuxControllerReceive(CMN_MUX_CONTROLLER *controller)
 			{
 				return EXIT_SUCCESS;
 			}
-			
-#if MUX_OPTIONS_DEBUG_IP_COMMAND			
-			MUX_DEBUG( "Read data from peer port %d", dataConn->port );
-#endif
+
+			if(dataConn->ctrlConn->controller)
+			if(CONTROLLER_IS_DEBUG(dataConn) )
+			{
+				MUX_DEBUG( "Read data from peer port %d", dataConn->port );
+			}
 
 			cmn_mutex_lock(dataConn->mutexLock);
 			if(dataConn->errCode != IPCMD_ERR_NOERROR )
@@ -545,7 +556,7 @@ static void _destoryCtrlThread(struct _CmnThread *th)
 
 CmnThread  threadController =
 {
-	name		:	"Controller",
+	name		:	MUX_THREAD_NAME_CONTROLLER,
 	init			:	_initCtrlThread,
 	mainLoop		:	_muxCtrlMainLoop,
 	eventHandler	:	NULL,

@@ -298,6 +298,10 @@ int	cmnThreadId(void)
 
 char	*cmnThreadGetName()
 {
+#define	WITH_PID	1
+#if WITH_PID
+	static char returnName[32] = "Unknown";
+#endif
 	static char threadName[16] = "Unknown";
 	pthread_t             self = pthread_self();
 
@@ -307,7 +311,12 @@ char	*cmnThreadGetName()
 		return "Unknown";
 	}
 
+#if WITH_PID
+	snprintf(returnName, sizeof(returnName), "%s.%d", threadName, cmnThreadId());
+	return returnName;
+#else
 	return threadName;
+#endif
 }
 
 int	cmnThreadSetSignalHandler(int signum, void (*saHandler)(int) )

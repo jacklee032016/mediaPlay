@@ -430,6 +430,7 @@ struct CLIENT_CONN
 {
 	CTRL_LINK_TYPE			type;
 	int						port;	/* service port */
+	int						timeout;
 
 	
 
@@ -639,6 +640,8 @@ struct	DATA_CONN
 	struct CTRL_CONN		*ctrlConn;
 };
 
+#define	CONTROLLER_IS_DEBUG(dataConn)	\
+			MUX_MAIN_IS_DEBUG_MSG( (dataConn)->ctrlConn->controller->muxMain)
 
 
 typedef	enum _PLUGIN_TYPE
@@ -829,6 +832,9 @@ typedef	struct _MuxMain
 	int						udpCtrlPort;
 	int						tcpCtrlPort;
 	char						unixPort[CMN_NAME_LENGTH];
+
+	int						debugMsg;
+	int						debugFsm;
 	
 //	CTRL_LINK_TYPE			ctrlProtocol;
 	
@@ -864,6 +870,11 @@ typedef	struct _MuxMain
 	MuxMediaCapture			*mediaCaptures;	/* Capture of PLAYER or Capture of FILE registered here */
 }MuxMain;
 
+#define	MUX_MAIN_IS_DEBUG_MSG(muxMain)	\
+		(muxMain->debugMsg != 0)
+
+#define	MUX_MAIN_IS_DEBUG_FSM(muxMain)	\
+		(muxMain->debugFsm != 0)
 
 /************ Macros like functions **********************/
 

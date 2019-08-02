@@ -55,13 +55,13 @@ static int _muxRxUnfDeviceInit(MUX_RX_T *muxRx)
 	HI_S32                   ret = 0;
 	//HI_UNF_EDID_BASE_INFO_S  stSinkAttr;
 
-	cmnThreadSetName("HiSys");
+	cmnThreadSetName(MUX_THREAD_NAME_SOUND);
 	HI_SYS_Init();
 
-	cmnThreadSetName("HiMCE");
+//	cmnThreadSetName("HiMCE");
 	HIADP_MCE_Exit();
 
-	cmnThreadSetName("HiSound");
+//	cmnThreadSetName("HiSound");
 	ret = HIADP_Snd_Init();
 	if (ret != HI_SUCCESS)
 	{
@@ -69,7 +69,7 @@ static int _muxRxUnfDeviceInit(MUX_RX_T *muxRx)
 		return HI_FAILURE;
 	}
 
-	cmnThreadSetName("HiDisplay");
+	cmnThreadSetName(MUX_THREAD_NAME_DISPLAY);
 	//ret = HIADP_Disp_Init(HI_UNF_ENC_FMT_1080P_50);// muxRx->videoFormat );
 	ret = HIADP_Disp_Init( FMT_AUTO(muxRx->videoFormat)?HI_UNF_ENC_FMT_1080P_50:muxRx->videoFormat);
 	if (ret != HI_SUCCESS)
@@ -78,7 +78,7 @@ static int _muxRxUnfDeviceInit(MUX_RX_T *muxRx)
 		return HI_FAILURE;
 	}
 
-	cmnThreadSetName("HiVideoOut");
+//	cmnThreadSetName("HiVideoOut");
 	ret = HIADP_VO_Init(HI_UNF_VO_DEV_MODE_MOSAIC);
 	//ret = HIADP_VO_Init(HI_UNF_VO_DEV_MODE_NORMAL);
 	if (ret != HI_SUCCESS)
@@ -134,7 +134,7 @@ static int _muxRxUnfDeviceInit(MUX_RX_T *muxRx)
 	}
 #endif
 
-	cmnThreadSetName("HiDMX");
+//	cmnThreadSetName("HiDMX");
 	ret = HI_UNF_DMX_Init();
 	if (HI_SUCCESS != ret)
 	{
@@ -142,7 +142,7 @@ static int _muxRxUnfDeviceInit(MUX_RX_T *muxRx)
 		return HI_FAILURE;
 	}
 
-	cmnThreadSetName("HiAvPlayInit");
+//	cmnThreadSetName("HiAvPlayInit");
 	ret = HI_UNF_AVPLAY_Init();
 	if (ret != HI_SUCCESS)
 	{
@@ -150,7 +150,7 @@ static int _muxRxUnfDeviceInit(MUX_RX_T *muxRx)
 		return HI_FAILURE;
 	}
 
-	cmnThreadSetName("HiSOInit");
+//	cmnThreadSetName("HiSOInit");
 	ret = HI_UNF_SO_Init();
 	if (HI_SUCCESS != ret)
 	{
@@ -221,13 +221,12 @@ HI_S32 muxRxInit(MUX_RX_T *muxRx)
 	MUX_PLAY_INFO("Display Format:%s:%d", muxPlayer->playerConfig.displayFormat, muxRx->videoFormat);
 
 	muxRx->initLock = cmn_mutex_init();
-	cmn_mutex_lock(muxRx->initLock);
-#if 1	
-	cmnThreadSetName("HiDevice");
-	res = _muxRxUnfDeviceInit(muxRx);
-#endif
 
-	cmnThreadSetName("HiPlayer");
+	/* sound/display modules and threads */		
+	res = _muxRxUnfDeviceInit(muxRx);
+
+
+//	cmnThreadSetName("HiPlayer");
 	res |= _muxHiPlayerInit( muxRx);
 
 	cmnThreadSetName("HiOSD");
@@ -238,8 +237,9 @@ HI_S32 muxRxInit(MUX_RX_T *muxRx)
 		return HI_FAILURE;
 	}
 
-	cmnThreadSetName("Players");
+//	cmnThreadSetName("Players");
 
+	cmn_mutex_lock(muxRx->initLock);
 	res |= cmn_list_iterate(&muxPlayer->playerConfig.windows, HI_TRUE, muxRxCreatePlayer, muxRx);
 	if (HI_SUCCESS != res)
 	{
@@ -259,8 +259,10 @@ HI_S32 muxRxInit(MUX_RX_T *muxRx)
 	cmnThreadSetName("PlayCapture");
 	res = muxRxCaptureInit(muxRx);
 
-//	usleep(10000 * 1000);
 	res = muxPlayerSetMainWindowTop(muxRx);
+
+	//usleep(10000 * 1000);
+	usleep(10 * 1000);
 
 	return HI_SUCCESS;
 }

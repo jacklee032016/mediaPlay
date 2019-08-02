@@ -265,7 +265,6 @@ void HDMI_HotPlug_Proc(HI_VOID *pPrivateData)
 		return;
 	}
 
-
 	if(muxHdmiGetAutoConfig(&muxHdmiCfg) == EXIT_FAILURE)
 	{
 		MUX_PLAY_ERROR("HDMI Auto params select failed");
@@ -376,7 +375,7 @@ void HDMI_HotPlug_Proc(HI_VOID *pPrivateData)
 	}
 
 	
-	usleep(300 * 1000);
+//	usleep(300 * 1000);
 	ret = HI_UNF_HDMI_CEC_Enable(HI_UNF_HDMI_ID_0);
 	if (ret != HI_SUCCESS)
 	{

@@ -12,6 +12,29 @@
 #include <string.h>
 #include <math.h>
 
+#define	MUX_THREAD_NAME_MAIN						"main"
+#define	MUX_THREAD_NAME_CONTROLLER					"commu"
+#define	MUX_THREAD_NAME_FTP							"ftp"
+#define	MUX_THREAD_NAME_MEDIA_SCHEDULER			"schedule"
+
+
+#define	MUX_THREAD_NAME_SOUND						"sound"
+#define	MUX_THREAD_NAME_DISPLAY						"display"
+
+/* for every window player (wp) */
+#define	MUX_THREAD_NAME_WINDOW_VIDEO_PLAYER		"wpVideo"		/* 3 threads from */
+#define	MUX_THREAD_NAME_WINDOW_AUDIO_PLAYER		"wpAudio"		
+
+#define	MUX_THREAD_NAME_WINDOW_DECODE_PLAYER	"wpDecoder"		/* decoder of source, decoding protocol and container format */
+
+#define	MUX_THREAD_NAME_MEDIA_CONTROL				"wpMedia"		/* SetMedia */
+
+/* for audio/video capture */
+#define	MUX_THREAD_NAME_CAPTURE_VIDEO				"capVideo"
+#define	MUX_THREAD_NAME_CAPTURE_AUDIO				"capAudio"
+
+
+#define	MUX_THREAD_NAME_CAPTURE_AUDIO_ENCODER	"capAudioEnc"
 
 
 #define	MUX_WITH_AVI_H264_ANNEXB		1	/* AVI container save h264 video in annex B format; used by RECORDER and SERVER (only HTTP?) */

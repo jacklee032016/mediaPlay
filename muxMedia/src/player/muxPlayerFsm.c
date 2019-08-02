@@ -24,7 +24,7 @@ static int __playBlackWindow(MUX_PLAY_T *play)
 		ret= OSD_DESKTOP_LOCK(&play->muxRx->higo);
 		if(ret != 0)
 		{
-			MUX_PLAY_WARN( "Lock for playing image: %s", strerror(errno) );
+			PLAY_WARN(play, "Lock for playing image: %s", strerror(errno) );
 			return HI_SUCCESS;
 		}
 		
@@ -33,7 +33,7 @@ static int __playBlackWindow(MUX_PLAY_T *play)
 		ret = OSD_DESKTOP_UNLOCK(&play->muxRx->higo);
 		if(ret != 0)
 		{
-			MUX_PLAY_WARN( "Unlocked for playing image: %s", strerror(errno) );
+			PLAY_WARN(play, "Unlocked for playing image: %s", strerror(errno) );
 			return HI_SUCCESS;
 		}
 	}
@@ -50,7 +50,10 @@ static int __playRestart(MUX_PLAY_T *play)
 	if(!jsonEvent)
 	{/* check whether other media is still in this playlist */
 		//CMN_ABORT("No pending OPEN command for %s", play->muxFsm.name);
-		MUX_PLAY_DEBUG("Continue other items in playlist");
+		if(PLAY_IS_DEBUG_FSM(play))
+		{
+			PLAY_DEBUG(play, "Continue other items in playlist");
+		}
 		if(muxPlayerPlaying(play, FALSE, NULL, 0) == 0)
 		{
 			__playBlackWindow(play);
@@ -62,7 +65,10 @@ static int __playRestart(MUX_PLAY_T *play)
 	if(_fsm->currentCmd == CMD_TYPE_OPEN)
 	{/* for 'play' command when state is still in PLAYING/IMAGE */
 
-		MUX_PLAY_DEBUG("Continue OPEN command in enter into STOP operation");
+		if(PLAY_IS_DEBUG_FSM(play))
+		{
+			PLAY_DEBUG(play, "Continue OPEN command in enter into STOP operation");
+		}
 		char *media = cmnGetStrFromJsonObject(jsonEvent->object, _MUX_JSON_NAME_MEDIA);
 		if(media == NULL || !strlen(media))
 		{
@@ -73,7 +79,7 @@ static int __playRestart(MUX_PLAY_T *play)
 		int repeatNumber = cmnGetIntegerFromJsonObject(jsonEvent->object, _MUX_JSON_NAME_REPEAT);
 		if(repeatNumber == -1)
 		{
-			MUX_PLAY_ERROR(" No repeat number for this play command");
+			PLAY_ERROR(play, " No repeat number for this play command");
 		}
 
 		if(muxPlayerPlaying(play, TRUE, media, repeatNumber) == 0)
@@ -113,13 +119,14 @@ static int _playerEofHandler(void *ctx, EVENT *_event)
 {
 	MUX_PLAY_T *play = (MUX_PLAY_T *)ctx;
 
-#if PLAYER_DEBUG_HIPLAY_EVENT
-	MUX_PLAY_DEBUG( "'%s' event: in state of '%s'", muxPlayerEventName(_event->event), muxPlayerStateName( play->muxFsm.currentState) );
-#endif
-
+	if(PLAY_IS_DEBUG_FSM(play))
+	{
+		PLAY_DEBUG(play, "'%s' event: in state of '%s'", muxPlayerEventName(_event->event), muxPlayerStateName( play->muxFsm.currentState) );
+	}
+	
 	if(play->playerHandler == HI_SVR_PLAYER_INVALID_HDL)
 	{
-		MUX_PLAY_WARN("'EOF' event: PlayerHandler error :0x%x", play->playerHandler);
+		PLAY_WARN(play, "'EOF' event: PlayerHandler error :0x%x", play->playerHandler);
 		exit(1);
 	}
 
@@ -133,9 +140,10 @@ static int _playerSeekFinishHandler(void *ctx, EVENT *_event)
 	HI_SVR_PLAYER_EVENT_S *event = (HI_SVR_PLAYER_EVENT_S *)_event;
 #endif
 
-#if PLAYER_DEBUG_HIPLAY_EVENT
-	MUX_PLAY_DEBUG("'%s' event is handling in state of '%s'", muxPlayerEventName(_event->event) , muxPlayerStateName( play->muxFsm.currentState) );
-#endif
+	if(PLAY_IS_DEBUG_FSM(play))
+	{
+		PLAY_DEBUG(play, "'%s' event is handling in state of '%s'", muxPlayerEventName(_event->event) , muxPlayerStateName( play->muxFsm.currentState) );
+	}
 
 	if(PLAYER_CHECK_STATE(play, HI_SVR_PLAYER_STATE_STOP) )
 	{/* when receives STOP state, send seek command to start next playing */
@@ -156,13 +164,15 @@ static int _playerProgressHandler(void *ctx, EVENT *_event)
 	MUX_PLAY_T *play = (MUX_PLAY_T *)ctx;
 	HI_SVR_PLAYER_EVENT_S *event = (HI_SVR_PLAYER_EVENT_S *)_event->data;
 	
-#if PLAYER_DEBUG_HIPLAY_EVENT
-	MUX_PLAY_DEBUG( "'%s' event is handling in state of '%s'", muxPlayerEventName(_event->event), muxPlayerStateName( play->muxFsm.currentState) );
-#endif
+	if(PLAY_IS_DEBUG_FSM(play))
+	{
+		PLAY_DEBUG(play, "'%s' event is handling in state of '%s'", muxPlayerEventName(_event->event), muxPlayerStateName( play->muxFsm.currentState) );
+	}
+	
 	memcpy(&play->progress, event->pu8Data, sizeof(HI_SVR_PLAYER_PROGRESS_S));//event->u32Len);
 	if( play->muxRx->noPrintInHdmiATC == HI_FALSE)
 	{
-		MUX_PLAY_DEBUG("Current progress is %d, Duration:%lld ms,Buffer size:%lld bytes\n", play->progress.u32Progress, play->progress.s64Duration, play->progress.s64BufferSize);
+		PLAY_DEBUG(play, "Current progress is %d, Duration:%lld ms,Buffer size:%lld bytes\n", play->progress.u32Progress, play->progress.s64Duration, play->progress.s64BufferSize);
 	}
 	
 	return STATE_CONTINUE;
@@ -175,11 +185,13 @@ static int _playerFirstFrameTimeHandler(void *ctx, EVENT *_event)
 	unsigned int  firstFrameTime;
 	
 	firstFrameTime = *((HI_U32*)event->pu8Data);
-#if PLAYER_DEBUG_HIPLAY_EVENT
-	MUX_PLAY_DEBUG("'%s' event is handling in state of '%s'", muxPlayerEventName(_event->event) , muxPlayerStateName( play->muxFsm.currentState) );
-	MUX_PLAY_DEBUG("the first frame time is %d ms of %s", firstFrameTime, play->muxFsm.name);
-#endif
 
+	if(PLAY_IS_DEBUG_FSM(play))
+	{
+		PLAY_DEBUG(play, "'%s' event is handling in state of '%s'", muxPlayerEventName(_event->event) , muxPlayerStateName( play->muxFsm.currentState) );
+		PLAY_DEBUG(play, "the first frame time is %d ms", firstFrameTime);
+	}
+	
 	return STATE_CONTINUE;
 }
 #endif
@@ -191,7 +203,10 @@ static int _playerStateChange(void *ctx, EVENT *_event)
 
 	int newState = (HI_SVR_PLAYER_STATE_E)*event->pu8Data;
 
-	MUX_PLAY_DEBUG("'%s' event, new state is '%s' on %s in state of '%s'", muxPlayerEventName(_event->event), muxPlayerStateName(newState), play->muxFsm.name, muxPlayerStateName( play->muxFsm.currentState) );
+	if(PLAY_IS_DEBUG_FSM(play))
+	{
+		PLAY_DEBUG(play, "'%s' event, new state is '%s' in state of '%s'", muxPlayerEventName(_event->event), muxPlayerStateName(newState), muxPlayerStateName( play->muxFsm.currentState) );
+	}
 	
 	if (newState == HI_SVR_PLAYER_STATE_STOP)
 	{/* play end, then black screen */
@@ -204,7 +219,7 @@ static int _playerStateChange(void *ctx, EVENT *_event)
 	else if (newState == HI_SVR_PLAYER_STATE_PAUSE && play->pausedCtrl == PLAYER_PAUSE_WAITING)
 	{
 		play->pausedCtrl = PLAYER_PAUSE_PAUSED;
-		MUX_PLAY_DEBUG("Have been paused now");
+		PLAY_DEBUG(play, "Have been paused now");
 	}
 	else
 	{
@@ -222,16 +237,17 @@ static int _playerSofHandler(void *ctx, EVENT *_event)
 	
 	int newState = (HI_SVR_PLAYER_STATE_E)*event->pu8Data;
 
-#if PLAYER_DEBUG_HIPLAY_EVENT
-	/* new state is still PLAYING. Before that state_change message has make state into PLAYING */
-	MUX_PLAY_DEBUG( "'%s' event is handling, new state is '%s' in state of '%s'", muxPlayerEventName(_event->event), muxPlayerStateName(newState), muxPlayerStateName( play->muxFsm.currentState) );
-#endif
-
+	if(PLAY_IS_DEBUG_FSM(play))
+	{/* new state is still PLAYING. Before that state_change message has make state into PLAYING */
+		PLAY_DEBUG(play, "'%s' event is handling, new state is '%s' in state of '%s'", muxPlayerEventName(_event->event), muxPlayerStateName(newState), muxPlayerStateName( play->muxFsm.currentState) );
+	}
+	
 	if (HI_SVR_PLAYER_STATE_BACKWARD == newState)
 	{
-#if PLAYER_DEBUG_HIPLAY_EVENT
-		MUX_PLAY_DEBUG( "backward to start of file, start play! \n");
-#endif
+		if(PLAY_IS_DEBUG_FSM(play))
+		{
+			PLAY_DEBUG(play, "backward to start of file, start play! \n");
+		}
 		HI_SVR_PLAYER_Play(play->playerHandler);
 	}
 
@@ -250,10 +266,11 @@ static int _playerStreamChangeHandler(void *ctx, EVENT *_event)
 	HI_SVR_PLAYER_EVENT_S *event = (HI_SVR_PLAYER_EVENT_S *)_event->data;
 	HI_SVR_PLAYER_STREAMID_S	*streamId = NULL;
 
-#if PLAYER_DEBUG_HIPLAY_EVENT
-	MUX_PLAY_DEBUG( "'%s' event is handling in state of '%s'", muxPlayerEventName(_event->event), muxPlayerStateName( play->muxFsm.currentState) );
-#endif
-
+	if(PLAY_IS_DEBUG_FSM(play))
+	{
+		PLAY_DEBUG(play, "'%s' event is handling in state of '%s'", muxPlayerEventName(_event->event), muxPlayerStateName( play->muxFsm.currentState) );
+	}
+	
 	streamId = (HI_SVR_PLAYER_STREAMID_S*)event->pu8Data;
 	if (NULL != streamId)
 	{
@@ -268,10 +285,11 @@ static int _playerStreamChangeHandler(void *ctx, EVENT *_event)
 #endif
 		}
 
-#if PLAYER_DEBUG_HIPLAY_EVENT
-		MUX_PLAY_DEBUG( "Stream id change to: ProgramId %d, vid %d, aid %d, sid %d \n", streamId->u16ProgramId, streamId->u16VidStreamId,
-			streamId->u16AudStreamId, streamId->u16SubStreamId);
-#endif
+		if(PLAY_IS_DEBUG_FSM(play))
+		{
+			PLAY_DEBUG(play, "Stream id change to: ProgramId %d, vid %d, aid %d, sid %d \n", streamId->u16ProgramId, streamId->u16VidStreamId,
+				streamId->u16AudStreamId, streamId->u16SubStreamId);
+		}
 	}
 	
 	return STATE_CONTINUE;
@@ -282,14 +300,20 @@ static int _playerDownloadProgressHandler(void *ctx, EVENT *_event)
 	MUX_PLAY_T *play = (MUX_PLAY_T *)ctx;
 	HI_SVR_PLAYER_EVENT_S *event = (HI_SVR_PLAYER_EVENT_S *)_event->data;
 	
-#if PLAYER_DEBUG_HIPLAY_EVENT
-	MUX_PLAY_DEBUG( "'%s' event is handling in state of '%s'", muxPlayerEventName(_event->event), muxPlayerStateName( play->muxFsm.currentState) );
-#endif
+	if(PLAY_IS_DEBUG_FSM(play))
+	{
+		PLAY_DEBUG(play, "'%s' event is handling in state of '%s'", muxPlayerEventName(_event->event), muxPlayerStateName( play->muxFsm.currentState) );
+	}
+	
 	HI_SVR_PLAYER_Invoke(play->playerHandler, HI_FORMAT_INVOKE_GET_BANDWIDTH, &play->downloadBandWidth);
 
 	memcpy(&play->downloadProgress, event->pu8Data, event->u32Len);
-	MUX_PLAY_DEBUG( "download progress:%d, duration:%lld ms, buffer size:%lld bytes, bandwidth = %lld\n", 
-		play->downloadProgress.u32Progress, play->downloadProgress.s64Duration, play->downloadProgress.s64BufferSize, play->downloadBandWidth );
+	
+	if(PLAY_IS_DEBUG_FSM(play))
+	{
+		PLAY_DEBUG(play, "download progress:%d, duration:%lld ms, buffer size:%lld bytes, bandwidth = %lld\n", 
+			play->downloadProgress.u32Progress, play->downloadProgress.s64Duration, play->downloadProgress.s64BufferSize, play->downloadBandWidth );
+	}
 
 	if (play->downloadProgress.u32Progress >= 100 && play->pausedCtrl == PLAYER_PAUSE_PAUSED)
 	{
@@ -305,32 +329,35 @@ static int _playerErrorHandler(void *ctx, EVENT *_event)
 	MUX_PLAY_T *play = (MUX_PLAY_T *)ctx;
 	HI_SVR_PLAYER_EVENT_S *event = (HI_SVR_PLAYER_EVENT_S *)_event->data;
 	
-	MUX_PLAY_DEBUG( "'%s' event is handling on %s in state of '%s'",muxPlayerEventName(_event->event), play->muxFsm.name, muxPlayerStateName( play->muxFsm.currentState) );
+	if(PLAY_IS_DEBUG_FSM(play))
+	{
+		PLAY_DEBUG(play, "'%s' event is handling in state of '%s'",muxPlayerEventName(_event->event), muxPlayerStateName( play->muxFsm.currentState) );
+	}
 	play->sysError = (HI_S32)*event->pu8Data;
 
 	if (HI_SVR_PLAYER_ERROR_VID_PLAY_FAIL == play->sysError)
 	{
-		MUX_PLAY_ERROR("%s: VID start fail!", play->muxFsm.name);
+		PLAY_ERROR(play, "VID start fail!");
 	}
 	else if (HI_SVR_PLAYER_ERROR_AUD_PLAY_FAIL == play->sysError)
 	{
-		MUX_PLAY_ERROR("%s: Aud start fail!", play->muxFsm.name);
+		PLAY_ERROR(play, "Aud start fail!");
 	}
 	else if (HI_SVR_PLAYER_ERROR_PLAY_FAIL == play->sysError)
 	{
-		MUX_PLAY_ERROR("%s: Play fail!", play->muxFsm.name);
+		PLAY_ERROR(play, "Play fail!");
 	}
 	else if (HI_SVR_PLAYER_ERROR_NOT_SUPPORT == play->sysError)
 	{
-		MUX_PLAY_ERROR("%s: Format Not support!", play->muxFsm.name);
+		PLAY_ERROR(play, "Format Not support!");
 	}
 	else if (HI_SVR_PLAYER_ERROR_TIMEOUT == play->sysError)
 	{
-		MUX_PLAY_ERROR("%s: HiPlayer Time Out!", play->muxFsm.name);
+		PLAY_ERROR(play, "HiPlayer Time Out!");
 	}
 	else
 	{
-		MUX_PLAY_ERROR("%s: HiPlayer unknow Error = 0x%x \n", play->muxFsm.name, play->sysError);
+		PLAY_ERROR(play, "HiPlayer unknow Error = 0x%x \n", play->sysError);
 	}
 	
 	return STATE_CONTINUE;
@@ -342,61 +369,62 @@ static int _playerBufferStateHandler(void *ctx, EVENT *_event)
 	HI_SVR_PLAYER_EVENT_S *event = (HI_SVR_PLAYER_EVENT_S *)_event->data;
 	
 	HI_SVR_PLAYER_BUFFER_S *pstBufStat = (HI_SVR_PLAYER_BUFFER_S*)event->pu8Data;
-#if PLAYER_DEBUG_HIPLAY_EVENT
-	MUX_PLAY_DEBUG( "'%s' event is handling in state of '%s'", muxPlayerEventName(_event->event) , muxPlayerStateName( play->muxFsm.currentState) );
-	MUX_PLAY_DEBUG( "HI_SVR_PLAYER_EVENT_BUFFER_STATE type:%d, duration:%lld ms, size:%lld bytes\n",
-		pstBufStat->eType, pstBufStat->stBufStat.s64Duration, pstBufStat->stBufStat.s64BufferSize);
-#endif
+	if(PLAY_IS_DEBUG_FSM(play))
+	{
+		PLAY_DEBUG(play,  "'%s' event is handling in state of '%s'", muxPlayerEventName(_event->event) , muxPlayerStateName( play->muxFsm.currentState) );
+		PLAY_DEBUG(play,  "HI_SVR_PLAYER_EVENT_BUFFER_STATE type:%d, duration:%lld ms, size:%lld bytes\n",
+			pstBufStat->eType, pstBufStat->stBufStat.s64Duration, pstBufStat->stBufStat.s64BufferSize);
+	}
 
 	HI_SVR_PLAYER_GetFileInfo(play->playerHandler, &play->fileInfo);
 
 	if (pstBufStat->eType == HI_SVR_PLAYER_BUFFER_EMPTY)
 	{
-		MUX_PLAY_DEBUG( "### HI_SVR_PLAYER_EVENT_BUFFER_STATE type:HI_SVR_PLAYER_BUFFER_EMPTY, duration:%lld ms, size:%lld bytes\n",
+		PLAY_DEBUG(play, "### HI_SVR_PLAYER_EVENT_BUFFER_STATE type:HI_SVR_PLAYER_BUFFER_EMPTY, duration:%lld ms, size:%lld bytes\n",
 			pstBufStat->stBufStat.s64Duration, pstBufStat->stBufStat.s64BufferSize);
 		if ((HI_FORMAT_SOURCE_NET_VOD == play->fileInfo->eSourceType ||
 			HI_FORMAT_SOURCE_NET_LIVE == play->fileInfo->eSourceType ) &&
 			HI_SVR_PLAYER_STATE_PLAY == play->playerState)
 		{
-			MUX_PLAY_DEBUG( "Begin to pause");
+			PLAY_DEBUG(play, "Begin to pause");
 			play->pausedCtrl = PLAYER_PAUSE_WAITING;
 			HI_SVR_PLAYER_Pause(play->playerHandler);
 		}
 	}
 	else if (pstBufStat->eType == HI_SVR_PLAYER_BUFFER_START)
 	{
-		MUX_PLAY_DEBUG( "### HI_SVR_PLAYER_EVENT_BUFFER_STATE type:HI_SVR_PLAYER_BUFFER_START, duration:%lld ms, size:%lld bytes\n",
+		PLAY_DEBUG(play, "### HI_SVR_PLAYER_EVENT_BUFFER_STATE type:HI_SVR_PLAYER_BUFFER_START, duration:%lld ms, size:%lld bytes\n",
 			pstBufStat->stBufStat.s64Duration, pstBufStat->stBufStat.s64BufferSize);
 		if ((HI_FORMAT_SOURCE_NET_VOD == play->fileInfo->eSourceType ||
 			HI_FORMAT_SOURCE_NET_LIVE == play->fileInfo->eSourceType ) &&
 			HI_SVR_PLAYER_STATE_PLAY == play->playerState)
 		{
-			MUX_PLAY_DEBUG("Begin to pause");
+			PLAY_DEBUG(play, "Begin to pause");
 			play->pausedCtrl = PLAYER_PAUSE_WAITING;
 			HI_SVR_PLAYER_Pause(play->playerHandler);
 		}
 	}
 	else if (pstBufStat->eType == HI_SVR_PLAYER_BUFFER_ENOUGH)
 	{
-		MUX_PLAY_DEBUG( "### HI_SVR_PLAYER_EVENT_BUFFER_STATE type:HI_SVR_PLAYER_BUFFER_ENOUGH, duration:%lld ms, size:%lld bytes\n",
+		PLAY_DEBUG(play, "### HI_SVR_PLAYER_EVENT_BUFFER_STATE type:HI_SVR_PLAYER_BUFFER_ENOUGH, duration:%lld ms, size:%lld bytes\n",
 			pstBufStat->stBufStat.s64Duration, pstBufStat->stBufStat.s64BufferSize);
 		if ((HI_FORMAT_SOURCE_NET_VOD == play->fileInfo->eSourceType ||
 			HI_FORMAT_SOURCE_NET_LIVE == play->fileInfo->eSourceType ) &&
 			PLAYER_PAUSE_PAUSED == play->pausedCtrl)
 		{
-			MUX_PLAY_INFO( "Begin to resume");
+			PLAY_INFO(play, "Begin to resume");
 			HI_SVR_PLAYER_Resume(play->playerHandler);
 		}
 	}
 	else if (pstBufStat->eType == HI_SVR_PLAYER_BUFFER_FULL)
 	{
-		MUX_PLAY_DEBUG( "### HI_SVR_PLAYER_EVENT_BUFFER_STATE type:HI_SVR_PLAYER_BUFFER_FULL, duration:%lld ms, size:%lld bytes\n",
+		PLAY_DEBUG(play, "### HI_SVR_PLAYER_EVENT_BUFFER_STATE type:HI_SVR_PLAYER_BUFFER_FULL, duration:%lld ms, size:%lld bytes\n",
 			pstBufStat->stBufStat.s64Duration, pstBufStat->stBufStat.s64BufferSize);
 		if ((HI_FORMAT_SOURCE_NET_VOD == play->fileInfo->eSourceType ||
 			HI_FORMAT_SOURCE_NET_LIVE == play->fileInfo->eSourceType ) &&
 			PLAYER_PAUSE_PAUSED == play->pausedCtrl)
 		{
-			MUX_PLAY_INFO("Begin to resume");
+			PLAY_INFO(play, "Begin to resume");
 			HI_SVR_PLAYER_Resume(play->playerHandler);
 		}
 	}
@@ -412,10 +440,11 @@ static int _playerNetworkHandler(void *ctx, EVENT *_event)
 	HI_S32 s32Ret = HI_FAILURE;
 
 	HI_FORMAT_NET_STATUS_S *netStat = (HI_FORMAT_NET_STATUS_S*)event->pu8Data;
-#if PLAYER_DEBUG_HIPLAY_EVENT
-	MUX_PLAY_DEBUG( "'%s' event is handling in state of '%s'", muxPlayerEventName(_event->event) , muxPlayerStateName( play->muxFsm.currentState) );
-	MUX_PLAY_DEBUG( "HI_SVR_PLAYER_EVNET_NETWORK_INFO: type:%d, code:%d, str:%s on %s", netStat->eType, netStat->s32ErrorCode, netStat->szProtocals, play->muxFsm.name );
-#endif
+	if(PLAY_IS_DEBUG_FSM(play))
+	{
+		PLAY_DEBUG(play,  "'%s' event is handling in state of '%s'", muxPlayerEventName(_event->event) , muxPlayerStateName( play->muxFsm.currentState) );
+		PLAY_DEBUG(play,  "HI_SVR_PLAYER_EVNET_NETWORK_INFO: type:%d, code:%d, str:%s", netStat->eType, netStat->s32ErrorCode, netStat->szProtocals);
+	}
 
 	if (netStat->eType == HI_FORMAT_MSG_NETWORK_ERROR_UNKNOW && netStat->s32ErrorCode == -111)
 	{/* HTTP timeout */
@@ -427,17 +456,17 @@ static int _playerNetworkHandler(void *ctx, EVENT *_event)
 		s32Ret = pthread_create(&thread, HI_NULL, muxNetworkReconnect, (HI_VOID*)play);
 		if (s32Ret == HI_SUCCESS)
 		{
-			MUX_PLAY_INFO( "create thread:reconnect successfully\n");
+			PLAY_INFO(play, "create thread:reconnect successfully\n");
 		}
 		else
 		{
-			MUX_PLAY_ERROR("failed to create thread:reconnect\n");
+			PLAY_ERROR(play, "failed to create thread:reconnect\n");
 		}
 	}
 	else if (netStat->eType == HI_FORMAT_MSG_NETWORK_ERROR_CONNECT_FAILED)
 	{
 		{
-			MUX_PLAY_WARN("WARNING: network connection failed on protocol:%s", netStat->szProtocals );
+			PLAY_WARN(play, "WARNING: network connection failed on protocol:%s", netStat->szProtocals );
 			
 			PLAY_ALERT_MSG(play, COLOR_RED,  "network failed on protocol:%s", netStat->szProtocals);
 		}
@@ -460,14 +489,17 @@ static int _playerTimeoutHandlerInPlaying(void *ctx, EVENT *_event)
 	play->playTimer = NULL;
 	PLAY_UNLOCK(play);
 
-	MUX_PLAY_DEBUG( "'%s' event is handling on '%s' in state of '%s'",muxPlayerEventName(_event->event), play->muxFsm.name, muxPlayerStateName( play->muxFsm.currentState) );
+	if(PLAY_IS_DEBUG_FSM(play))
+	{
+		PLAY_DEBUG(play, "'%s' event is handling in state of '%s'",muxPlayerEventName(_event->event), muxPlayerStateName( play->muxFsm.currentState) );
+	}
 
 	if(PLAYER_CHECK_STATE(play, HISVR_PLAYER_STATE_IMAGE) )
 	{
 		ret= OSD_DESKTOP_LOCK(&play->muxRx->higo);
 		if(ret != 0)
 		{
-			MUX_PLAY_WARN( "Lock for playing image: %s", strerror(errno) );
+			PLAY_WARN(play, "Lock for playing image: %s", strerror(errno) );
 			return HI_SUCCESS;
 		}
 		
@@ -476,20 +508,20 @@ static int _playerTimeoutHandlerInPlaying(void *ctx, EVENT *_event)
 		ret = OSD_DESKTOP_UNLOCK(&play->muxRx->higo);
 		if(ret != 0)
 		{
-			MUX_PLAY_WARN( "Unlocked for playing image: %s", strerror(errno) );
+			PLAY_WARN(play, "Unlocked for playing image: %s", strerror(errno) );
 			return HI_SUCCESS;
 		}
 
 
-		MUX_PLAY_DEBUG("'%s' will enter STOP state from IMAGE state", play->muxFsm.name );
+		PLAY_DEBUG(play, "'will enter STOP state from IMAGE state");
 		/* send SEEK_FINISHED event to start next playing (image/stream) */
-		muxPlayerReportFsmEvent(&play->muxFsm, (HI_SVR_PLAYER_EVENT_E)HI_SVR_PLAYER_EVENT_SEEK_FINISHED, 0, NULL);
+		SEND_EVEVT_TO_PLAYER(play, HI_SVR_PLAYER_EVENT_SEEK_FINISHED, NULL);
 
 		newState = HI_SVR_PLAYER_STATE_STOP;
 	}
 	else
 	{
-		MUX_PLAY_DEBUG("'%s' will enter STOP state from PLAYING state", play->muxFsm.name );
+		PLAY_DEBUG(play, "will enter STOP state from PLAYING state");
 		muxPlayerStopPlaying(play);
 
 	}
@@ -518,18 +550,21 @@ static int _playerEndHandler(void *ctx, EVENT *_event)
 
 	PLAY_ALERT_MSG(play, COLOR_RED,  "playing '%s' ended in '%s'", play->currentUrl, muxPlayerStateName( play->muxFsm.currentState) );
 
-	MUX_PLAY_DEBUG( "'%s' event is handling on '%s in state of '%s''",muxPlayerEventName(_event->event), play->muxFsm.name, muxPlayerStateName( play->muxFsm.currentState));
+	if(PLAY_IS_DEBUG_FSM(play))
+	{
+		PLAY_DEBUG(play, "'%s' event is handling in state of '%s''",muxPlayerEventName(_event->event), muxPlayerStateName( play->muxFsm.currentState));
+	}
 
 	if(PLAYER_CHECK_STATE(play, HISVR_PLAYER_STATE_IMAGE) )
 	{
-		MUX_PLAY_DEBUG("'%s' send SEEK_FINISHED event in IMAGE state", play->muxFsm.name );
-		muxPlayerReportFsmEvent(&play->muxFsm, (HI_SVR_PLAYER_EVENT_E)HI_SVR_PLAYER_EVENT_SEEK_FINISHED, 0, NULL);
+		PLAY_DEBUG(play, "send SEEK_FINISHED event in IMAGE state");
+		SEND_EVEVT_TO_PLAYER(play, HI_SVR_PLAYER_EVENT_SEEK_FINISHED, NULL);
 		/* when playing image stopped, clear OSD window. Dec.20,2017 */
 
 		ret= OSD_DESKTOP_LOCK(&play->muxRx->higo);
 		if(ret != 0)
 		{
-			MUX_PLAY_WARN( "Lock for playing image: %s", strerror(errno) );
+			PLAY_WARN(play, "Lock for playing image: %s", strerror(errno) );
 			return HI_SUCCESS;
 		}
 		
@@ -538,7 +573,7 @@ static int _playerEndHandler(void *ctx, EVENT *_event)
 		ret = OSD_DESKTOP_UNLOCK(&play->muxRx->higo);
 		if(ret != 0)
 		{
-			MUX_PLAY_WARN( "Unlocked for playing image: %s", strerror(errno) );
+			PLAY_WARN(play, "Unlocked for playing image: %s", strerror(errno) );
 			return HI_SUCCESS;
 		}
 
@@ -567,7 +602,7 @@ static int _playerTimeoutHandler(void *ctx, EVENT *_event)
 	{
 #if 1
 		/* when setMedia thread is cancelled by timer callback, because timer's callback of setMedia emit FAIL event */
-		MUX_PLAY_ERROR( "'%s' event is not handling in state of '%s''",muxPlayerEventName(_event->event), muxPlayerStateName( play->muxFsm.currentState));
+		PLAY_ERROR(play, "'%s' event is not handling in state of '%s''",muxPlayerEventName(_event->event), muxPlayerStateName( play->muxFsm.currentState));
 #else
 		/* when setMedia thread is cancelled by timer callback and there is pending JSON: because timer's callback of setMedia emit timeout event */
 		CMN_PLAY_JSON_EVENT *jsonEvent = (CMN_PLAY_JSON_EVENT *)play->muxFsm.dataOfCurrentCmd;
@@ -586,11 +621,14 @@ static int _playerTimeoutHandler(void *ctx, EVENT *_event)
 
 	PLAY_ALERT_MSG(play, COLOR_RED,  "playing '%s' failed, timeout in '%s'", play->currentUrl, muxPlayerStateName( play->muxFsm.currentState) );
 
-	MUX_PLAY_DEBUG( "'%s' event is handling on '%s in state of '%s''",muxPlayerEventName(_event->event), play->muxFsm.name, muxPlayerStateName( play->muxFsm.currentState));
+	if(PLAY_IS_DEBUG_FSM(play))
+	{
+		PLAY_DEBUG(play, "'%s' event is handling in state of '%s''",muxPlayerEventName(_event->event), muxPlayerStateName( play->muxFsm.currentState));
+	}
 
 	if(PLAYER_CHECK_STATE(play, HISVR_PLAYER_STATE_IMAGE) )
 	{
-		MUX_PLAY_DEBUG("'%s' will enter STOP state from IMAGE state", play->muxFsm.name );
+		PLAY_DEBUG(play, "will enter STOP state from IMAGE state");
 		newState = HI_SVR_PLAYER_STATE_STOP;
 	}
 	else if(PLAYER_CHECK_STATE(play, HI_SVR_PLAYER_STATE_PLAY)  )
@@ -615,65 +653,79 @@ static int _playerTimeoutHandler(void *ctx, EVENT *_event)
 	return newState;
 }
 
+
+
 /* FAILED event from setMedia() function call or timer's callback of SetMedia thread */
 static int _playerFailedHandler(void *ctx, EVENT *_event)
 {
+/* as discuss, client clear this message now, so CLEAR_MESSAGE is 0. 07.30, 2019*/
+#define	CLEAR_MESSAGE			0
+
 	MUX_PLAY_T *play = (MUX_PLAY_T *)ctx;
 	int res = 0;
 
-//	PLAY_ALERT_MSG(play, COLOR_RED,  "playing '%s' failed, maybe media URL is wrong", play->currentUrl, muxPlayerStateName( play->muxFsm.currentState) );
 	PLAY_ALERT_MSG(play, COLOR_RED,  "playing '%s' failed in '%s'", play->currentUrl, muxPlayerStateName( play->muxFsm.currentState) );
 
 	res= OSD_DESKTOP_LOCK(&play->muxRx->higo);
 	if(res != 0)
 	{
-		MUX_PLAY_WARN( "Lock PlayFailed for AlertMsg: %s", strerror(errno) );
+		PLAY_WARN(play, "Lock PlayFailed for AlertMsg: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
 	muxOutputAlert((play)->muxRx, COLOR_RED, ALERT_DEFAULT_LAYOUT, "playing '%s' failed", play->currentUrl);//, muxPlayerStateName( play->muxFsm.currentState));
 	res= OSD_DESKTOP_UNLOCK(&play->muxRx->higo);
 	if(res != 0)
 	{
-		MUX_PLAY_WARN( "Unlock PlayFailed for AlertMsg: %s", strerror(errno) );
+		PLAY_WARN(play, "Unlock PlayFailed for AlertMsg: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
 	
-	MUX_PLAY_DEBUG( "'%s' event is handling on '%s' in state of '%s'",muxPlayerEventName(_event->event), play->muxFsm.name, muxPlayerStateName( play->muxFsm.currentState) );
+	if(PLAY_IS_DEBUG_FSM(play))
+	{
+		PLAY_DEBUG(play, "'%s' event is handling in state of '%s'",muxPlayerEventName(_event->event), muxPlayerStateName( play->muxFsm.currentState) );
+	}
 
 	CMN_PLAY_JSON_EVENT *jsonEvent = (CMN_PLAY_JSON_EVENT *)play->muxFsm.dataOfCurrentCmd;
 	if(jsonEvent)
-	{
-		cmnMuxJEventReply(jsonEvent, IPCMD_ERR_PLUGIN_PLAYER_FAILED, "%s: playing failed. Maybe media URL is wrong or media is invalidate format!", play->muxFsm.name );
+	{	
+		cmnMuxJEventReply(jsonEvent, IPCMD_ERR_PLUGIN_PLAYER_FAILED, "%s: playing '%s' failed. Maybe media URL is wrong or media is invalidate format!", play->muxFsm.name, play->currentUrl );
 	}
 		
 	play->muxFsm.currentCmd = CMD_TYPE_UNKNOWN;
 	play->muxFsm.dataOfCurrentCmd = NULL;
 
+#if CLEAR_MESSAGE
 	cmn_delay((play->muxRx->muxPlayer->playerConfig.timeoutErrorMsg>0)?play->muxRx->muxPlayer->playerConfig.timeoutErrorMsg*1000:1000*10);
-	
+
 	res= OSD_DESKTOP_LOCK(&play->muxRx->higo);
 	if(res != 0)
 	{
-		MUX_PLAY_WARN( "Lock PlayFailed for OsdClear: %s", strerror(errno) );
+		PLAY_WARN(play, "Lock PlayFailed for OsdClear: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
+	
 //	muxOsdClear(play->muxRx->higo.alert);
 	muxOutputAlert((play)->muxRx, COLOR_RED, ALERT_DEFAULT_LAYOUT, "");//, muxPlayerStateName( play->muxFsm.currentState));
+
 	res= OSD_DESKTOP_UNLOCK(&play->muxRx->higo);
 	if(res != 0)
 	{
-		MUX_PLAY_WARN( "Unlock PlayFailed for OsdClear: %s", strerror(errno) );
+		PLAY_WARN(play, "Unlock PlayFailed for OsdClear: %s", strerror(errno) );
 		return HI_SUCCESS;
 	}
+#endif
+	
 
-#if 1
+#if 0
+	/* as discussed, never start again automatilcally if media is wrong. 07.30, 2019 */
 	if(PLAYER_CHECK_STATE(play, HI_SVR_PLAYER_STATE_STOP) )
 	{/* when receives STOP state, send seek command to start next playing */
 		__playRestart(play);
 	}
-#else
-	muxPlayerStopPlaying(play);
 #endif
+	
+	/* it has been stop, it call stop again, it will block forever. 07.30, 2019 */
+	
 
 	return STATE_CONTINUE;
 }
@@ -685,7 +737,10 @@ static int _playerOKHandler(void *ctx, EVENT *_event)
 {
 	MUX_PLAY_T *play = (MUX_PLAY_T *)ctx;
 
-	MUX_PLAY_DEBUG("'%s' event is handling on %s in state of %s", muxPlayerEventName(_event->event), play->muxFsm.name, muxPlayerStateName( play->muxFsm.currentState)  );
+	if(PLAY_IS_DEBUG_FSM(play))
+	{
+		PLAY_DEBUG(play, "'%s' event is handling in state of %s", muxPlayerEventName(_event->event), muxPlayerStateName( play->muxFsm.currentState)  );
+	}
 	PLAY_ALERT_MSG(play, COLOR_GREEN,  "playing '%s' OK, in '%s'", play->currentUrl, muxPlayerStateName( play->muxFsm.currentState) );
 
 	/* start timer */
@@ -713,7 +768,10 @@ static int _playerImageOKHandler(void *ctx, EVENT *_event)
 {
 	MUX_PLAY_T *play = (MUX_PLAY_T *)ctx;
 
-	MUX_PLAY_DEBUG("'%s' event is handling on %s in state of %s", muxPlayerEventName(_event->event), play->muxFsm.name, muxPlayerStateName( play->muxFsm.currentState) );
+	if(PLAY_IS_DEBUG_FSM(play))
+	{
+		PLAY_DEBUG(play, "'%s' event is handling in state of %s", muxPlayerEventName(_event->event), muxPlayerStateName( play->muxFsm.currentState) );
+	}
 	PLAY_ALERT_MSG(play, COLOR_GREEN,  "playing Image '%s' OK, in '%s'", play->currentUrl, muxPlayerStateName( play->muxFsm.currentState) );
 
 	/* start timer */
@@ -1285,7 +1343,8 @@ void		_playerStopStateEnter(void *ownerCtx)
 	FSM_OWNER *_fsm = (FSM_OWNER *)ownerCtx;
 	MUX_PLAY_T *play = (MUX_PLAY_T *)_fsm->ctx;
 
-	muxPlayerRemovePlayingTimer(play);
+//	muxPlayerRemovePlayingTimer(play);
+	MUX_PLAY_CLEAR_SET_MEDIA(play);
 
 	HI_UNF_VO_ResetWindow(play->windowHandle,  (play->muxRx->muxPlayer->playerConfig.keepLastFrame)?HI_UNF_WINDOW_FREEZE_MODE_LAST: HI_UNF_WINDOW_FREEZE_MODE_BLACK);
 	if(IS_MAIN_PLAYER(play) )

@@ -117,6 +117,44 @@ static void termInit(MuxMain	*muxMain)
 #endif
 }
 
+#include <sys/wait.h>
+
+static void _sigChldHandler(int sig)
+{
+	int saved_errno = errno;
+	pid_t pid;
+	
+	do
+	{
+		MUX_ERROR("Signal CHLD is called");
+		pid = waitpid((pid_t)(-1), 0, WNOHANG);
+		if(pid> 0)
+		{
+			MUX_INFO("thread %d exit now", pid);
+		}
+		
+	}while(pid> 0);
+	
+	errno = saved_errno;
+}
+
+int sysSignalRegisterChild(void)
+{
+	struct sigaction sa;
+	
+	sa.sa_handler = &_sigChldHandler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART | SA_NOCLDSTOP;
+	
+	if (sigaction(SIGCHLD, &sa, 0) == -1)
+	{
+		perror(0);
+		exit(1);
+		return -1;
+	}
+
+	return 0;
+}
 
 static int _muxMainAddPlugIn(MuxPlugIn *plugin, MuxMain *muxMain)
 {
@@ -267,14 +305,14 @@ int main(int argc, char **argv)
 	
 	int res = EXIT_SUCCESS;
 
-	MUX_INFO(CMN_VERSION_INFO(CMN_MODULE_MAIN_NAME));
+	MUX_INFO(CMN_MODULE_MAIN_NAME" "CMN_VERSION_INFO(CMN_MODULE_MAIN_NAME));
 	fprintf(stderr, CMN_MODULE_MAIN_NAME" " CMN_VERSION_INFO(CMN_MODULE_MAIN_NAME)"\n");
 
 	CMN_SHARED_INIT();
 
 	memset(muxMain, 0 , sizeof(MuxMain) );
 
-	cmnThreadSetName("main");
+	cmnThreadSetName(MUX_THREAD_NAME_MAIN);
 //	putenv("http_proxy");
 	unsetenv("http_proxy");/* Kill the http_proxy */
 
@@ -296,6 +334,7 @@ int main(int argc, char **argv)
 	muxMain->registerConsumer = _muxMainRegisterConsumer;
 	muxMain->addCapture = _muxMainAddCapture;
 
+	sysSignalRegisterChild();
 	/* signal init */
 	signal(SIGPIPE, SIG_IGN);
 /*
@@ -334,9 +373,6 @@ int main(int argc, char **argv)
 	}
 #endif
 
-#if 0
-	av_register_all();
-#endif
 
 	cmnMediaInit(&muxMain->mediaCaptureConfig);
 

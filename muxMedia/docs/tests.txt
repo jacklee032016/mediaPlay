@@ -1,6 +1,98 @@
 					Tests for MuxMedia
 																		Oct. 10th, 2017						Jack Lee
 
+apiClient -c osdFontSize -o index=1,size=64
+
+HTTP error
+apiClient -c play -o media=http://192.168.168.75:38001/video.rtsp
+
+
+Error rtsp
+
+# IP address wrong: finished quickly
+apiClient -c play -o media=rtsp://192.168.168.75:38001/video1.rtsp
+
+# port wrong: finished quickly
+apiClient -c play -o media=rtsp://192.168.168.74:38003/video1.rtsp
+
+# URI wrong: never finish
+apiClient -c play -o media=rtsp://192.168.168.74:38001/video/12.rtsp
+
+apiClient -c play -o media=rtsp://192.168.168.74:38001/video12.rtsp
+
+
+07.26, 2019
+---------------------------------------
+
+apiClient -c play -o media=rtsp://192.168.168.74:38001/video1.rtsp
+
+07.24, 2019
+---------------------------------------
+Test text line wrapping:
+
+
+	apiClient -c osdPosition -o index=1,left=260,top=50,width=1400,height=220
+	apiClient -c osdBackground -o index=1,color='0xFF777722'
+	
+
+    apiClient -c osdPosition -o index=1,left=528,top=32,width=582,height=334
+
+    apiClient -c osdBackground -o index=1,color='0xFF777722'
+
+    apiClient -c osdFontSize -o index=1,size=106
+ 
+	apiClient -c alert -o media='as dasd asds',halign=1,valign=1
+	apiClient -c alert -o media='as dasd asdt',halign=1,valign=1
+	
+    apiClient -c alert -o media='as dasd asds23',halign=1,valign=1
+
+
+    apiClient -c osdPosition -o index=1,left=528,top=32,width=800,height=334
+
+    apiClient -c osdBackground -o index=1,color='0xFF777722'
+
+    apiClient -c osdFontSize -o index=1,size=106
+ 
+	apiClient -c alert -o media='as dasd asds',halign=1,valign=1
+	apiClient -c alert -o media='as dasd asdt',halign=1,valign=1
+	
+    apiClient -c alert -o media='as dasd asds23',halign=1,valign=1
+
+
+07.24, 2019
+---------------------------------------
+Test size of letter is bigger than size of box
+
+::
+
+    apiClient -c osdPosition -o index=1,left=220,top=250,width=1400,height=60
+
+    apiClient -c osdBackground -o index=1,color='0xFF777722'
+
+    apiClient -c osdFontSize -o index=1,size=48
+ 
+    apiClient -c alert -o media='text message',halign=1,valign=1
+
+07.23, 2019
+---------------------------------------
+Test networking media timeout
+
+::
+
+
+	apiClient -c play -o media=/t10.mov
+
+	apiClient -c play -o media=/t101.mov
+	 
+	apiClient -c play -o media=http://192.168.168.110/video.sdp
+	 
+	 
+	apiClient -c cecInfo
+	 
+	 
+	apiClient -c alert -o media='text message', halign=1, valign=1
+
+
 
 Support formats:
 hi_unf_video.h

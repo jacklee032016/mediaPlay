@@ -110,6 +110,21 @@ static int _parseGlobalConfig(const char **p, MuxMain *muxMain, int linenum)
 		fprintf(stderr, "Controller UNIX Port: %s\n", muxMain->unixPort);
 #endif
 	}
+	else if (!strcasecmp(cmd, "DebugMsg"))
+	{
+		muxMain->debugMsg = cmnParseGetBoolValue(p);
+#if DEBUG_CONFIG_FILE
+		fprintf(stderr, "debugMsg: %s\n", (muxMain->debugMsg)?"YES":"NO");
+#endif
+	}
+	else if (!strcasecmp(cmd, "DebugFsm"))
+	{
+		muxMain->debugFsm = cmnParseGetBoolValue(p);
+#if DEBUG_CONFIG_FILE
+		fprintf(stderr, "debugFsm: %s\n", (muxMain->debugFsm)?"YES":"NO");
+#endif
+	}
+
 #if 0	
 	else if (!strcasecmp(cmd, "CtrlProtocol"))
 	{

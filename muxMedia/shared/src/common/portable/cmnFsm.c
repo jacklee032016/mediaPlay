@@ -64,7 +64,9 @@ int cmnFsmHandle(void *ctx, void *_event)
 	{
 		if( owner->fsm->states[j].state == owner->currentState )
 		{
+#if CMN_DEBUG_FSM
 			MUX_DEBUG("FSM '%s' handling in state '%s'", owner->name, owner->fsm->states[j].name);
+#endif
 			newState = _fsmStateHandle( &owner->fsm->states[j], ctx, event);
 			break;
 		}
@@ -82,7 +84,9 @@ int cmnFsmHandle(void *ctx, void *_event)
 				if( owner->fsm->states[j].enter_handle!= NULL)
 					( owner->fsm->states[j].enter_handle)( owner);
 				
+#if CMN_DEBUG_FSM
 				MUX_DEBUG("Entered into new state '%s' of FSM '%s'", owner->fsm->states[j].name, owner->name );
+#endif
 				break;
 			}
 		}

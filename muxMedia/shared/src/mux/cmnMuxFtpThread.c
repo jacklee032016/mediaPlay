@@ -302,7 +302,7 @@ static void _destoryFtpThread(struct _CmnThread *th)
 
 CmnThread  threadCmnFtp =
 {
-	name		:	"FTP",
+	name		:	MUX_THREAD_NAME_FTP,
 	flags		:	SET_BIT(1, CMN_THREAD_FLAG_WAIT),
 	
 	init			:	_initFtpThread,

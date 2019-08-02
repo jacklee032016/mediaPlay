@@ -35,7 +35,7 @@ typedef int (*CMN_ALARM_TIMER_CALLBACK)(int interval);
 * returned value is the same as the one passed in, the periodic alarm continues, otherwise a new alarm 
 * is scheduled.  If the callback returns 0, the periodic alarm is cancelled.
  */
-typedef int (*CMN_THREAD_TIMER_CALLBACK)(int interval, void *param);
+typedef int (*CMN_THREAD_TIMER_CALLBACK)(void *timer, int interval, void *param);
 
 
 /* Get the number of milliseconds since the library initialization.

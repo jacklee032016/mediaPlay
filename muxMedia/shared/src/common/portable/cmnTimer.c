@@ -158,7 +158,7 @@ static void __threaded_timer_check(void)
 
 			cmn_mutex_unlock(_timers.mutex );
 
-			ms = t->cb(t->interval, t->param);
+			ms = t->cb(t, t->interval, t->param);
 			
 			cmn_mutex_lock(_timers.mutex);
 			

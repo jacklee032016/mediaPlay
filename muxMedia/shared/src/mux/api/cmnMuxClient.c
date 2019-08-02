@@ -20,9 +20,6 @@
 
 #include "_cmnMux.h"
 
-/* some operation in player is slow, such as play or forward */
-//#define	CLIENT_TIMEOUT_SECONDS		15
-#define	CLIENT_TIMEOUT_SECONDS		30
 
 void cmnMuxClientConnDestroy(struct CLIENT_CONN *clientConn)
 {
@@ -30,7 +27,7 @@ void cmnMuxClientConnDestroy(struct CLIENT_CONN *clientConn)
 	cmn_free(clientConn);
 }
 
-struct CLIENT_CONN *cmnMuxClientConnCreate(CTRL_LINK_TYPE type, int port, char *address)
+struct CLIENT_CONN *cmnMuxClientConnCreate(CTRL_LINK_TYPE type, int port, char *address, int timeoutSeconds)
 {
 	int res = EXIT_SUCCESS;
 	struct	CLIENT_CONN *clientConn = NULL;
@@ -62,7 +59,7 @@ struct CLIENT_CONN *cmnMuxClientConnCreate(CTRL_LINK_TYPE type, int port, char *
 	}
 
 	struct timeval timeout;      
-	timeout.tv_sec = CLIENT_TIMEOUT_SECONDS;
+	timeout.tv_sec = timeoutSeconds;
 	timeout.tv_usec = 0;
 
 	if (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0)
@@ -133,6 +130,7 @@ struct CLIENT_CONN *cmnMuxClientConnCreate(CTRL_LINK_TYPE type, int port, char *
 	clientConn->type = type;
 	clientConn->port = port;
 	clientConn->errCode = IPCMD_ERR_NOERROR;
+	clientConn->timeout = timeoutSeconds;
 	
 	if(type == CTRL_LINK_UDP ||type == CTRL_LINK_TCP )
 	{
@@ -211,7 +209,7 @@ cJSON *cmnMuxClientConnReadReponse(struct CLIENT_CONN *clientConn)
 	
 	if(len == -1 && (errno == EAGAIN || errno== ESPIPE ||errno== EINPROGRESS||errno== EWOULDBLOCK))
 	{ // timed out before any data read : EINTR
-		MUX_WARN("Timeout for this command from %s:%d", inet_ntoa(clientConn->peerAddr.sin_addr), ntohs(clientConn->peerAddr.sin_port));
+		MUX_WARN("Timeout after %d seconds for this command from %s:%d", clientConn->timeout, inet_ntoa(clientConn->peerAddr.sin_addr), ntohs(clientConn->peerAddr.sin_port));
 		return NULL;
 	}
 	else if(len == 0)
@@ -314,14 +312,14 @@ static int _getJSonHandlerFromFile(char *jsonFilename, cJSON **handler)
 	return EXIT_SUCCESS;
 }
 
-int cmnMuxClientInit(int port, CTRL_LINK_TYPE type, char *serverAddress)
+int cmnMuxClientInit(int port, CTRL_LINK_TYPE type, char *serverAddress, int timeoutSeconds)
 {
 	CLIENT_CTRL	*clientCtrl = &_clientCtrl;
 	struct CLIENT_CONN *clientConn;
 
 	memset(clientCtrl, 0, sizeof(CLIENT_CTRL));
 
-	clientConn = cmnMuxClientConnCreate(type, port, serverAddress);
+	clientConn = cmnMuxClientConnCreate(type, port, serverAddress, timeoutSeconds);
 	if(clientConn == NULL)
 	{
 		MUX_ERROR("Connect to '%s:%d' failed", serverAddress, port);

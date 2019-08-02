@@ -41,12 +41,12 @@
 
 
 /* build options for player */
-#define	WITH_HIPLAYER_STATE_CHECK			0
+#define	WITH_HIPLAYER_STATE_CHECK			1
 
 #define	WITH_HIGO_DEBUG						0
 
 /* some event only for info alert, no handle is needed, so these events can be ignored in FSM */
-#define	PLAYER_ENABLE_INFO_EVENT				0
+#define	PLAYER_ENABLE_INFO_EVENT				1
 
 #define	PLAYER_DEBUG_HIPLAY_EVENT			0
 
@@ -196,14 +196,14 @@ typedef	enum _MUX_MEDIA_TYPE
 #define ANSI_COLOR_RESET			"\x1b[0m"
 
 
-#define	ERROR_TEXT_BEGIN			"\t\e[31m ERR:"
+#define	ERROR_TEXT_BEGIN			"\t\e[31m"
 #define	ERROR_TEXT_END			"\e[0m"
 
 
-#define	WARN_TEXT_BEGIN			""ANSI_COLOR_MAGENTA"WARN:"
+#define	WARN_TEXT_BEGIN			""ANSI_COLOR_MAGENTA""
 
 //#define	INFO_TEXT_BEGIN			""ANSI_COLOR_BLUE"INFO:"
-#define	INFO_TEXT_BEGIN			""ANSI_COLOR_CYAN"INFO:"
+#define	INFO_TEXT_BEGIN			""ANSI_COLOR_CYAN""
 
 
 
@@ -278,20 +278,51 @@ int cmn_log_init(log_stru_t *lobj);
 	#endif
 #endif
 
+#if linux
+#include "pthread.h"
+#include <string.h>
+#include <errno.h>
+
+#include <sys/time.h>
+
+inline static char *sysTimestamp(void)
+{
+	static char timestamp[32];
+	
+	struct timeval tv;
+	struct tm *ptm;
+
+	gettimeofday(&tv, NULL);
+	ptm = localtime(&tv.tv_sec);
+#if 0
+	strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", ptm);
+#else
+	strftime(timestamp, sizeof(timestamp), "%H:%M:%S", ptm);
+#endif
+
+	return timestamp;
+}
+#else
+#define	sysTimestamp()		""
+#endif
+
+#include <string.h>
+
+#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
 #define	FILE_TO_STDOUT			1
 
 #ifndef   __CMN_RELEASE__
 #if FILE_TO_STDOUT
 #define	CMN_MSG_LOG(level, format ,...)   \
-	do{ char buf[4096]; snprintf(buf, sizeof(buf),ERROR_TEXT_BEGIN  __FILE__".%d|%s:%s" ERROR_TEXT_END "\n" , __LINE__, cmnThreadGetName(), format ) ;\
+	do{ char buf[4096]; snprintf(buf, sizeof(buf), ERROR_TEXT_BEGIN  "%s.[ERR, %s]:[%s-%u.%s()]: %s" ERROR_TEXT_END "\n", sysTimestamp(), cmnThreadGetName(), __FILENAME__, __LINE__, __FUNCTION__, format ) ;\
 		printf(buf, ##__VA_ARGS__);			\
 		}while(0)
 #else
 #define	CMN_MSG_LOG(level, format ,...)   \
 	do{ 					\
 		if ( level <= CMN_LOG_DEBUG && get_current_level() >= level) \
-			log_information(level, __FILE__, __LINE__, format, ##__VA_ARGS__);	\
+			log_information(level, __FILENAME__, __LINE__, format, ##__VA_ARGS__);	\
 	}while(0)
 #endif
 #else
@@ -305,14 +336,14 @@ int cmn_log_init(log_stru_t *lobj);
 #ifndef   __CMN_RELEASE__
 #if FILE_TO_STDOUT
 #define	CMN_MSG_INFO(level, format ,...)   \
-	do{ char buf[4096]; snprintf(buf, sizeof(buf), INFO_TEXT_BEGIN __FILE__".%d|%s:%s"ANSI_COLOR_RESET  "\n", __LINE__, cmnThreadGetName(), format ) ;\
+	do{ char buf[4096]; snprintf(buf, sizeof(buf), INFO_TEXT_BEGIN"%s.[INFO,%s]:[%s-%u.%s]: %s"ANSI_COLOR_RESET "\n", sysTimestamp(), cmnThreadGetName(),  __FILENAME__, __LINE__, __FUNCTION__, format ) ;\
 		printf(buf, ##__VA_ARGS__);			\
 		}while(0)
 #else
 #define	CMN_MSG_INFO(level, format ,...)   \
 	do{ 					\
 		if ( level <= CMN_LOG_DEBUG && get_current_level() >= level) \
-			log_information(level, __FILE__, __LINE__, format, ##__VA_ARGS__);	\
+			log_information(level, __FILENAME__, __LINE__, format, ##__VA_ARGS__);	\
 	}while(0)
 #endif
 #else
@@ -330,7 +361,7 @@ int cmn_log_init(log_stru_t *lobj);
 #ifndef   __CMN_RELEASE__
 #if FILE_TO_STDOUT
 #define	CMN_MSG_DEBUG(level, format ,...) 	 \
-	do{ char buf[4096]; snprintf(buf, sizeof(buf), __FILE__".%d|%s:%s\n", __LINE__, cmnThreadGetName(), format ) ;\
+	do{ char buf[4096]; snprintf(buf, sizeof(buf), "%s.[DBUG,%s]:[%s-%u.%s]: %s\n", sysTimestamp(), cmnThreadGetName(),  __FILENAME__, __LINE__, __FUNCTION__, format ) ;\
 		printf(buf, ##__VA_ARGS__);			\
 		}while(0)
 
@@ -339,7 +370,7 @@ int cmn_log_init(log_stru_t *lobj);
 #define	CMN_MSG_DEBUG(level, format ,...) 	\
 	do{ 					\
 		if ( level <= CMN_LOG_DEBUG && get_current_level() >= level) \
-			log_information(level, __FILE__, __LINE__, format, ##__VA_ARGS__);	\
+			log_information(level, __FILENAME__, __LINE__, format, ##__VA_ARGS__);	\
 	}while(0)
 #endif
 
@@ -517,6 +548,11 @@ int cmnParseGetIpAddress(struct in_addr *ipAddress, const char *p);
 
 #define  MUX_ERROR(...)		{CMN_MSG_LOG(CMN_LOG_ERR, __VA_ARGS__);}
 
+
+#define	MUX_ASSERT(x, ...)			{if((x)==0) {MUX_ERROR(__VA_ARGS__);}}
+
+
+#define	CMN_DEBUG_FSM			0
 
 
 extern volatile int recvSigalTerminal;

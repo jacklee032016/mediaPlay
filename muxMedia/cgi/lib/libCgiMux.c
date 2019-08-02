@@ -42,7 +42,7 @@ int cgiMuxInit(MUX_WEB_CMN *muxWeb)
 
 	cmnMediaInit(&muxWeb->cgiMain.mediaCaptureConfig);
 
-	cmnMuxClientInit(3600, CTRL_LINK_TCP, "127.0.0.1");//"192.168.168.101");
+	cmnMuxClientInit(3600, CTRL_LINK_TCP, "127.0.0.1", 25);//"192.168.168.101");
 
 	return 0;	
 }

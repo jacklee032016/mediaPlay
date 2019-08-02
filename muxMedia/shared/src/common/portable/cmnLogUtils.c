@@ -284,7 +284,7 @@ void log_information(int pri, const char* frmt,...)
 		}
 #else
 
-		ret = fprintf(logobj.fp, "%s[%s,%s] : %s\n"ERROR_TEXT_END, _colorEsc, priname[pri_], cmnThreadGetName(), buf);
+		ret = fprintf(logobj.fp, "%s[%s][%s,%s]: %s\n"ERROR_TEXT_END, _colorEsc, sysTimestamp(), priname[pri_], cmnThreadGetName(), buf);
 #endif
 		if(logobj.fp != NULL)
 			fflush(logobj.fp);	/* added this line, lizhijie, 2007.03.16 */
